@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+  <head> <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>G</text></svg>">
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Grovillon Maison</title>
@@ -37,75 +38,15 @@
         color: #ccc;
         text-decoration: underline;
       }
-      button {
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 1rem;
-        cursor: pointer;
-        background-color: #ffffff10;
-        border: 1px solid #ccc;
-        color: white;
-        transition: background-color 0.3s;
-      }
-      button:hover {
-        background-color: #ffffff30;
-      }
-      #modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.9);
-        align-items: center;
-        justify-content: center;
-      }
-      #modal form {
-        background-color: #111;
-        padding: 20px;
-        border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      #modal input, #modal textarea {
-        padding: 10px;
-        border: none;
-        border-radius: 4px;
-      }
-      #modal button {
-        background-color: #ffffff10;
-      }
     </style>
   </head>
   <body>
     <h1>Grovillon Maison</h1>
     <p>Silent force, lasting influence</p>
-    <button onclick="document.getElementById('modal').style.display = 'flex'">Request Access</button>
-
     <div class="info">
       <p>An exclusive, invitation-only project currently in development.</p>
       <p>For inquiries: <a href="mailto:d@grovillon.com">d@grovillon.com</a></p>
       <p>(NDA-protected collaborations only)</p>
     </div>
-
-    <div id="modal">
-      <form action="https://formspree.io/f/mayrwjek" method="POST">
-        <h3 style="color:white">Request Access</h3>
-        <input type="text" name="name" placeholder="Your Name" required />
-        <input type="email" name="email" placeholder="Your Email" required />
-        <textarea name="message" placeholder="Your Message" required></textarea>
-        <button type="submit">Submit</button>
-        <button type="button" onclick="document.getElementById('modal').style.display = 'none'">Cancel</button>
-      </form>
-    </div>
-
-    <script>
-      // Optional: close modal on background click
-      document.getElementById('modal').addEventListener('click', function (e) {
-        if (e.target === this) this.style.display = 'none';
-      });
-    </script>
   </body>
 </html>
