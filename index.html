@@ -29,7 +29,7 @@
       }
       .info {
         position: absolute;
-        bottom: 80px;
+        bottom: 40px;
         font-size: 0.9rem;
         color: #ccc;
       }
@@ -39,16 +39,16 @@
       }
       button {
         margin-top: 20px;
-        background-color: transparent;
-        border: 1px solid #fff;
-        color: white;
         padding: 10px 20px;
+        font-size: 1rem;
         cursor: pointer;
-        transition: 0.3s;
+        background-color: #ffffff10;
+        border: 1px solid #ccc;
+        color: white;
+        transition: background-color 0.3s;
       }
       button:hover {
-        background-color: white;
-        color: black;
+        background-color: #ffffff30;
       }
       #modal {
         display: none;
@@ -57,41 +57,55 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.9);
+        background-color: rgba(0, 0, 0, 0.9);
         align-items: center;
         justify-content: center;
+      }
+      #modal form {
+        background-color: #111;
+        padding: 20px;
+        border-radius: 8px;
+        display: flex;
         flex-direction: column;
-        z-index: 1000;
+        gap: 10px;
       }
-      #modal input, #modal button.submit {
-        margin: 10px;
+      #modal input, #modal textarea {
         padding: 10px;
-        width: 250px;
+        border: none;
+        border-radius: 4px;
       }
-      #closeModal {
-        margin-top: 20px;
-        cursor: pointer;
-        color: #ccc;
+      #modal button {
+        background-color: #ffffff10;
       }
     </style>
   </head>
   <body>
     <h1>Grovillon Maison</h1>
     <p>Silent force, lasting influence</p>
+    <button onclick="document.getElementById('modal').style.display = 'flex'">Request Access</button>
+
     <div class="info">
       <p>An exclusive, invitation-only project currently in development.</p>
       <p>For inquiries: <a href="mailto:d@grovillon.com">d@grovillon.com</a></p>
       <p>(NDA-protected collaborations only)</p>
-      <button onclick="document.getElementById('modal').style.display='flex'">Request Access</button>
     </div>
 
     <div id="modal">
-      <form onsubmit="event.preventDefault(); alert('Thank you — we will contact you soon.'); document.getElementById('modal').style.display='none';">
-        <input type="text" placeholder="Your Name" required />
-        <input type="email" placeholder="Your Email" required />
-        <button class="submit" type="submit">Submit Request</button>
+      <form action="https://formspree.io/f/mayrwjek" method="POST">
+        <h3 style="color:white">Request Access</h3>
+        <input type="text" name="name" placeholder="Your Name" required />
+        <input type="email" name="email" placeholder="Your Email" required />
+        <textarea name="message" placeholder="Your Message" required></textarea>
+        <button type="submit">Submit</button>
+        <button type="button" onclick="document.getElementById('modal').style.display = 'none'">Cancel</button>
       </form>
-      <div id="closeModal" onclick="document.getElementById('modal').style.display='none'">Close</div>
     </div>
+
+    <script>
+      // Optional: close modal on background click
+      document.getElementById('modal').addEventListener('click', function (e) {
+        if (e.target === this) this.style.display = 'none';
+      });
+    </script>
   </body>
 </html>
