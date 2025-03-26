@@ -15,7 +15,7 @@
         justify-content: center;
         height: 100vh;
         flex-direction: column;
-        font-family: Arial, sans-serif;
+        font-family: 'Georgia', serif;
         text-align: center;
         margin: 0;
       }
@@ -60,18 +60,57 @@
         background: rgba(0, 0, 0, 0.95);
         align-items: center;
         justify-content: center;
-        flex-direction: column;
         z-index: 1000;
       }
-      #modal input, #modal textarea, #modal button.submit, #modal label {
-        margin: 10px;
-        padding: 10px;
-        width: 250px;
+      form {
+        background-color: #111;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        max-width: 350px;
+        width: 90%;
       }
-      #closeModal {
-        margin-top: 20px;
+      form input,
+      form textarea {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        background: #222;
+        color: white;
+        font-size: 0.95rem;
+      }
+      form textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+      form label {
+        font-size: 0.85rem;
+        color: #aaa;
+        display: flex;
+        align-items: center;
+      }
+      form label input {
+        margin-right: 8px;
+        transform: scale(1.2);
+      }
+      form .submit {
+        background: white;
+        color: black;
+        border: none;
+        padding: 10px 25px;
+        font-weight: bold;
+        font-size: 1rem;
+        border-radius: 6px;
         cursor: pointer;
-        color: #ccc;
+        transition: 0.3s;
+      }
+      form .submit:hover {
+        background: #ddd;
       }
       #loader {
         display: none;
@@ -84,6 +123,13 @@
         margin-top: 20px;
         text-align: center;
         max-width: 300px;
+      }
+      #closeModal {
+        margin-top: 30px;
+        cursor: pointer;
+        color: #888;
+        font-size: 0.9rem;
+        text-decoration: underline;
       }
     </style>
   </head>
@@ -103,7 +149,7 @@
         <input type="email" id="email" placeholder="Email Address" required />
         <input type="text" id="organization" placeholder="Organization / Affiliation (optional)" />
         <textarea id="reason" placeholder="Reason for Request" required></textarea>
-        <label><input type="checkbox" id="agree" required /> I agree to the <a href="#" target="_blank">preliminary confidentiality terms</a>.</label><br />
+        <label><input type="checkbox" id="agree" required /> I agree to the <a href="#" target="_blank">preliminary confidentiality terms</a>.</label>
         <button class="submit" type="submit">Submit Request</button>
       </form>
       <div id="loader">Sending your request...</div>
