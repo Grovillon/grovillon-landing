@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head> <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>G</text></svg>">
-
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Grovillon Maison</title>
@@ -30,13 +29,49 @@
       }
       .info {
         position: absolute;
-        bottom: 40px;
+        bottom: 80px;
         font-size: 0.9rem;
         color: #ccc;
       }
       .info a {
         color: #ccc;
         text-decoration: underline;
+      }
+      button {
+        margin-top: 20px;
+        background-color: transparent;
+        border: 1px solid #fff;
+        color: white;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+      button:hover {
+        background-color: white;
+        color: black;
+      }
+      #modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        z-index: 1000;
+      }
+      #modal input, #modal button.submit {
+        margin: 10px;
+        padding: 10px;
+        width: 250px;
+      }
+      #closeModal {
+        margin-top: 20px;
+        cursor: pointer;
+        color: #ccc;
       }
     </style>
   </head>
@@ -47,6 +82,16 @@
       <p>An exclusive, invitation-only project currently in development.</p>
       <p>For inquiries: <a href="mailto:d@grovillon.com">d@grovillon.com</a></p>
       <p>(NDA-protected collaborations only)</p>
+      <button onclick="document.getElementById('modal').style.display='flex'">Request Access</button>
+    </div>
+
+    <div id="modal">
+      <form onsubmit="event.preventDefault(); alert('Thank you — we will contact you soon.'); document.getElementById('modal').style.display='none';">
+        <input type="text" placeholder="Your Name" required />
+        <input type="email" placeholder="Your Email" required />
+        <button class="submit" type="submit">Submit Request</button>
+      </form>
+      <div id="closeModal" onclick="document.getElementById('modal').style.display='none'">Close</div>
     </div>
   </body>
 </html>
