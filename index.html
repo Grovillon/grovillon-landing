@@ -73,6 +73,7 @@
         gap: 15px;
         max-width: 350px;
         width: 90%;
+        position: relative;
       }
       form input,
       form textarea {
@@ -91,12 +92,16 @@
       form label {
         font-size: 0.85rem;
         color: #aaa;
-        display: flex;
-        align-items: center;
+        display: block;
+        text-align: left;
       }
-      form label input {
+      form label input[type="checkbox"] {
         margin-right: 8px;
         transform: scale(1.2);
+      }
+      form label a {
+        color: #3581b1;
+        text-decoration: underline;
       }
       form .submit {
         background: white;
@@ -125,7 +130,9 @@
         max-width: 300px;
       }
       #closeModal {
-        margin-top: 30px;
+        position: absolute;
+        top: 10px;
+        right: 15px;
         cursor: pointer;
         color: #888;
         font-size: 0.9rem;
@@ -145,16 +152,16 @@
 
     <div id="modal">
       <form id="accessForm">
+        <div id="closeModal" onclick="document.getElementById('modal').style.display='none'">Close</div>
         <input type="text" id="name" placeholder="Full Name" required />
         <input type="email" id="email" placeholder="Email Address" required />
         <input type="text" id="organization" placeholder="Organization / Affiliation (optional)" />
         <textarea id="reason" placeholder="Reason for Request" required></textarea>
-        <label><input type="checkbox" id="agree" required /> I agree to the <a href="#" target="_blank">preliminary confidentiality terms</a>.</label>
+        <label><input type="checkbox" id="agree" required />I agree to the <a href="#" target="_blank">preliminary confidentiality terms</a>.</label>
         <button class="submit" type="submit">Submit Request</button>
       </form>
       <div id="loader">Sending your request...</div>
       <div id="confirmation">Your request has been received. Please check your email for the next steps.</div>
-      <div id="closeModal" onclick="document.getElementById('modal').style.display='none'">Close</div>
     </div>
 
     <script>
