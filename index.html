@@ -57,13 +57,13 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.9);
+        background: rgba(0, 0, 0, 0.95);
         align-items: center;
         justify-content: center;
         flex-direction: column;
         z-index: 1000;
       }
-      #modal input, #modal button.submit {
+      #modal input, #modal textarea, #modal button.submit, #modal label {
         margin: 10px;
         padding: 10px;
         width: 250px;
@@ -72,6 +72,18 @@
         margin-top: 20px;
         cursor: pointer;
         color: #ccc;
+      }
+      #loader {
+        display: none;
+        color: white;
+        margin-top: 20px;
+      }
+      #confirmation {
+        display: none;
+        color: lightgreen;
+        margin-top: 20px;
+        text-align: center;
+        max-width: 300px;
       }
     </style>
   </head>
@@ -86,12 +98,52 @@
     </div>
 
     <div id="modal">
-      <form onsubmit="event.preventDefault(); alert('Thank you — we will contact you soon.'); document.getElementById('modal').style.display='none';">
-        <input type="text" placeholder="Your Name" required />
-        <input type="email" placeholder="Your Email" required />
+      <form id="accessForm">
+        <input type="text" id="name" placeholder="Full Name" required />
+        <input type="email" id="email" placeholder="Email Address" required />
+        <input type="text" id="organization" placeholder="Organization / Affiliation (optional)" />
+        <textarea id="reason" placeholder="Reason for Request" required></textarea>
+        <label><input type="checkbox" id="agree" required /> I agree to the <a href="#" target="_blank">preliminary confidentiality terms</a>.</label><br />
         <button class="submit" type="submit">Submit Request</button>
       </form>
+      <div id="loader">Sending your request...</div>
+      <div id="confirmation">Your request has been received. Please check your email for the next steps.</div>
       <div id="closeModal" onclick="document.getElementById('modal').style.display='none'">Close</div>
     </div>
+
+    <script>
+      const form = document.getElementById('accessForm');
+      const loader = document.getElementById('loader');
+      const confirmation = document.getElementById('confirmation');
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        loader.style.display = 'block';
+        confirmation.style.display = 'none';
+
+        const data = {
+          name: document.getElementById('name').value,
+          email: document.getElementById('email').value,
+          organization: document.getElementById('organization').value,
+          reason: document.getElementById('reason').value,
+          agreed: document.getElementById('agree').checked
+        };
+
+        fetch('https://hook.eu2.make.com/la4g179q26aiawzkvoyd929c4xlbdikb', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        })
+        .then(response => {
+          loader.style.display = 'none';
+          confirmation.style.display = 'block';
+          form.reset();
+        })
+        .catch(error => {
+          loader.innerText = 'Something went wrong. Please try again later.';
+        });
+      });
+    </script>
   </body>
 </html>
