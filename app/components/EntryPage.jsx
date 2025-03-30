@@ -1,4 +1,5 @@
-// ✅ File: app/login/page.jsx
+// ✅ File: app/components/EntryPage.jsx (Homepage visible to visitors)
+
 'use client';
 
 import MissionSection from "./MissionSection";
@@ -8,28 +9,17 @@ export default function EntryPage() {
     <>
       {/* 🔥 GLOBAL BACKGROUND LOGO */}
       <div
-  style={{
-    position: "fixed",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    zIndex: 0, // ✅ το αλλάξαμε από -1
-    pointerEvents: "none",
-    width: "100vw",
-    maxWidth: "1000px",
-  }}
+  className="fixed inset-0 z-0 pointer-events-none flex items-center justify-center"
 >
   <img
     src="/images/logo.png"
     alt="Logo"
-    style={{
-      width: "80vw",
-      opacity: 0.08,
-      pointerEvents: "none",
-      filter: "drop-shadow(0 0 60px rgba(255, 255, 255, 0.6)) blur(1.5px)",
-    }}
+    className="w-[80vw] max-w-[1000px] opacity-10 filter drop-shadow-[0_0_60px_rgba(255,255,255,0.6)] blur-[1.5px]"
   />
 </div>
+
+
+
   <main
         style={{
           height: "100vh",
