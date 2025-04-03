@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Grovillon Maison",
+  title: "Grovillon Project",
   description: "An invitation-only initiative for frontier tech with dignity, silence, and purpose.",
   icons: {
     icon: "/favicon.ico",

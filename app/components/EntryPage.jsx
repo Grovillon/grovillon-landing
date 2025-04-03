@@ -38,7 +38,7 @@ export default function EntryPage() {
       >
         {/* MAIN CONTENT */}
         <h1 className="text-5xl md:text-6xl font-[Georgia,serif] tracking-wide mb-10">
-  Grovillon Maison
+  Grovillon Project
 </h1>
 
 <p className="text-base md:text-lg text-gray-400 italic max-w-xl mx-auto ">
