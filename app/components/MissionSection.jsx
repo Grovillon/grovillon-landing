@@ -1,46 +1,35 @@
 'use client';
-import Image from "next/image";
+import Image from 'next/image';
 
-const missions = [
+const sections = [
   {
-    title: "Through Whiteouts and Altitude",
-    text: `The cold doesn’t ask.
-The altitude doesn’t care.
-The system adapts to your needs —  
-before your body even notices them.  
+    image: '/images/mission1.png',
+    alt: 'Ski scenario',
+    text: `We're developing the product that is able to analyze the shifts —
+inside you and around you.
 
-It anticipates, adjusts, and responds in real time,  
-keeping you comfortable  
-so you can keep moving  
-without second thoughts.`,
-    image: "/images/mission1.png",
-    alt: "Mountaineer in high-altitude expedition",
+Micro-signals from the body. Subtle changes in the environment.
+It feels them before you feel them. It prepares before you need it.`,
   },
   {
-    title: "Recon unit. Gear active.",
-    text: `In places where comfort is rare ,
-your tools better do.
-Nothing extra. Nothing missing.
+    image: '/images/mission2.png',
+    alt: 'Military or recovery scenario',
+    text: `In places where every second counts, comfort is not a luxury — it’s a tool.
 
-We simplify.
-We filter.
-We stabilize your comfort
-so you can act.`,
-    image: "/images/mission2.png",
-    alt: "Field unit in unknown terrain",
+The system doesn’t wait for signals.
+It anticipates them.
+It stabilizes before you even ask.
+
+A second skin that carries certainty when your body can’t.`,
   },
   {
-    title: "EVA scenario. System integrated.",
-    text: `When you're alone in orbit,
-everything is distraction.
-Even the sound of your breath.
+    image: '/images/mission3.png',
+    alt: 'Astronaut in EVA',
+    text: `So when the change arrives — in the cold, in the heat, in motion, at rest,
+in a suit, in recovery, on ice, or even in orbit —
+your system’s already in place.
 
-We build for that silence —
-so you don’t carry uncertainty.
-You carry function, discretion,
-and trust in something that won’t interrupt you.`,
-    image: "/images/mission3.png",
-    alt: "Astronaut in EVA mission",
+And you're already in control.`,
   },
 ];
 
@@ -48,7 +37,7 @@ export default function MissionSection() {
   return (
     <section className="py-20 bg-black/50 text-white px-6">
       <div className="space-y-24 max-w-6xl mx-auto">
-        {missions.map((mission, index) => (
+        {sections.map((section, index) => (
           <div
             key={index}
             className={`flex flex-col md:flex-row ${
@@ -58,8 +47,8 @@ export default function MissionSection() {
             {/* Εικόνα */}
             <div className="w-full md:w-1/2 rounded-xl overflow-hidden shadow-lg">
               <Image
-                src={mission.image}
-                alt={mission.alt}
+                src={section.image}
+                alt={section.alt}
                 width={800}
                 height={600}
                 className="object-cover w-full h-full rounded-xl"
@@ -68,28 +57,29 @@ export default function MissionSection() {
 
             {/* Κείμενο */}
             <div className="w-full md:w-1/2 text-center md:text-left space-y-4">
-              <h3 className="text-xl md:text-2xl font-semibold italic">{mission.title}</h3>
-              {mission.text.split('\n').map((line, i) => (
-                <p key={i} className="text-gray-300 text-base md:text-lg font-light">{line.trim()}</p>
+              {section.text.split('\n').map((line, i) => (
+                <p key={i} className="text-gray-300 text-base md:text-lg font-light">
+                  {line.trim()}
+                </p>
               ))}
             </div>
           </div>
         ))}
       </div>
 
-      {/* CTA με Login + Request */}
+      {/* CTA */}
       <div className="text-center max-w-2xl mx-auto mt-24 space-y-4">
-      <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300">
-      If you test. If you build.
-If you contribute before a product even exists.
-Then this space is yours.
-Request access.
-</p>
-<p className="text-sm italic text-gray-400 mt-2 mb-2">
-  Access is not granted. It is recognized.
-</p>
+        <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300">
+          If you test. If you build.
+          If you contribute before a product even exists.
+          Then this space is yours.  
+          Request access.
+        </p>
+        <p className="text-sm italic text-gray-400 mt-2 mb-2">
+          Access is not granted. It is recognized.
+        </p>
 
-<div className="flex justify-center gap-4 mt-1">
+        <div className="flex justify-center gap-4 mt-1">
           <button
             onClick={() => window.location.href = '/login'}
             className="bg-transparent text-white font-[Georgia,serif] text-sm px-6 py-2 rounded-md border border-white hover:bg-white/10 transition"
