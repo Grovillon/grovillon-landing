@@ -10,15 +10,11 @@ export async function POST(req) {
     }
 
     const whitelist = await getWhitelistEmails();
-
-    const allowed = whitelist.some(user => user.email === email.toLowerCase());
+    const allowed = whitelist.includes(email.toLowerCase());
 
     return NextResponse.json({ allowed });
   } catch (error) {
-    console.error('Server error in check-whitelist:', error); // 💥 Δείξε το ακριβές error
-    return NextResponse.json(
-      { allowed: false, error: error.message || 'Unknown server error' },
-      { status: 500 }
-    );
+    console.error('Error in check-whitelist API:', error);
+    return NextResponse.json({ allowed: false, error: 'Server error' }, { status: 500 });
   }
 }
