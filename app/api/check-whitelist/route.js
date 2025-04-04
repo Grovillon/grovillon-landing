@@ -4,22 +4,21 @@ import { getWhitelistEmails } from '@/lib/keys/getWhitelistEmails';
 export async function POST(req) {
   try {
     const { email } = await req.json();
-    console.log('✅ Received email:', email);
 
     if (!email) {
-      console.warn('⚠️ Missing email in request');
       return NextResponse.json({ allowed: false, error: 'Missing email' });
     }
 
     const whitelist = await getWhitelistEmails();
-    console.log('📋 Whitelist loaded:', whitelist);
 
     const allowed = whitelist.some(user => user.email === email.toLowerCase());
-    console.log('✅ Email allowed:', allowed);
 
     return NextResponse.json({ allowed });
   } catch (error) {
-    console.error('❌ Error in check-whitelist API:', error.message, error.stack);
-    return NextResponse.json({ allowed: false, error: 'Server error' }, { status: 500 });
+    console.error('Server error in check-whitelist:', error); // 💥 Δείξε το ακριβές error
+    return NextResponse.json(
+      { allowed: false, error: error.message || 'Unknown server error' },
+      { status: 500 }
+    );
   }
 }
