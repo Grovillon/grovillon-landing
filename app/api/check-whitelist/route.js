@@ -10,6 +10,7 @@ export async function POST(req) {
     }
 
     const whitelist = await getWhitelistData();
+    console.log('Whitelist loaded:', whitelist); // 👈 Βάλαμε debug για να δούμε τι φορτώνει
 
     const isAllowed = whitelist.some(
       (user) =>
