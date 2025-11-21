@@ -33,7 +33,7 @@ And you're already in control.`,
   },
 ];
 
-// 👉 Αν το βάλεις true, επανεμφανίζονται τα κουμπιά
+// Αν το βάλεις true, επανεμφανίζονται τα κουμπιά
 const SHOW_CTA = false;
 
 export default function MissionSection() {
@@ -61,7 +61,10 @@ export default function MissionSection() {
             {/* Κείμενο */}
             <div className="w-full md:w-1/2 text-center md:text-left space-y-4">
               {section.text.split('\n').map((line, i) => (
-                <p key={i} className="text-gray-300 text-base md:text-lg font-light">
+                <p
+                  key={i}
+                  className="text-gray-300 text-base md:text-lg font-light"
+                >
                   {line.trim()}
                 </p>
               ))}
@@ -71,46 +74,46 @@ export default function MissionSection() {
       </div>
 
       {/* CTA text */}
-<div className="text-center max-w-2xl mx-auto mt-24 space-y-4">
-  <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
-    If you test. If you build.
-    If you can turn a concept into a working system long before it looks like a product.
-  </p>
+      <div className="text-center max-w-2xl mx-auto mt-24 space-y-4">
+        <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
+          If you test. If you build.
+          If you can turn a concept into a working system long before it looks
+          like a product.
+        </p>
 
-  <div className="text-sm md:text-base text-gray-300 space-y-1 mt-4">
-    <p>We are looking to connect with:</p>
-    <p>• Embedded systems engineers</p>
-    <p>• Microcontroller and firmware developers</p>
-    <p>• PCB designers (flex and rigid)</p>
-    <p>• Power management engineers</p>
-    <p>• Sensor integration engineers</p>
-  </div>
+        <div className="text-sm md:text-base text-gray-300 space-y-1 mt-4">
+          <p>We are looking to connect with:</p>
+          <p>• Embedded systems engineers</p>
+          <p>• Microcontroller and firmware developers</p>
+          <p>• PCB designers (flex and rigid)</p>
+          <p>• Power management engineers</p>
+          <p>• Sensor integration engineers</p>
+        </div>
 
-  <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 mt-6">
-    If this is your craft, you can reach us directly at <span className="underline">d@grovillon.com</span>.
-  </p>
-</div>
-
-
-        {/* 👉 Τα κουμπιά κρύβονται όσο το SHOW_CTA είναι false */}
-        {SHOW_CTA && (
-          <div className="flex justify-center gap-4 mt-1">
-            <button
-              onClick={() => window.location.href = '/login'}
-              className="bg-transparent text-white font-[Georgia,serif] text-sm px-6 py-2 rounded-md border border-white hover:bg-white/10 transition"
-            >
-              Login
-            </button>
-
-            <button
-              onClick={() => window.location.href = '/request'}
-              className="bg-transparent text-white font-[Georgia,serif] text-sm px-6 py-2 rounded-md border border-white hover:bg-white/10 transition"
-            >
-              Request Access
-            </button>
-          </div>
-        )}
+        <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 mt-6">
+          If this is your craft, you can reach us directly at{' '}
+          <span className="underline">d@grovillon.com</span>.
+        </p>
       </div>
+
+      {/* Τα κουμπιά κρύβονται όσο το SHOW_CTA είναι false */}
+      {SHOW_CTA && (
+        <div className="flex justify-center gap-4 mt-6">
+          <button
+            onClick={() => (window.location.href = '/login')}
+            className="bg-transparent text-white font-[Georgia,serif] text-sm px-6 py-2 rounded-md border border-white hover:bg-white/10 transition"
+          >
+            Login
+          </button>
+
+          <button
+            onClick={() => (window.location.href = '/request')}
+            className="bg-transparent text-white font-[Georgia,serif] text-sm px-6 py-2 rounded-md border border-white hover:bg-white/10 transition"
+          >
+            Request Access
+          </button>
+        </div>
+      )}
     </section>
   );
 }
