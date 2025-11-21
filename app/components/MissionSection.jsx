@@ -33,6 +33,9 @@ And you're already in control.`,
   },
 ];
 
+// 👉 Αν το βάλεις true, επανεμφανίζονται τα κουμπιά
+const SHOW_CTA = false;
+
 export default function MissionSection() {
   return (
     <section className="py-20 bg-black/50 text-white px-6">
@@ -67,7 +70,7 @@ export default function MissionSection() {
         ))}
       </div>
 
-      {/* CTA */}
+      {/* CTA text */}
       <div className="text-center max-w-2xl mx-auto mt-24 space-y-4">
         <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300">
           If you test. If you build.
@@ -75,25 +78,29 @@ export default function MissionSection() {
           Then this space is yours.  
           Request access.
         </p>
+
         <p className="text-sm italic text-gray-400 mt-2 mb-2">
           Access is not granted. It is recognized.
         </p>
 
-        <div className="flex justify-center gap-4 mt-1">
-          <button
-            onClick={() => window.location.href = '/login'}
-            className="bg-transparent text-white font-[Georgia,serif] text-sm px-6 py-2 rounded-md border border-white hover:bg-white/10 transition"
-          >
-            Login
-          </button>
+        {/* 👉 Τα κουμπιά κρύβονται όσο το SHOW_CTA είναι false */}
+        {SHOW_CTA && (
+          <div className="flex justify-center gap-4 mt-1">
+            <button
+              onClick={() => window.location.href = '/login'}
+              className="bg-transparent text-white font-[Georgia,serif] text-sm px-6 py-2 rounded-md border border-white hover:bg-white/10 transition"
+            >
+              Login
+            </button>
 
-          <button
-            onClick={() => window.location.href = '/request'}
-            className="bg-transparent text-white font-[Georgia,serif] text-sm px-6 py-2 rounded-md border border-white hover:bg-white/10 transition"
-          >
-            Request Access
-          </button>
-        </div>
+            <button
+              onClick={() => window.location.href = '/request'}
+              className="bg-transparent text-white font-[Georgia,serif] text-sm px-6 py-2 rounded-md border border-white hover:bg-white/10 transition"
+            >
+              Request Access
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
