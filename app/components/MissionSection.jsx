@@ -71,17 +71,26 @@ export default function MissionSection() {
       </div>
 
       {/* CTA text */}
-      <div className="text-center max-w-2xl mx-auto mt-24 space-y-4">
-        <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300">
-          If you test. If you build.
-          If you contribute before a product even exists.
-          Then this space is yours.  
-          Request access.
-        </p>
+<div className="text-center max-w-2xl mx-auto mt-24 space-y-4">
+  <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
+    If you test. If you build.
+    If you can turn a concept into a working system long before it looks like a product.
+  </p>
 
-        <p className="text-sm italic text-gray-400 mt-2 mb-2">
-          Access is not granted. It is recognized.
-        </p>
+  <div className="text-sm md:text-base text-gray-300 space-y-1 mt-4">
+    <p>We are looking to connect with:</p>
+    <p>• Embedded systems engineers</p>
+    <p>• Microcontroller and firmware developers</p>
+    <p>• PCB designers (flex and rigid)</p>
+    <p>• Power management engineers</p>
+    <p>• Sensor integration engineers</p>
+  </div>
+
+  <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 mt-6">
+    If this is your craft, you can reach us directly at <span className="underline">d@grovillon.com</span>.
+  </p>
+</div>
+
 
         {/* 👉 Τα κουμπιά κρύβονται όσο το SHOW_CTA είναι false */}
         {SHOW_CTA && (
