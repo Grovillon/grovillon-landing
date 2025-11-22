@@ -5,8 +5,8 @@ const sections = [
   {
     image: '/images/mission1.png',
     alt: 'Ski scenario',
-    text: `We're developing the product that is able to analyze the shifts —
-inside you and around you.
+    text: `We're developing the product that is able to analyze the shifts 
+inside and around you.
 
 Micro-signals from the body. Subtle changes in the environment.
 It feels them before you feel them. It prepares before you need it.`,
@@ -14,7 +14,7 @@ It feels them before you feel them. It prepares before you need it.`,
   {
     image: '/images/mission2.png',
     alt: 'Military or recovery scenario',
-    text: `In places where every second counts, comfort is not a luxury — it’s a tool.
+    text: `In places where every second counts, comfort is not a luxury, it’s a tool.
 
 The system doesn’t wait for signals.
 It anticipates them.
@@ -25,8 +25,8 @@ A second skin that carries certainty when your body can’t.`,
   {
     image: '/images/mission3.png',
     alt: 'Astronaut in EVA',
-    text: `So when the change arrives — in the cold, in the heat, in motion, at rest,
-in a suit, in recovery, on ice, or even in orbit —
+    text: `So when the change arrives, in the cold, in the heat, in motion, at rest,
+in a suit, in recovery, on ice, or even in orbit,
 your system’s already in place.
 
 And you're already in control.`,
@@ -83,6 +83,7 @@ export default function MissionSection() {
 
         <div className="text-sm md:text-base text-gray-300 space-y-1 mt-4">
           <p>We are looking to connect with:</p>
+          
           <p>• AI engineers and data scientists</p>
           <p>• Embedded systems and PCB engineers</p>
           <p>• Industrial designers with experience in compact hardware housings</p>
