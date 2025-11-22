@@ -83,11 +83,9 @@ export default function MissionSection() {
 
         <div className="text-sm md:text-base text-gray-300 space-y-1 mt-4">
           <p>We are looking to connect with:</p>
-          <p>• Embedded systems engineers</p>
-          <p>• Microcontroller and firmware developers</p>
-          <p>• PCB designers (flex and rigid)</p>
-          <p>• Power management engineers</p>
-          <p>• Sensor integration engineers</p>
+          <p>• AI engineers and data scientists</p>
+          <p>• Embedded systems and PCB engineers</p>
+          <p>• Industrial designers with experience in compact hardware housings</p>
         </div>
 
         <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 mt-6">
