@@ -5,22 +5,19 @@ const sections = [
   {
     image: '/images/mission1.png',
     alt: 'Ski scenario',
-    text: `We're developing the product that is able to analyze the shifts 
-inside and around you.
-
-Micro-signals from the body. Subtle changes in the environment.
-It feels them before you feel them. It prepares before you need it.`,
+    text: `We’re developing a system that reads the shifts inside you and around you.
+Microsignals from the body, subtle changes in the environment.
+It feels them before you notice them.
+It prepares before you even know you need it.`,
   },
   {
     image: '/images/mission2.png',
     alt: 'Military or recovery scenario',
     text: `In places where every second counts, comfort is not a luxury, it’s a tool.
-
-The system doesn’t wait for signals.
-It anticipates them.
+The system doesn’t wait for discomfort to appear.
+It anticipates it.
 It stabilizes before you even ask.
-
-A second skin that carries certainty when your body can’t.`,
+A second skin that gives you certainty when your body can’t.`,
   },
   {
     image: '/images/mission3.png',
@@ -76,18 +73,13 @@ export default function MissionSection() {
       {/* CTA text */}
       <div className="text-center max-w-2xl mx-auto mt-24 space-y-4">
         <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
-          If you test. If you build.
-          If you can turn a concept into a working system long before it looks
-          like a product.
+          If you build. If you test.
+If you can turn a raw idea into a working system before it even has a name.
+We’re looking to connect with people like you.
+AI engineers, embedded architects, designers who know how to make hardware disappear into form.
         </p>
 
-        <div className="text-sm md:text-base text-gray-300 space-y-1 mt-4">
-          <p>We are looking to connect with:</p>
-          
-          <p>• AI engineers and data scientists</p>
-          <p>• Embedded systems and PCB engineers</p>
-          <p>• Industrial designers with experience in compact hardware housings</p>
-        </div>
+      
 
         <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 mt-6">
           If this is your craft, you can reach us directly at{' '}

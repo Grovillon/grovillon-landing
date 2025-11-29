@@ -74,7 +74,7 @@ Silent force, lasting influence.
     textAlign: "center"
   }}
 >
-  An invitation-based initiative exploring the frontier between human and technology with dignity, silence, and purpose.
+  An invitation based initiative exploring the frontier between the human body and technology with dignity, silence and purpose.
 </p>
 
       </section>
