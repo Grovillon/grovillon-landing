@@ -42,7 +42,7 @@ export default function EntryPage() {
 </h1>
 
 <p className="text-base md:text-lg text-gray-400 italic max-w-xl mx-auto ">
-Silent force, lasting influence.
+Stealth tech, quietly present.
   </p>
 
       </main>
