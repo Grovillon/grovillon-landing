@@ -74,8 +74,11 @@ export default function MissionSection() {
       <div className="text-center max-w-2xl mx-auto mt-24 space-y-4">
         <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
           If you build. If you test.
-If you can turn a raw idea into a working system before it even has a name.
-We’re looking to connect with people like you.
+If you can turn a raw idea into a working system before it even has a name,
+we’re looking to connect with people like you.
+</p>
+
+<p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
 AI engineers, embedded architects, designers who know how to make hardware disappear into form.
         </p>
 
