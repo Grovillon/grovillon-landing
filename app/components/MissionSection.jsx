@@ -6,7 +6,7 @@ const sections = [
     image: '/images/mission1.png',
     alt: 'Ski scenario',
     text: `We’re developing a system that reads the shifts inside you and around you.
-Microsignals from the body, subtle changes in the environment.
+Micro-signals from the body, subtle changes in the environment.
 It feels them before you notice them.
 It prepares before you even know you need it.`,
   },
