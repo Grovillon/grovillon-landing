@@ -37,7 +37,7 @@ export default function EntryPage() {
         }}
       >
         {/* MAIN CONTENT */}
-        <h1 className="text-5xl md:text-6xl font-[Georgia,serif] tracking-wide mb-10">
+<h1 className="text-6xl md:text-7xl font-[family-name:var(--font-title)] font-bold tracking-widest mb-10">
   Grovillon Project
 </h1>
 
