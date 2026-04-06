@@ -4,53 +4,36 @@ import { useEffect, useRef, useState } from 'react';
 
 const sections = [
   {
-    image: '/images/mission1.png',
-    alt: 'Ski scenario',
-    text: `We're developing a system that reads the shifts inside you and around you.
-Micro-signals from the body, subtle changes in the environment.
-It feels them before you notice them.
-It prepares before you even know you need it.`,
+    image: '/images/shirt.png',
+    alt: 'The suit',
+    text: `A form of support designed to stay close to the body.`,
   },
   {
-    image: '/images/mission2.png',
-    alt: 'Military or recovery scenario',
-    text: `In places where every second counts, comfort is not a luxury, it's a tool.
-The system doesn't wait for discomfort to appear.
-It anticipates it.
-It stabilizes before you even ask.
-A second skin that gives you certainty when your body can't.`,
+    image: '/images/6 layers textile.png',
+    alt: 'The layers',
+    text: `Its complexity is not visible.
+By design.
+Silently present. Close to the body.`,
   },
   {
-    image: '/images/mission3.png',
-    alt: 'Astronaut in EVA',
-    text: `So when the change arrives, in the cold, in the heat, in motion, at rest,
-in a suit, in recovery, on ice, or even in orbit,
-your system's already in place.
-
-And you're already in control.`,
+    image: '/images/environment.png',
+    alt: 'The environment',
+    text: `Discreet in presence. Serious in purpose.
+Not distracting. Not asking to be managed.
+Built to support physiological stability when it matters most.`,
   },
 ];
 
 const SHOW_CTA = false;
 
-const newText = [
-  "There is a moment, just before something begins to slip, when the body is already under pressure.",
-  "That is the space Grovillon is being shaped for.",
-  "A form of support designed to stay close to the body.",
-  "Discreet in presence. Serious in purpose.",
-  "Not loud. Not distracting. Not asking to be managed.",
-  "Built for critical and high demand conditions, it is shaped around one idea: that support should arrive quietly, before strain becomes something larger.",
-  "The person wearing it is not meant to think about it.",
-  "They move. They focus. They continue.",
-  "What matters is not spectacle.",
-  "What matters is steadiness.",
-  "Its complexity is not visible.",
-  "By design.",
-  "Silently present. Close to the body.",
-  "Built to support physiological stability when it matters most.",
+const typewriterText = [
+  "Built for situations where the body is asked to carry more than usual.",
+  "",
+  "From recovery and thermal stress to demanding operational environments, the focus remains the same:",
+  "quiet support, close to the body, when stability matters most.",
 ];
 
-const fullText = newText.join('\n');
+const fullText = typewriterText.join('\n');
 
 function TypewriterText() {
   const [displayed, setDisplayed] = useState('');
@@ -121,25 +104,13 @@ export default function MissionSection() {
         ))}
       </div>
 
-      {/* 3 εικόνες + typewriter κείμενο */}
+      {/* Typewriter κείμενο */}
       <div className="max-w-4xl mx-auto mt-48 space-y-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="rounded-xl overflow-hidden shadow-lg h-60 md:h-72">
-            <Image src="/images/shirt.png" alt="The suit" width={580} height={430} className="object-cover w-full h-full rounded-xl" />
-          </div>
-          <div className="rounded-xl overflow-hidden shadow-lg h-60 md:h-72">
-            <Image src="/images/6 layers textile.png" alt="The layers" width={580} height={430} className="object-cover w-full h-full rounded-xl" />
-          </div>
-          <div className="rounded-xl overflow-hidden shadow-lg h-60 md:h-72">
-            <Image src="/images/environment.png" alt="The environment" width={580} height={430} className="object-cover w-full h-full rounded-xl" />
-          </div>
-        </div>
-
         <TypewriterText />
       </div>
 
       {/* Διαχωριστική γραμμή + αγγελία */}
-<div className="max-w-2xl mx-auto mt-80">
+      <div className="max-w-2xl mx-auto mt-80">
         <div className="border-t-[3px] border-white/20 mb-16" />
         <div className="rounded-2xl px-10 py-12 bg-white/[0.06] backdrop-blur-sm shadow-[0_0_60px_rgba(255,255,255,0.04)]">
           <div className="text-center space-y-2">
