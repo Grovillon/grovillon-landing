@@ -77,7 +77,11 @@ export default function MissionSection() {
           </p>
         <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300">
           - Senior Embedded Systems & Firmware Engineer
+          </p>
+        <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300">
           - Control Systems & Algorithms Lead
+          </p>
+        <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300">
           - Freelance / B2B Contractor for Mobile App Development.
         </p>
         <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300">
