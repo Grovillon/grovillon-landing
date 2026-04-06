@@ -73,9 +73,10 @@ export default function MissionSection() {
       {/* CTA text */}
       <div className="text-center max-w-2xl mx-auto mt-32 space-y-4">
         <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
-          We're looking to connect with a Senior Embedded Systems & Firmware Engineer,
-          a Control Systems & Algorithms Lead,
-          and a Freelance / B2B Contractor for Mobile App Development.
+          We're looking to connect with:
+          - Senior Embedded Systems & Firmware Engineer
+          - Control Systems & Algorithms Lead
+          - Freelance / B2B Contractor for Mobile App Development.
         </p>
         <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300">
           We'd love to hear from you. Write to us at{' '}
