@@ -71,18 +71,46 @@ export default function MissionSection() {
       </div>
 
       {/* CTA text */}
-      <div className="text-center max-w-2xl mx-auto mt-24 space-y-4">
-        <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
-          If you build. If you test.
-If you can turn a raw idea into a working system before it even has a name,
-we’re looking to connect with people like you.
-</p>
+      <div className="text-left max-w-2xl mx-auto mt-24 space-y-8">
 
-<p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
-AI engineers, embedded architects, designers who know how to make hardware disappear into form.
+        <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-400 leading-relaxed">
+          2 core engineering roles for the Grovillon PoC:
         </p>
 
-      
+        {/* Role 1 */}
+        <div className="space-y-2">
+          <p className="text-sm md:text-base font-[Georgia,serif] text-white font-semibold">
+            1) Senior Embedded Systems & Firmware Engineer
+          </p>
+          <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
+            C/C++ on MCUs, RTOS or bare metal, sensor interfaces (I2C/SPI), actuator control (PWM), BLE telemetry.
+            Must be strong in power management and fault handling (deep sleep, watchdogs, safe recovery). Safety minded.
+          </p>
+        </div>
+
+        {/* Role 2 */}
+        <div className="space-y-2">
+          <p className="text-sm md:text-base font-[Georgia,serif] text-white font-semibold">
+            2) Control Systems & Algorithms Lead (PRI)
+          </p>
+          <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
+            Control theory and state machines (closed loop control, constraints, degraded modes), signal processing and sensor fusion (filtering, calibration, robustness).
+            Able to turn safety logic and predictive decision making into efficient edge code.
+          </p>
+        </div>
+
+        {/* Optional */}
+        <div className="space-y-2">
+          <p className="text-sm md:text-base font-[Georgia,serif] text-gray-400 italic">
+            Optional (contractor, part time):
+          </p>
+          <p className="text-sm md:text-base font-[Georgia,serif] text-white font-semibold">
+            3) Mobile App Developer (Telemetry Dashboard)
+          </p>
+          <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
+            Simple BLE app (Flutter/React Native) to view real time data, logs, basic controls for testing.
+          </p>
+        </div>
 
         <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 mt-6">
           If this is your craft, you can reach us directly at{' '}
