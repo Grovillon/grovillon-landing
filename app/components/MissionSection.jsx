@@ -74,6 +74,8 @@ export default function MissionSection() {
       <div className="text-center max-w-2xl mx-auto mt-32 space-y-4">
         <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300 leading-relaxed">
           We're looking to connect with:
+          </p>
+        <p className="text-sm md:text-base font-[Georgia,serif] italic text-gray-300">
           - Senior Embedded Systems & Firmware Engineer
           - Control Systems & Algorithms Lead
           - Freelance / B2B Contractor for Mobile App Development.
