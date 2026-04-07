@@ -14,7 +14,7 @@ export default function EntryPage() {
   <img
     src="/images/logo.png"
     alt="Logo"
-    className="w-[80vw] max-w-[1000px] opacity-10 filter drop-shadow-[0_0_60px_rgba(255,255,255,0.6)] blur-[1.5px]"
+className="w-[80vw] max-w-[1000px] opacity-10 filter drop-shadow-[0_0_120px_rgba(255,255,255,1)] blur-[1.5px]"
   />
 </div>
 
