@@ -21,7 +21,7 @@ Close to the body.`,
   {
     image: '/images/environment.png',
     alt: 'The environment',
-    text: `Built for uncontrolled conditions.
+    text: `Built for high-demand conditions.
 Supporting physiological stability when it matters most.`,
   },
 ];
