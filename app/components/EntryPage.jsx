@@ -74,7 +74,7 @@ Stealth tech, quietly present.
     textAlign: "center"
   }}
 >
-  An invitation based initiative exploring the frontier between the human body and technology with dignity, silence and purpose.
+  A system designed to support physiological stability in critical and high-demand conditions.
 </p>
 
       </section>
