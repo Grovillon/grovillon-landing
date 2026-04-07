@@ -25,7 +25,7 @@ const oswald = Oswald({
 
 export const metadata = {
   title: "Grovillon Project",
-  description: "A system designed to support physiological stability in critical and high demand conditions.",
+  description: "A system designed to support physiological stability in critical and high-demand conditions.",
   icons: {
     icon: "/favicon.ico",
   },
