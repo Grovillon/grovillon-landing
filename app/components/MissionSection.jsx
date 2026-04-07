@@ -6,17 +6,16 @@ const sections = [
   {
     image: '/images/shirt.png',
     alt: 'The suit',
-    text: `It stays close to the body.
-Not as a layer.
-As a second skin.`,
+    text: `Worn, not carried.
+Designed for the moment
+conditions stop being ideal.`,
   },
   {
     image: '/images/6 layers textile.png',
     alt: 'The layers',
     text: `Its complexity is not visible.
 By design.
-Silently present.
-Close to the body.`,
+Silently present.`,
   },
   {
     image: '/images/environment.png',
