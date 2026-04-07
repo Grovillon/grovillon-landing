@@ -6,21 +6,23 @@ const sections = [
   {
     image: '/images/shirt.png',
     alt: 'The suit',
-    text: `A form of support designed to stay close to the body.`,
+    text: `It stays close to the body.
+Not as a layer.
+As a second skin.`,
   },
   {
     image: '/images/6 layers textile.png',
     alt: 'The layers',
     text: `Its complexity is not visible.
 By design.
-Silently present. Close to the body.`,
+Silently present.
+Close to the body.`,
   },
   {
     image: '/images/environment.png',
     alt: 'The environment',
-    text: `Discreet in presence. Serious in purpose.
-Not distracting. Not asking to be managed.
-Built to support physiological stability when it matters most.`,
+    text: `Built for uncontrolled conditions.
+Supporting physiological stability when it matters most.`,
   },
 ];
 
@@ -28,9 +30,12 @@ const SHOW_CTA = false;
 
 const typewriterText = [
   "Built for situations where the body is asked to carry more than usual.",
-  "",
-  "From recovery and thermal stress to demanding operational environments, the focus remains the same:",
-  "quiet support, close to the body, when stability matters most.",
+  "From recovery to thermal stress,",
+  "to demanding operational environments,",
+  "the focus remains the same:",
+  "quiet support.",
+  "Close to the body.",
+  "When stability matters most.",
 ];
 
 const fullText = typewriterText.join('\n');
@@ -75,7 +80,7 @@ function TypewriterText() {
 
 export default function MissionSection() {
   return (
-    <section className="py-20 bg-black/50 text-white px-6">
+<section className="py-20 text-white px-6" style={{background: 'rgba(0,0,0,0.5)'}}>
       <div className="space-y-24 max-w-6xl mx-auto">
         {sections.map((section, index) => (
           <div
@@ -84,16 +89,18 @@ export default function MissionSection() {
               index % 2 !== 0 ? 'md:flex-row-reverse' : ''
             } items-center gap-10`}
           >
-            <div className="w-full md:w-1/2 rounded-xl overflow-hidden shadow-lg">
+<div className={`w-full ${index === 0 ? 'md:w-2/3' : 'md:w-1/2'} rounded-xl overflow-hidden shadow-lg ${index < 2 ? 'relative z-10' : ''}`}
+              style={index < 2 ? {isolation: 'isolate'} : {}}>
               <Image
                 src={section.image}
                 alt={section.alt}
                 width={800}
                 height={600}
-                className="object-cover w-full h-full rounded-xl"
+                className={`object-cover w-full h-full rounded-xl ${index < 2 ? 'mix-blend-normal' : ''}`}
+                style={index < 2 ? {opacity: 1, mixBlendMode: 'normal'} : {}}
               />
             </div>
-            <div className="w-full md:w-1/2 text-center md:text-left space-y-4">
+<div className={`w-full md:w-1/2 space-y-4 text-center ${index === 1 ? 'md:text-right' : 'md:text-left'}`}>
               {section.text.split('\n').map((line, i) => (
                 <p key={i} className="text-gray-300 text-base md:text-lg font-light">
                   {line.trim()}
