@@ -1,22 +1,379 @@
 @import "tailwindcss";
 
-/* ✅ Force dark theme globally */
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --ground: #0a0b0c;
+  --ink: #ecebe7;
+  --ink-2: #b3b4b0;
+  --ink-3: #8e9092;
+  --lamp: #f0e6d6;
+  --line: rgb(236 235 231 / 0.12);
+  --line-strong: rgb(236 235 231 / 0.26);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --gutter: clamp(1.25rem, 5vw, 4.5rem);
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ground: var(--ground);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-lamp: var(--lamp);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ❌ Removed prefers-color-scheme logic to avoid switching to light mode */
+@layer base {
+  html {
+    background: var(--ground) url("/images/grain.png") repeat;
+    background-size: 128px 128px;
+    color: var(--ink);
+    -webkit-text-size-adjust: 100%;
+    scrollbar-color: #2b2d2f var(--ground);
+    scrollbar-width: thin;
+  }
 
-html, body {
-  background-color: var(--background) !important;
-  color: var(--foreground) !important;
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    min-height: 100vh;
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    letter-spacing: 0.004em;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: rgb(240 230 214 / 0.88);
+    color: var(--ground);
+  }
+
+  :focus-visible {
+    outline: 1.5px solid var(--lamp);
+    outline-offset: 4px;
+    border-radius: 1px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+}
+
+@layer components {
+  .wrap {
+    width: 100%;
+    max-width: 84rem;
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* Type roles: one family, Archivo; width does the expressive work. */
+  .t-display {
+    font-stretch: 125%;
+    font-weight: 300;
+    font-size: clamp(2.375rem, 8.1vw, 6rem);
+    line-height: 0.95;
+    letter-spacing: 0.012em;
+    text-transform: uppercase;
+  }
+
+  .t-statement {
+    font-stretch: 112%;
+    font-weight: 300;
+    font-size: clamp(1.875rem, 3.9vw, 3.5rem);
+    line-height: 1.06;
+    letter-spacing: -0.006em;
+  }
+
+  .t-lead {
+    font-size: clamp(1.1875rem, 1.55vw, 1.4375rem);
+    font-weight: 400;
+    line-height: 1.42;
+    color: var(--ink);
+  }
+
+  .t-body {
+    font-size: 1.0625rem;
+    font-weight: 380;
+    line-height: 1.65;
+    color: var(--ink-2);
+  }
+
+  .t-label {
+    font-stretch: 112%;
+    font-weight: 500;
+    font-size: 0.8125rem;
+    line-height: 1.2;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .t-passage {
+    font-size: clamp(1.375rem, 2.35vw, 2.125rem);
+    font-weight: 330;
+    line-height: 1.32;
+    letter-spacing: -0.004em;
+    color: var(--ink);
+  }
+
+  .t-role {
+    font-stretch: 106%;
+    font-weight: 400;
+    font-size: clamp(1.125rem, 1.85vw, 1.5rem);
+    line-height: 1.3;
+  }
+
+  /* Controls */
+  .lo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3rem;
+    padding: 0 1.25rem 0 1.375rem;
+    background-color: var(--ink);
+    color: var(--ground);
+    font-stretch: 112%;
+    font-weight: 560;
+    font-size: 0.9375rem;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    transition:
+      background-color 200ms ease,
+      transform 160ms var(--ease-out);
+  }
+
+  .lo-btn:active {
+    transform: scale(0.97);
+  }
+
+  .lo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 3rem;
+    color: var(--ink-2);
+    font-stretch: 112%;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition:
+      color 200ms ease,
+      transform 160ms var(--ease-out);
+  }
+
+  .lo-link:active {
+    transform: scale(0.97);
+  }
+
+  .lo-arrow {
+    flex: none;
+    transition: transform 200ms var(--ease-out);
+  }
+
+  .lo-inline {
+    color: var(--ink);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.28em;
+    text-decoration-color: var(--line-strong);
+    transition: text-decoration-color 200ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .lo-btn:hover {
+      background-color: #ffffff;
+    }
+
+    .lo-link:hover {
+      color: var(--ink);
+    }
+
+    .lo-btn:hover .lo-arrow,
+    .lo-link:hover .lo-arrow,
+    .role-row:hover .lo-arrow {
+      transform: translateX(4px);
+    }
+
+    .lo-link:hover .lo-arrow[data-direction="down"] {
+      transform: translateY(3px);
+    }
+
+    .lo-inline:hover {
+      text-decoration-color: var(--ink);
+    }
+
+    .role-row:hover {
+      color: var(--ink);
+      background-color: rgb(236 235 231 / 0.035);
+    }
+
+    .nav-link:hover {
+      color: var(--ink);
+    }
+  }
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--ink-2);
+    text-decoration: none;
+    transition: color 200ms ease;
+  }
+
+  /* Hero: the relief is the ground the page stands on. */
+  .hero {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    min-height: max(36rem, 82svh);
+  }
+
+  .hero-field {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+  }
+
+  /* The same surface returns under a low, grazing lamp that travels with the reader. */
+  .field-band {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .band-field {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  }
+
+  /* A canvas is shown only once it has drawn, so the relief never pops in over the ground. */
+  .hero-field,
+  .band-field {
+    opacity: 0;
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  [data-field="on"] > .hero-field,
+  [data-field="on"] > .band-field {
+    opacity: 1;
+  }
+
+  [data-field="off"] > .hero-field,
+  [data-field="off"] > .band-field {
+    display: none;
+  }
+
+  /* Without the relief (no script, no WebGL, or no GPU) a still light takes its place. */
+  .hero::before,
+  .field-band::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 600ms var(--ease-out);
+  }
+
+  .hero::before {
+    background: radial-gradient(70rem 42rem at 72% 8%, rgb(240 230 214 / 0.07), transparent 70%);
+  }
+
+  .field-band::before {
+    background: radial-gradient(56rem 34rem at 62% 42%, rgb(240 230 214 / 0.05), transparent 70%);
+  }
+
+  [data-field="off"]::before {
+    opacity: 1;
+  }
+
+  @media (scripting: none) {
+    .hero::before,
+    .field-band::before {
+      opacity: 1;
+    }
+  }
+
+  /* Media lit from the same lamp: the garment falls off into the ground. */
+  .garment-img {
+    width: 100%;
+    height: auto;
+    -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+  }
+
+  /* Lit from above: the outer layers catch the lamp, the inner ones stay in shadow. */
+  .layers-img {
+    width: 100%;
+    height: auto;
+    filter: grayscale(1) brightness(0.86) contrast(1.06);
+    -webkit-mask-image: linear-gradient(to bottom, #000 34%, rgb(0 0 0 / 0.42) 66%, rgb(0 0 0 / 0.1) 90%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 34%, rgb(0 0 0 / 0.42) 66%, rgb(0 0 0 / 0.1) 90%, transparent 100%);
+  }
+
+  .role-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    min-height: 4.5rem;
+    padding: 1.25rem 0.25rem;
+    border-top: 1px solid var(--line);
+    color: var(--ink-2);
+    text-decoration: none;
+    transition:
+      color 200ms ease,
+      background-color 200ms ease;
+  }
+
+  .role-row:active {
+    background-color: rgb(236 235 231 / 0.06);
+    transition-duration: 100ms;
+  }
+
+  .passage-line {
+    display: block;
+  }
+
+  .passage-line + .passage-line {
+    margin-top: 0.5em;
+  }
+}
+
+/* Motion. Content is fully visible by default: this state is only ever set by
+   script, and only when the visitor has not asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal="pending"] {
+    clip-path: polygon(0px 0px, 0px 0px, 0px 0px);
+  }
+}
+
+@media print {
+  [data-reveal] {
+    clip-path: none !important;
+  }
 }

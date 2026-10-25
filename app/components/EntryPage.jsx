@@ -1,85 +1,74 @@
-// ✅ File: app/components/EntryPage.jsx (Homepage visible to visitors)
-
-'use client';
-
-import MissionSection from "./MissionSection";
+import Arrow from "./Arrow";
+import LightField from "./LightField";
+import Mark from "./Mark";
+import MissionSection, { CONTACT_EMAIL } from "./MissionSection";
 
 export default function EntryPage() {
+  const year = new Date().getFullYear();
+
   return (
     <>
-      {/* 🔥 GLOBAL BACKGROUND LOGO */}
-      <div
-  className="fixed inset-0 z-0 pointer-events-none flex items-center justify-center"
->
-  <img
-    src="/images/logo.png"
-    alt="Logo"
-className="w-[80vw] md:w-[50vw] max-w-[700px] opacity-10 filter drop-shadow-[0_0_120px_rgba(255,255,255,1)] blur-[1.5px]"
-  />
-</div>
+      <header className="absolute inset-x-0 top-0 z-10">
+        <div className="wrap flex items-center justify-between pt-5 md:pt-7">
+          <a href="#top" className="nav-link -ml-2 px-2 text-ink" aria-label="Grovillon Project, back to top">
+            <Mark className="h-8 w-8" />
+          </a>
+          <nav aria-label="Primary">
+            <ul className="t-label flex items-center gap-6 md:gap-9">
+              <li>
+                <a href="#roles" className="nav-link">
+                  Open roles
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${CONTACT_EMAIL}`} className="nav-link">
+                  Contact
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </header>
 
+      <main id="top">
+        <section className="hero" aria-labelledby="hero-title">
+          <LightField className="hero-field" />
+          <div className="wrap mt-auto pb-[clamp(4.5rem,13svh,8.5rem)] pt-32">
+            <h1 id="hero-title" className="t-display">
+              <span className="block">Grovillon</span> <span className="block">Project</span>
+            </h1>
+            <div className="mt-8 max-w-[38rem] md:mt-10">
+              <p className="t-lead">Stealth tech, quietly present.</p>
+              <p className="t-body mt-3 max-w-[42ch]">
+                A system designed to support physiological stability in critical and{' '}
+                <span className="whitespace-nowrap">high-demand</span> conditions.
+              </p>
+            </div>
+            <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-2">
+              <a href={`mailto:${CONTACT_EMAIL}`} className="lo-btn">
+                Write to us
+                <Arrow className="lo-arrow" />
+              </a>
+              <a href="#roles" className="lo-link">
+                Open roles
+                <Arrow direction="down" className="lo-arrow" />
+              </a>
+            </div>
+          </div>
+        </section>
 
-
-  <main
-        style={{
-          height: "100vh",
-          backgroundColor: "transparent",
-          color: "white",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          fontFamily: "Georgia, serif",
-          textAlign: "center",
-          padding: "2rem",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* MAIN CONTENT */}
-<h1 className="text-6xl md:text-7xl font-[family-name:var(--font-title)] font-bold tracking-widest mb-10">
-  Grovillon Project
-</h1>
-
-<p className="text-base md:text-lg text-gray-400 italic max-w-xl mx-auto ">
-Stealth tech, quietly present.
-  </p>
-
+        <MissionSection />
       </main>
 
-      {/* SECTION */}
-      <section
-        style={{
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          color: "#ccc",
-          padding: "5rem 1.5rem",
-          textAlign: "center",
-        }}
-      >
-        <h2 style={{ fontSize: "1.8rem", marginBottom: "1.5rem" }}>
-          
-        </h2>
-        <p
-  style={{
-    maxWidth: "650px",
-    margin: "0 auto",
-    lineHeight: "1.6",
-    borderTop: "1px solid #444",
-    borderBottom: "1px solid #444",
-    padding: "1rem 0",
-    marginBottom: "4rem", // = mb-16 περίπου
-    color: "#ccc",
-    fontStyle: "italic",
-    fontFamily: "Georgia, serif",
-    textAlign: "center"
-  }}
->
-  A system designed to support physiological stability in critical and high-demand conditions.
-</p>
-
-      </section>
-
-      <MissionSection />
+      <footer className="wrap mt-[clamp(6rem,12vw,10rem)]">
+        <div className="flex flex-col gap-6 border-t border-line py-10 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4 text-ink-2">
+            <Mark className="h-9 w-9" />
+            <span className="t-label">Grovillon Project</span>
+          </div>
+          <p className="text-sm text-ink-3">© {year} Grovillon</p>
+        </div>
+      </footer>
     </>
   );
 }

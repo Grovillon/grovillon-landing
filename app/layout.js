@@ -1,40 +1,46 @@
-import { Geist, Geist_Mono, Lora, Oswald } from "next/font/google";
+import { Archivo } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
+  axes: ["wdth"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const lora = Lora({
-  variable: "--font-lora",
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-});
-
-const oswald = Oswald({
-  variable: "--font-title",
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
+const title = "Grovillon Project";
+const description = "A system designed to support physiological stability in critical and high-demand conditions.";
 
 export const metadata = {
-  title: "Grovillon Project",
-  description: "A system designed to support physiological stability in critical and high-demand conditions.",
+  title,
+  description,
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
   },
+  openGraph: {
+    title,
+    description,
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title,
+    description,
+  },
+};
+
+export const viewport = {
+  themeColor: "#0a0b0c",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${lora.variable} ${oswald.variable} antialiased`}>
+    <html lang="en" className={archivo.variable}>
+      <body className="antialiased">
         {children}
       </body>
     </html>
