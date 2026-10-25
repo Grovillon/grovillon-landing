@@ -74,6 +74,7 @@ void main() {
 const PLANFORM = (30 * Math.PI) / 180;
 const ENTRANCE_MS = 1700;
 const WARM_MS = 1200;
+const HANDOFF_MS = 200;
 
 function cubicBezier(p1x, p1y, p2x, p2y) {
   const cx = 3 * p1x;
@@ -241,6 +242,7 @@ export default function LightField({ className, variant = 'hero' }) {
     const entrance = config.entrance && !reduceMotion.matches;
     let entranceStart = entrance ? -1 : null;
     let entranceT = 0;
+    let handOffAt = null;
     let warmStart = entrance ? -1 : null;
     let intensity = entrance ? 0 : 1;
     let pointerActive = false;
@@ -262,7 +264,8 @@ export default function LightField({ className, variant = 'hero' }) {
     };
 
     // The pointer can take the lamp mid-entrance: the spring inherits the eased
-    // path's velocity, so the hand-off has no jump.
+    // path's velocity and its stiffness ramps in, so the lamp carries its
+    // momentum through the turn instead of reversing in one frame.
     const handOff = () => {
       const a = Math.max(entranceT - 0.01, 0);
       const b = Math.min(entranceT + 0.01, 1);
@@ -270,6 +273,7 @@ export default function LightField({ className, variant = 'hero' }) {
       light.vx = (layout.rest[0] - layout.start[0]) * rate;
       light.vy = (layout.rest[1] - layout.start[1]) * rate;
       entranceStart = null;
+      handOffAt = -1;
     };
 
     // The scroll variant's lamp crosses the surface as the section passes
@@ -349,13 +353,22 @@ export default function LightField({ className, variant = 'hero' }) {
         if (entranceT >= 1) entranceStart = null;
         moving = true;
       } else {
-        const ax = -springK * (light.x - target.x) - springC * light.vx;
+        let k = springK;
+        let c = springC;
+        if (handOffAt !== null) {
+          if (handOffAt < 0) handOffAt = now;
+          const ramp = Math.min((now - handOffAt) / HANDOFF_MS, 1);
+          k = springK * ramp;
+          c = 2 * Math.sqrt(k);
+          if (ramp >= 1) handOffAt = null;
+        }
+        const ax = -k * (light.x - target.x) - c * light.vx;
         light.vx += ax * dt;
         light.x += light.vx * dt;
         if (config.trackY) {
           light.y = target.y;
         } else {
-          const ay = -springK * (light.y - target.y) - springC * light.vy;
+          const ay = -k * (light.y - target.y) - c * light.vy;
           light.vy += ay * dt;
           light.y += light.vy * dt;
         }

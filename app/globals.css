@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 :root {
+  /* public/images/grain.png averages to this colour and LightField's shader draws it as uGround; change all three together. */
   --ground: #0a0b0c;
   --ink: #ecebe7;
+  --ink-lit: #f8f5ef;
   --ink-2: #b3b4b0;
   --ink-3: #8e9092;
   --lamp: #f0e6d6;
@@ -62,9 +64,8 @@
   }
 
   :focus-visible {
-    outline: 1.5px solid var(--lamp);
+    outline: 2px solid var(--lamp);
     outline-offset: 4px;
-    border-radius: 1px;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -196,7 +197,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     .lo-btn:hover {
-      background-color: #ffffff;
+      background-color: var(--ink-lit);
     }
 
     .lo-link:hover {
@@ -211,6 +212,11 @@
 
     .lo-link:hover .lo-arrow[data-direction="down"] {
       transform: translateY(3px);
+    }
+
+    .lo-btn:hover .lo-arrow[data-direction="out"],
+    .role-row:hover .lo-arrow[data-direction="out"] {
+      transform: translate(3px, -3px);
     }
 
     .lo-inline:hover {
@@ -330,9 +336,9 @@
   .layers-img {
     width: 100%;
     height: auto;
-    filter: grayscale(1) brightness(0.86) contrast(1.06);
-    -webkit-mask-image: linear-gradient(to bottom, #000 34%, rgb(0 0 0 / 0.42) 66%, rgb(0 0 0 / 0.1) 90%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 34%, rgb(0 0 0 / 0.42) 66%, rgb(0 0 0 / 0.1) 90%, transparent 100%);
+    filter: grayscale(1) brightness(0.96) contrast(1.06);
+    -webkit-mask-image: linear-gradient(to bottom, #000 48%, rgb(0 0 0 / 0.62) 74%, rgb(0 0 0 / 0.2) 92%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 48%, rgb(0 0 0 / 0.62) 74%, rgb(0 0 0 / 0.2) 92%, transparent 100%);
   }
 
   .role-row {
@@ -343,7 +349,7 @@
     min-height: 4.5rem;
     padding: 1.25rem 0.25rem;
     border-top: 1px solid var(--line);
-    color: var(--ink-2);
+    color: var(--ink);
     text-decoration: none;
     transition:
       color 200ms ease,
@@ -355,12 +361,13 @@
     transition-duration: 100ms;
   }
 
+  .passage-sentence,
   .passage-line {
     display: block;
   }
 
-  .passage-line + .passage-line {
-    margin-top: 0.5em;
+  .passage-sentence + .passage-sentence {
+    margin-top: 0.9em;
   }
 }
 

@@ -13,20 +13,9 @@ export default function EntryPage() {
           <a href="#top" className="nav-link -ml-2 px-2 text-ink" aria-label="Grovillon Project, back to top">
             <Mark className="h-8 w-8" />
           </a>
-          <nav aria-label="Primary">
-            <ul className="t-label flex items-center gap-6 md:gap-9">
-              <li>
-                <a href="#roles" className="nav-link">
-                  Open roles
-                </a>
-              </li>
-              <li>
-                <a href={`mailto:${CONTACT_EMAIL}`} className="nav-link">
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </nav>
+          <a href={`mailto:${CONTACT_EMAIL}`} className="lo-link -mr-2 px-2">
+            {CONTACT_EMAIL}
+          </a>
         </div>
       </header>
 
@@ -47,7 +36,7 @@ export default function EntryPage() {
             <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-2">
               <a href={`mailto:${CONTACT_EMAIL}`} className="lo-btn">
                 Write to us
-                <Arrow className="lo-arrow" />
+                <Arrow direction="out" className="lo-arrow" />
               </a>
               <a href="#roles" className="lo-link">
                 Open roles

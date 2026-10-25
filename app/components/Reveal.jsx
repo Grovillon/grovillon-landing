@@ -31,7 +31,7 @@ export default function Reveal({ className, children }) {
               `polygon(0px 0px, ${reach}px 0px, 0px ${reach * SLOPE}px)`,
             ],
           },
-          { duration: 700, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' }
+          { duration: 900, easing: 'cubic-bezier(0.33, 1, 0.68, 1)' }
         );
         delete el.dataset.reveal;
       },
