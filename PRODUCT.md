@@ -26,7 +26,7 @@ web
 
 ## Operating Context
 
-- [Repo] One public landing route. `/login`, `/request`, `/reset-password` and `/api/check-whitelist` are dormant or functional plumbing and are outside visual scope.
+- [Repo] One public landing route and no authentication. [Brief] Grovillon needs no login, registration, password recovery or restricted access at this stage, so the legacy login, access-request and password-reset pages and the whitelist API were removed.
 - [Repo] Contact happens by email at the address already published on the page.
 
 ## Capabilities and Constraints
