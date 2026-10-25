@@ -1,3 +1,27 @@
 {
-  "telemetry": false
+  "telemetry": false,
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-color",
+        "value": "#000",
+        "files": [
+          "app/globals.css"
+        ],
+        "createdAt": "2026-10-25T23:25:51.464Z",
+        "reason": "Agent: #000 appears only as mask-image gradient stops, where only alpha is read; it is never painted as a colour"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(0 0 0 / 0.62)",
+        "files": [
+          "app/globals.css"
+        ],
+        "createdAt": "2026-10-25T23:25:51.474Z",
+        "reason": "Agent: a mask-image gradient stop, where only alpha is read; it is never painted as a colour"
+      }
+    ]
+  }
 }

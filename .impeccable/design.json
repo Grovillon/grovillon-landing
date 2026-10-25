@@ -1,0 +1,407 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-25T23:03:19Z",
+  "title": "Design System: Grovillon Project",
+  "extensions": {
+    "colorMeta": {
+      "lamp": {
+        "role": "primary",
+        "displayName": "Neutral-Warm Lamp",
+        "canonical": "#f0e6d6",
+        "tonalRamp": [
+          "#100a02",
+          "#2b2418",
+          "#494134",
+          "#696052",
+          "#8a8173",
+          "#ada495",
+          "#d2c8b8",
+          "#f7eddd"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Graphite Ground",
+        "canonical": "#0a0b0c",
+        "tonalRamp": [
+          "#0a0b0c",
+          "#242526",
+          "#414243",
+          "#606163",
+          "#818284",
+          "#a4a5a7",
+          "#c8c9cb",
+          "#edeff0"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Chalk Ink",
+        "canonical": "#ecebe7",
+        "tonalRamp": [
+          "#0c0b09",
+          "#262522",
+          "#43423f",
+          "#62615e",
+          "#83827f",
+          "#a6a5a1",
+          "#cac9c5",
+          "#efeeea"
+        ]
+      },
+      "ink-lit": {
+        "role": "neutral",
+        "displayName": "Lit Ink",
+        "canonical": "#f8f5ef",
+        "tonalRamp": [
+          "#0d0b07",
+          "#272520",
+          "#44423d",
+          "#63615c",
+          "#84827c",
+          "#a7a59f",
+          "#ccc9c3",
+          "#f1eee8"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ash Ink",
+        "canonical": "#b3b4b0",
+        "tonalRamp": [
+          "#0b0b09",
+          "#252522",
+          "#42423f",
+          "#61625e",
+          "#82837f",
+          "#a4a5a2",
+          "#c9cac5",
+          "#eeefeb"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Smoke Ink",
+        "canonical": "#8e9092",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#242527",
+          "#404244",
+          "#5f6163",
+          "#818284",
+          "#a3a5a7",
+          "#c7c9cb",
+          "#eceff1"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "rgb(236 235 231 / 0.12)",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#242526",
+          "#414242",
+          "#606162",
+          "#818283",
+          "#a4a5a6",
+          "#c8c9ca",
+          "#edefef"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "canonical": "rgb(236 235 231 / 0.26)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a4a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The page title only, one per page, left-set; expanded 125% width, uppercase."
+      },
+      "statement": {
+        "displayName": "Statement",
+        "purpose": "Section headings at 112% width, sentence case."
+      },
+      "passage": {
+        "displayName": "Passage",
+        "purpose": "A long passage set one phrase per line and grouped by sentence (lines on the line height, sentences 0.9em apart), in Chalk Ink."
+      },
+      "lead": {
+        "displayName": "Lead",
+        "purpose": "The tagline, short answer lines under a statement and a closing contact line."
+      },
+      "role": {
+        "displayName": "Role",
+        "purpose": "Titles inside hairline lists, at 106% width."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Supporting sentences in Ash Ink, held to 28-42ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "The footer wordmark only, uppercase at 112% width; never a tag above a heading."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Primary button text, 112% width."
+      },
+      "control-quiet": {
+        "displayName": "Quiet Control",
+        "purpose": "Quiet-link text, 112% width."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Everything that arrives or responds: press scale, arrow lean, relief and still-light fade-in, the lamp's warm-up."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.77, 0, 0.175, 1)",
+        "purpose": "The hero lamp's one entrance sweep only."
+      },
+      {
+        "name": "hover-color",
+        "value": "200ms ease",
+        "purpose": "Colour, background and underline changes on hover, fine pointers only."
+      },
+      {
+        "name": "press",
+        "value": "scale(0.97), 160ms cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Primary button and quiet link while pressed."
+      },
+      {
+        "name": "arrow-lean",
+        "value": "translate(3px, -3px) or translateY(3px), 200ms cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Arrows lean toward where they lead on hover."
+      },
+      {
+        "name": "row-press",
+        "value": "background rgb(236 235 231 / 0.06), 100ms",
+        "purpose": "Hairline list row while pressed."
+      },
+      {
+        "name": "lamp-entrance",
+        "value": "1700ms cubic-bezier(0.77, 0, 0.175, 1)",
+        "purpose": "Hero lamp sweeps once from left of centre to rest at upper right."
+      },
+      {
+        "name": "lamp-warm",
+        "value": "1200ms cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Lamp intensity rises from dark to full during the entrance."
+      },
+      {
+        "name": "lamp-spring-pointer",
+        "value": "spring, stiffness 170, damping 26",
+        "purpose": "Hero lamp follows a mouse pointer and returns to rest when it leaves. A pointer that arrives mid-entrance takes the lamp with its momentum: stiffness ramps in over 200ms, critically damped."
+      },
+      {
+        "name": "lamp-spring-scroll",
+        "value": "spring, stiffness 90, damping 19, horizontal only",
+        "purpose": "Band lamp crosses from 8% to 92% of the width with scroll, level with 42% of the viewport height."
+      },
+      {
+        "name": "relief-fade",
+        "value": "opacity 300ms cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "The relief appears only after its first frame, so it never pops in."
+      },
+      {
+        "name": "still-light-fade",
+        "value": "opacity 600ms cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "The still lamp light fades in when the relief cannot run on a hardware GPU."
+      },
+      {
+        "name": "media-reveal",
+        "value": "clip-path wipe, 900ms cubic-bezier(0.33, 1, 0.68, 1), edge at 30 degrees",
+        "purpose": "Media below the fold opens once from its top-left corner, triggered at 88% of the viewport height."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "No lamp sweep, no pointer or scroll following, no reveal, no smooth scroll; the lamp sits at rest at full strength."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "48rem"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one solid fill on a screen: Chalk Ink block, ground-coloured label, square, 3rem tall; brightens to Lit Ink and leans its up-right arrow on hover.",
+      "html": "<div class=\"ds-btn-primary-stage\"><a class=\"ds-btn-primary\" href=\"#\">Write to us<svg class=\"ds-btn-primary-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 15 15 5M7.5 5H15v7.5\"/></svg></a></div>",
+      "css": ".ds-btn-primary-stage { padding: 1.5rem; background: var(--ground, #0a0b0c); } .ds-btn-primary { display: inline-flex; align-items: center; gap: 0.75rem; min-height: 3rem; padding: 0 1.25rem 0 1.375rem; background-color: var(--ink, #ecebe7); color: var(--ground, #0a0b0c); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; font-stretch: 112%; font-weight: 560; font-size: 0.9375rem; letter-spacing: 0.01em; text-decoration: none; border-radius: 0; transition: background-color 200ms ease, transform 160ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)); } .ds-btn-primary-arrow { flex: none; transition: transform 200ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)); } @media (hover: hover) and (pointer: fine) { .ds-btn-primary:hover { background-color: var(--ink-lit, #f8f5ef); } .ds-btn-primary:hover .ds-btn-primary-arrow { transform: translate(3px, -3px); } } .ds-btn-primary:focus-visible { outline: 2px solid var(--lamp, #f0e6d6); outline-offset: 4px; } .ds-btn-primary:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Quiet Link",
+      "kind": "button",
+      "refersTo": "link-quiet",
+      "description": "Every secondary action: Ash Ink text with an arrow, no fill or border; rises to Chalk Ink and leans its arrow on hover.",
+      "html": "<div class=\"ds-link-quiet-stage\"><a class=\"ds-link-quiet\" href=\"#\">Open roles<svg class=\"ds-link-quiet-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M10 3v13M4.5 10.5 10 16l5.5-5.5\"/></svg></a></div>",
+      "css": ".ds-link-quiet-stage { padding: 1.5rem; background: var(--ground, #0a0b0c); } .ds-link-quiet { display: inline-flex; align-items: center; gap: 0.625rem; min-height: 3rem; color: var(--ink-2, #b3b4b0); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; font-stretch: 112%; font-weight: 500; font-size: 0.9375rem; text-decoration: none; transition: color 200ms ease, transform 160ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)); } .ds-link-quiet-arrow { flex: none; transition: transform 200ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)); } @media (hover: hover) and (pointer: fine) { .ds-link-quiet:hover { color: var(--ink, #ecebe7); } .ds-link-quiet:hover .ds-link-quiet-arrow { transform: translateY(3px); } } .ds-link-quiet:focus-visible { outline: 2px solid var(--lamp, #f0e6d6); outline-offset: 4px; } .ds-link-quiet:active { transform: scale(0.97); }"
+    },
+    {
+      "name": "Inline Link",
+      "kind": "custom",
+      "refersTo": "link-inline",
+      "description": "A link inside running text: Chalk Ink with a 1px Strong Hairline underline that rises to Chalk Ink on hover.",
+      "html": "<p class=\"ds-link-inline-stage\">Write to us at <a class=\"ds-link-inline\" href=\"#\">address@example.com</a>.</p>",
+      "css": ".ds-link-inline-stage { margin: 0; padding: 1.5rem; background: var(--ground, #0a0b0c); color: var(--ink-2, #b3b4b0); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; font-size: clamp(1.1875rem, 1.55vw, 1.4375rem); font-weight: 400; line-height: 1.42; } .ds-link-inline { color: var(--ink, #ecebe7); text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: 0.28em; text-decoration-color: var(--line-strong, rgb(236 235 231 / 0.26)); transition: text-decoration-color 200ms ease; } @media (hover: hover) and (pointer: fine) { .ds-link-inline:hover { text-decoration-color: var(--ink, #ecebe7); } } .ds-link-inline:focus-visible { outline: 2px solid var(--lamp, #f0e6d6); outline-offset: 4px; }"
+    },
+    {
+      "name": "Header",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "A bare header over the field: the mark top left and the contact address top right as a quiet link in Ash Ink, so the address is on screen from the first moment; no bar, background or menu.",
+      "html": "<header class=\"ds-nav\"><a class=\"ds-nav-mark\" href=\"#\" aria-label=\"Back to top\"><svg viewBox=\"0 0 1198 1200\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M564 2a401 401 0 0 0-76 10l-43 10A609 609 0 0 0 15 467a638 638 0 0 0 9 295c5 18 5 20 10 33a613 613 0 0 0 268 324c14 8 46 25 56 29 35 15 72 28 73 26l3-5 21-62-21-8-22-8A544 544 0 0 1 96 750l-12-50v-5h55l55 1v122h211l3-4 3-3V648l-1-164-31-34-154-163c-24-25-24-25-20-33q3-7 20-21l10-9 19 18a1839 1839 0 0 1 122 130l70 76 11 12v332h291l7 8c13 12 21 15 39 15 14-1 20-3 29-11 21-21 19-61-4-77-8-5-13-7-26-6q-27 0-37 16l-2 4H504V586l-1-155-4-1c-4-1-7-4-33-33q-26-28-28-33-2-2 3-6l31-28c32-31 42-38 59-38 7 0 9 0 15 3q13 7 24 21c3 4 4 5 4 13 2 16 7 32 14 40q7 8 19 13c9 3 24 3 32 0q19-7 28-27c2-5 2-6 2-20s0-15-2-20q-8-14-21-21c-7-3-8-3-21-4-15-1-18-2-27-11l-39-46-8-9V79l2-2c4-2 6-2 20-3 11-1 38 0 55 1 12 2 39 3 40 3l3-5 23-62c-1-2-30-6-54-8-16-1-57-2-76-1m202 0c-20 4-38 21-44 42-4 11-4 27 0 37 6 18 22 34 38 38h26q16-3 26 0c4 1 22 10 24 13 2 2 17 9 21 9l3 1v98h-70l-69 1-1 75v75l-7 5q-9 4-15 19c-2 4-2 6-2 18s0 13 3 19q6 12 17 19c10 6 17 8 30 8 10 0 11 0 17-3q15-6 23-23l5-8-1-12c0-11 0-12-3-18l-12-15-8-9v-50l1-49 46-1h46v189l-20 18-114 100q-7 3-62 3l-41-1-12-9c-15-13-21-16-35-15q-15-1-25 6-24 13-22 43c0 19 11 37 26 44 7 4 20 5 28 3a59 59 0 0 0 32-22l4-3h47c15 2 50 3 60 2l9-1 8-7 52-43c14-12 15-12 19-12q3-1 10 7l54 59 7 8v61l1 113v51l7 1 10 3a388 388 0 0 1 71 78 524 524 0 0 1-183 124c-9 4-25 8-33 9-12 0-13 0-19-8s-29-33-44-47l-38-41q-7-9-8-16v-4l-72-1h-72l-1-48 1-49 102-1h101l15 14c41 40 41 40 45 65 2 14 4 20 12 27q18 18 44 15 17-3 29-18c7-9 9-15 9-27q0-21-13-35-10-11-29-14-19-1-23-4a283 283 0 0 1-57-70H598l-140 1-1 36v36h-79l-5-6q-16-20-36-20c-6 0-17 3-23 6q-24 12-24 42-1 23 14 37 11 13 28 13 31 1 41-18l4-6h80v36l1 36h158l9 9 52 54 13 14q11 11 0 11l-33 3a1128 1128 0 0 1-126-1l-27 69q-2 1 3 2a663 663 0 0 0 177 0 753 753 0 0 0 147-41 592 592 0 0 0 272-872 649 649 0 0 0-130-145 477 477 0 0 0-123-75q-12-7-16-19c-8-18-14-25-28-32-11-6-28-8-40-6M483 88a500 500 0 0 0-141 55c-21 11-65 40-66 44l11 13 99 109 14 15 5-4 64-54 33-27 1-77V84h-3zm429 267v174h-18c-19 1-16-1-32 15l-9 8 2 3 63 70 15 17v77l2 1 10 1c10 0 16-2 31-13 15-12 18-13 31-13 10 0 11 0 18 3 35 17 38 70 4 88q-22 10-42 3-9-6-17-16-5-7-16-7-12 0-17 4c-2 2-3 2-3 13-3 53-2 62 6 72 20 25 64 72 67 72l33-41a545 545 0 0 0 83-246 969 969 0 0 0-4-114 409 409 0 0 0-13-67c-5-19-23-70-26-73-1-1-47-2-49-1l-1 76v74l3 3 7 7q18 17 12 42-2 13-12 23a44 44 0 0 1-37 13c-10-1-11-1-21-6-22-10-31-39-18-62q3-7 14-18l5-6v-96l1-97h32l33-1c4-1-16-35-37-62a504 504 0 0 0-99-94zm-747-48a484 484 0 0 0-89 247c-1 16-2 88-1 92 1 2 6 2 83 2h83v118h118V506l-11-12-63-66-2 2c-2 5-18 26-31 42l-31 42q-4 7-7 26c-4 27-37 44-63 32a48 48 0 0 1-24-69c9-14 19-19 42-21 20-1 23-4 51-47a285 285 0 0 1 31-45l-14-15-67-74z\"/></svg></a><a class=\"ds-nav-link\" href=\"#\">name@example.com</a></header>",
+      "css": ".ds-nav { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.25rem 1.5rem; background: var(--ground, #0a0b0c); color: var(--ink, #ecebe7); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; } .ds-nav-mark { display: inline-flex; align-items: center; min-height: 2.75rem; margin-left: -0.5rem; padding: 0 0.5rem; color: var(--ink, #ecebe7); } .ds-nav-mark svg { width: 2rem; height: 2rem; } .ds-nav-link { display: inline-flex; align-items: center; min-height: 3rem; margin-right: -0.5rem; padding: 0 0.5rem; color: var(--ink-2, #b3b4b0); font-stretch: 112%; font-weight: 500; font-size: 0.9375rem; text-decoration: none; transition: color 200ms ease; } @media (hover: hover) and (pointer: fine) { .ds-nav-link:hover { color: var(--ink, #ecebe7); } } .ds-nav-link:focus-visible, .ds-nav-mark:focus-visible { outline: 2px solid var(--lamp, #f0e6d6); outline-offset: 4px; }"
+    },
+    {
+      "name": "Hairline List",
+      "kind": "custom",
+      "refersTo": "role-row",
+      "description": "An open ledger of full-width link rows separated by 1px hairlines, titles in Chalk Ink; each row opens an email, so its arrow points up and out; a 3.5% tint and the arrow lean on hover.",
+      "html": "<div class=\"ds-rows-stage\"><ul class=\"ds-rows\"><li><a class=\"ds-row\" href=\"#\"><span class=\"ds-row-title\">First listed role</span><svg class=\"ds-row-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 15 15 5M7.5 5H15v7.5\"/></svg></a></li><li><a class=\"ds-row\" href=\"#\"><span class=\"ds-row-title\">Second listed role</span><svg class=\"ds-row-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 15 15 5M7.5 5H15v7.5\"/></svg></a></li><li><a class=\"ds-row\" href=\"#\"><span class=\"ds-row-title\">Third listed role</span><svg class=\"ds-row-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 15 15 5M7.5 5H15v7.5\"/></svg></a></li></ul></div>",
+      "css": ".ds-rows-stage { padding: 1.5rem; background: var(--ground, #0a0b0c); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; } .ds-rows { margin: 0; padding: 0; list-style: none; border-bottom: 1px solid var(--line, rgb(236 235 231 / 0.12)); } .ds-row { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; min-height: 4.5rem; padding: 1.25rem 0.25rem; border-top: 1px solid var(--line, rgb(236 235 231 / 0.12)); color: var(--ink, #ecebe7); text-decoration: none; transition: color 200ms ease, background-color 200ms ease; } .ds-row-title { font-stretch: 106%; font-weight: 400; font-size: clamp(1.125rem, 1.85vw, 1.5rem); line-height: 1.3; } .ds-row-arrow { flex: none; transition: transform 200ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)); } @media (hover: hover) and (pointer: fine) { .ds-row:hover { background-color: rgb(236 235 231 / 0.035); } .ds-row:hover .ds-row-arrow { transform: translate(3px, -3px); } } .ds-row:active { background-color: rgb(236 235 231 / 0.06); transition-duration: 100ms; } .ds-row:focus-visible { outline: 2px solid var(--lamp, #f0e6d6); outline-offset: 4px; }"
+    },
+    {
+      "name": "Relief Field (still light)",
+      "kind": "custom",
+      "description": "The field as every non-GPU visitor sees it: graphite ground and grain under a still pool of lamp light at upper right, the display title set lower left. On a hardware GPU the WebGL relief draws here instead.",
+      "html": "<section class=\"ds-field\"><h1 class=\"ds-field-title\"><span>Grovillon</span> <span>Project</span></h1></section>",
+      "css": ".ds-field { display: flex; flex-direction: column; justify-content: flex-end; min-height: 22rem; padding: 2rem 1.5rem; background: radial-gradient(70rem 42rem at 72% 8%, rgb(240 230 214 / 0.07), transparent 70%), url(\"/images/grain.png\") 0 0 / 128px 128px repeat var(--ground, #0a0b0c); color: var(--ink, #ecebe7); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; } .ds-field-title { margin: 0; font-stretch: 125%; font-weight: 300; font-size: clamp(2.375rem, 8.1vw, 6rem); line-height: 0.95; letter-spacing: 0.012em; text-transform: uppercase; text-wrap: balance; } .ds-field-title span { display: block; }"
+    },
+    {
+      "name": "Media Reveal",
+      "kind": "custom",
+      "description": "Media below the fold opens once from its top-left corner behind a hard edge at the 30 degree crease angle (900ms, ease-out); none under reduced motion. Shown on a fall-off placeholder.",
+      "html": "<div class=\"ds-reveal-stage\"><div class=\"ds-reveal\" role=\"img\" aria-label=\"Media placeholder\"></div></div>",
+      "css": ".ds-reveal-stage { padding: 1.5rem; background: var(--ground, #0a0b0c); } .ds-reveal { width: 240px; height: 160px; background: var(--ink-3, #8e9092); -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%); mask-image: linear-gradient(to bottom, #000 72%, transparent 100%); animation: ds-reveal-wipe 900ms cubic-bezier(0.33, 1, 0.68, 1) both; } @keyframes ds-reveal-wipe { from { clip-path: polygon(0px 0px, 0px 0px, 0px 0px); } to { clip-path: polygon(0px 0px, 517px 0px, 0px 299px); } } @media (prefers-reduced-motion: reduce) { .ds-reveal { animation: none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Low-Observable Surface",
+    "overview": "The page is a matte graphite surface that absorbs light and shows only what one lamp chooses to reveal. On a hardware GPU the ground under the hero and one mid-page band becomes a folded-plate relief, flat facets meeting at zigzag creases that run at ±30°, raked by a single neutral-warm lamp; everywhere else a still pool of the same light rests on the grain in its place. Either way the visitor meets a dark material first and an interface second.\n\nThe system is sparse and exact rather than dramatic. One family, Archivo, carries every word, and its width axis does the expressive work: expanded light capitals for the title, slightly widened light statements, normal width for reading. Ink is a tinted neutral in three steps. Content is separated by 1px hairlines and dark space, never by boxes, and the only solid fill on a screen is the primary button. Density is low: wide, fluid gaps of ground between subjects, short measures, nothing competing with the light.\n\nMotion is rationed and mostly belongs to the light. The lamp sweeps in once and settles, follows a mouse on a spring, and travels with the reader through the band; media opens once with a hard wipe cut at the crease angle. Type never moves, and nothing depends on motion, script or WebGL to be read. The system rejects the dark-tech default outright: a centred glowing headline over an orb or particle field, rows of glass cards, a neon accent, and the same fade-up on every section. Discretion is the brand's posture, so the visuals earn credibility through craft and never through claims.",
+    "keyCharacteristics": [
+      "A matte graphite ground under a static 128px grain tile; never flat black.",
+      "One neutral-warm lamp, the only light; nothing else glows.",
+      "A ±30° crease angle shared by the relief and the media reveal.",
+      "Archivo alone; width (125, 112, 106, 100) is the expressive axis and weight stays light.",
+      "Hairlines instead of boxes, square corners, no shadows.",
+      "Complete and legible with motion reduced, scripts off or no GPU."
+    ],
+    "rules": [
+      {
+        "name": "The One Lamp Rule",
+        "body": "Light has one source and one colour. The lamp is the only thing on the page that emits light; ink, hairlines and the button reflect it and never glow.",
+        "section": "colors"
+      },
+      {
+        "name": "The Light-Not-Paint Rule",
+        "body": "The lamp colour appears only as light (the relief and its still stand-in), as the focus ring and as the text selection. It is never a fill, a text colour, a border or an accent.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Inks Rule",
+        "body": "Text on the ground takes ink, ink-2 or ink-3 and nothing else: ink for what is read first, ink-2 for what supports it, ink-3 for fine print. The one inversion is the primary button, ground on ink. Interaction may raise ink-2 to ink; nothing changes hue.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "Archivo alone, from one variable file. Expression comes from the width axis, not from a second typeface: 125% for the title, 112% for statements, labels and controls, 106% for list titles, 100% for reading.",
+        "section": "typography"
+      },
+      {
+        "name": "The Light Type Rule",
+        "body": "Large type is light: 300 for the title and statements, 330 for the passage. Nothing is bold or italic; the heaviest weight in the system is the button's 560.",
+        "section": "typography"
+      },
+      {
+        "name": "The Still Type Rule",
+        "body": "Type never moves. No fade-ups, typing effects, split letters or scroll-linked text; every word is in the server HTML and visible before any script runs.",
+        "section": "typography"
+      },
+      {
+        "name": "The Asymmetry Rule",
+        "body": "Content is left-set on asymmetric splits of the 12-column grid (5 and 7, or a 5-column heading over a passage stepped to columns 6 to 12). Centring is kept for a short interlude: one statement, its lead lines and a narrow image, never a whole page.",
+        "section": "layout"
+      },
+      {
+        "name": "The Depth-Is-Light Rule",
+        "body": "Nothing is raised. Surfaces get depth only from the lamp falling across facets and from masks that let forms fall off into the ground.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Still Light Rule",
+        "body": "When the relief cannot run on a hardware GPU (a software WebGL renderer, no WebGL, or no script), a still radial pool of lamp light sits where the lamp would rest. Content never depends on the relief.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Crease Angle Rule",
+        "body": "Folds, cuts and wipes run at the relief's 30° crease angle and no other. Don't introduce skews, other diagonal wipes or angled section edges.",
+        "section": "shapes"
+      },
+      {
+        "name": "The No-Box Rule",
+        "body": "Content is never boxed: no cards, panels, outlined containers or framed images. Separation is a 1px hairline or dark space.",
+        "section": "shapes"
+      },
+      {
+        "name": "The One Filled Control Rule",
+        "body": "The primary button is the only solid fill on a screen and appears once there; every other action is text with an arrow.",
+        "section": "components"
+      },
+      {
+        "name": "The Brighten Rule",
+        "body": "Interaction only brightens: ink-2 rises to ink, a strong hairline to ink, ink to lit ink, and arrows lean 3px toward where they lead. Nothing changes hue, grows or lifts.",
+        "section": "components"
+      },
+      {
+        "name": "The Reveal Once Rule",
+        "body": "Media opens once and stays open; what the reader can already see is never hidden.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do keep every surface on the graphite ground with its grain tile, and let the relief or its still light be the only thing that brightens it.",
+      "Do rest the lamp away from the type: in the hero it settles upper right while the title sits lower left.",
+      "Do separate content with 1px hairlines (line, 12% ink) and dark space, and keep surfaces and controls square-cornered.",
+      "Do set every word in Archivo and change width before weight: 125% title; 112% statements, labels and controls; 106% list titles; 100% reading.",
+      "Do cut any new fold, wipe or diagonal at the 30° crease angle.",
+      "Do ease arrivals and responses with cubic-bezier(0.23, 1, 0.32, 1), press controls to scale(0.97), and keep hover effects behind `(hover: hover) and (pointer: fine)`.",
+      "Do make every view complete without motion, script or WebGL: content visible by default, the reveal's hidden state set only by script and only when motion is allowed, the still light in place of the relief.",
+      "Do use only approved images or abstract material, lit by the same lamp and falling off into the ground through masks; ship any derived or generated raster with its provenance embedded, and treat client originals in CSS only."
+    ],
+    "donts": [
+      "Don't add glow, bloom or halos to type, controls, the mark or images; the only soft light is the lamp on the relief or its still stand-in.",
+      "Don't use frosted glass, cards, panels or framed images.",
+      "Don't use gradients as decoration (gradient text, gradient buttons, tinted gradient backdrops); a gradient is only ever the lamp's falloff or a mask into the ground.",
+      "Don't introduce an accent colour, or use the lamp colour as paint.",
+      "Don't add box or drop shadows; depth comes only from light on the relief.",
+      "Don't set a centred, glowing headline over an orb or particle field.",
+      "Don't animate text into view or give every section the same entrance; only media reveals, once.",
+      "Don't set anything bold or italic, or add a second typeface.",
+      "Don't add technical detail of the product or invented claims to any visual."
+    ]
+  }
+}
