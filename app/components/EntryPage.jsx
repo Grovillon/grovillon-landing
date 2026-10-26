@@ -11,7 +11,7 @@ export default function EntryPage() {
       <header className="absolute inset-x-0 top-0 z-10">
         <div className="wrap flex items-center justify-between pt-5 md:pt-7">
           <a href="#top" className="nav-link -ml-2 px-2 text-ink" aria-label="Grovillon Project, back to top">
-            <Mark className="h-8 w-8" />
+            <Mark className="h-10 w-10" />
           </a>
           <a href={`mailto:${CONTACT_EMAIL}`} className="lo-link -mr-2 px-2">
             {CONTACT_EMAIL}
