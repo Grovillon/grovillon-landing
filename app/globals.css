@@ -298,9 +298,13 @@
     }
   }
 
-  /* Scene C: the hero's crease map in hairlines, answering to the pointer and to touch.
-     The still CSS crease map is what visitors without script or with reduced motion see. */
+  /* Scene C: a square grid of hairlines with a dot at every crossing, a second skin that
+     answers to the pointer and to touch. The still CSS grid is what visitors without script
+     or with reduced motion see. Its tile is one cell, crossed at its centre; centred across
+     the band it puts a line through the band's middle and one half a cell below its top,
+     where KineticGrid draws them, reading the cell from --grid-cell, with the same stroke. */
   .grid-band {
+    --grid-cell: 44px;
     position: relative;
     isolation: isolate;
   }
@@ -319,8 +323,9 @@
 
   .grid-band::before {
     content: "";
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='152'%3E%3Cpath d='M0 20L128 93.9L256 20' fill='none' stroke='%23ecebe7' stroke-opacity='.1'/%3E%3C/svg%3E");
-    background-size: 256px 152px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M0 22.5H44M22.5 0V44' fill='none' stroke='%23ecebe7' stroke-opacity='.1'/%3E%3Ccircle cx='22.5' cy='22.5' r='1.1' fill='%23ecebe7' fill-opacity='.17'/%3E%3C/svg%3E");
+    background-size: var(--grid-cell) var(--grid-cell);
+    background-position: 50% 0;
     -webkit-mask-image:
       radial-gradient(64rem 40rem at 74% 30%, #000, transparent 75%),
       linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
@@ -341,6 +346,29 @@
 
   [data-grid="on"]::before {
     opacity: 0;
+  }
+
+  @media (min-width: 48rem) {
+    .grid-band {
+      --grid-cell: 54px;
+    }
+
+    .grid-band::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='54'%3E%3Cpath d='M0 27.5H54M27.5 0V54' fill='none' stroke='%23ecebe7' stroke-opacity='.1'/%3E%3Ccircle cx='27.5' cy='27.5' r='1.1' fill='%23ecebe7' fill-opacity='.17'/%3E%3C/svg%3E");
+    }
+  }
+
+  /* Dense screens: the canvas's finer stroke. */
+  @media (min-resolution: 1.5dppx) {
+    .grid-band::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M0 22.5H44M22.5 0V44' fill='none' stroke='%23ecebe7' stroke-opacity='.1' stroke-width='.75'/%3E%3Ccircle cx='22.5' cy='22.5' r='1.1' fill='%23ecebe7' fill-opacity='.17'/%3E%3C/svg%3E");
+    }
+  }
+
+  @media (min-width: 48rem) and (min-resolution: 1.5dppx) {
+    .grid-band::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='54'%3E%3Cpath d='M0 27.5H54M27.5 0V54' fill='none' stroke='%23ecebe7' stroke-opacity='.1' stroke-width='.75'/%3E%3Ccircle cx='27.5' cy='27.5' r='1.1' fill='%23ecebe7' fill-opacity='.17'/%3E%3C/svg%3E");
+    }
   }
 
   /* Media lit from the same lamp: the garment falls off into the ground. */
