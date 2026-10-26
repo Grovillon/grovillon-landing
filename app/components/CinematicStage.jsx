@@ -5,9 +5,14 @@ import { useEffect, useRef } from 'react';
 import { createStageRenderer } from './stageRenderer';
 import { stageEdges, stageFocus, stageFrame, stageLayout } from './stageScript';
 
-// Scrubbing follows the scroll through a critically damped spring, so wheel
-// steps glide and a change of direction carries its momentum.
-const SCRUB = [140, 2 * Math.sqrt(140)];
+// Scrubbing follows the scroll through a soft, critically damped spring
+// (stiffness 40), so the separate steps of a mouse wheel blend into one
+// continuous move and a change of direction carries its momentum. It is solved
+// exactly each frame, so it moves the same at any frame rate.
+const SCRUB = Math.sqrt(40);
+// Close enough to the scroll to stop drawing (in shares of the pinned run, and
+// per second): what is left to move is well under a pixel on screen.
+const SCRUB_REST = [2e-5, 2e-4];
 // The pointer-held lamp uses the hero's spring.
 const LAMP = [170, 26];
 const DPR_STEPS = [2, 1.5, 1, 0.75];
@@ -85,9 +90,10 @@ async function decode(src) {
   }
 }
 
-// Scenes A and B share one pinned stage, so the cut between them is a match on
-// the lamp's light inside a single camera move. Without WebGL, without script
-// or with reduced motion, the same markup stays two ordinary sections.
+// Scenes A and B share one pinned stage, and the cut between them is made in
+// the dark: scene A's light goes out, and scene B's comes with the falling
+// stack. Without WebGL, without script or with reduced motion, the same markup
+// stays two ordinary sections.
 export default function CinematicStage() {
   const trackRef = useRef(null);
 
@@ -284,10 +290,12 @@ export default function CinematicStage() {
         tv = 0;
         snap = !visible;
       } else {
-        const [k, c] = SCRUB;
-        tv += (-k * (t - target) - c * tv) * dt;
-        t += tv * dt;
-        if (Math.abs(t - target) < 1e-5 && Math.abs(tv) < 1e-4) {
+        const x = t - target;
+        const c = tv + SCRUB * x;
+        const decay = Math.exp(-SCRUB * dt);
+        t = target + (x + c * dt) * decay;
+        tv = (tv - SCRUB * c * dt) * decay;
+        if (Math.abs(t - target) < SCRUB_REST[0] && Math.abs(tv) < SCRUB_REST[1]) {
           t = target;
           tv = 0;
         } else {
@@ -455,11 +463,14 @@ export default function CinematicStage() {
 
     // An in-page link that crosses the stage, and keyboard focus moving with Tab,
     // jump instead of scrolling smoothly, so the film does not flash past on the
-    // way to the roles. The focus target is not known before the browser scrolls
-    // to it, so every Tab-driven scroll jumps while the stage is running.
+    // way to the roles; the scene lands where the jump does. The focus target is
+    // not known before the browser scrolls to it, so every Tab-driven scroll
+    // jumps while the stage is running.
     let jumping = 0;
     let savedBehavior = '';
     const jumpOnce = () => {
+      snap = true;
+      kick();
       if (jumping) return;
       const root = document.documentElement;
       savedBehavior = root.style.scrollBehavior;
