@@ -55,7 +55,7 @@ const WALL_DEPTH = 0.45; // how far the wall stands behind the garment, in camer
 // (render px), and each sheet eases to rest over this much of the fall on either
 // side of its place, so the sheets land one after another, never all at once.
 const FALL_CLEAR = 60;
-const LANDING = 60;
+const LANDING = 130;
 const FLOOR = 0.3; // the least fill a held lamp leaves on scene B's sheets
 // Depth of field in scene B: blur in mip levels per sheet away from the lamp,
 // when the stack is fully open; nothing is out of focus while it is closed.
@@ -266,8 +266,9 @@ function garmentScene(t, layout, center) {
   // right shoulder seam, where its beam narrows as the camera arrives.
   const lamp = path(t, [
     [0, [1130, -460]],
-    [0.1, [1110, 160]],
-    [0.25, [420, 440]],
+    [0.07, [1120, -60]],
+    [0.13, [1110, 200]],
+    [0.26, [420, 440]],
     [0.31, [600, 240]],
     [0.37, [640, 260]],
     [0.47, SEAM],
@@ -276,8 +277,8 @@ function garmentScene(t, layout, center) {
   // The pool widens as the light comes down, and narrows for the push-in.
   const radius = track(t, [
     [0, 170],
-    [0.1, 300],
-    [0.25, 560],
+    [0.13, 300],
+    [0.26, 560],
     [0.31, 680],
     [0.37, 680],
     [0.47, 260],
@@ -288,9 +289,9 @@ function garmentScene(t, layout, center) {
   // first, so the scene ends in black. The wall
   // behind comes up a moment after the garment, under a pool that widens with
   // the lamp's, so the garment is not first seen as a silhouette against it.
-  const intensity = glide(ramp(t, 0, 0.09)) * (1 - glide(ramp(t, 0.43, 0.495)));
-  const wallLight = glide(ramp(t, 0.02, 0.11)) * (1 - glide(ramp(t, 0.41, 0.47)));
-  const wallPool = mix(0.45, 1, glide(ramp(t, 0, 0.12)));
+  const intensity = glide(ramp(t, 0, 0.13)) * (1 - glide(ramp(t, 0.43, 0.495)));
+  const wallLight = glide(ramp(t, 0.03, 0.15)) * (1 - glide(ramp(t, 0.41, 0.47)));
+  const wallPool = mix(0.45, 1, glide(ramp(t, 0, 0.16)));
   const fill = 0.82 * glide(ramp(t, 0.19, 0.29)) * (1 - glide(ramp(t, 0.36, 0.41)));
   return {
     scene: 'garment',
@@ -305,7 +306,7 @@ function garmentScene(t, layout, center) {
     look: [WALL_LOOK[0] * wallLight, WALL_LOOK[1] * wallLight, WALL_LOOK[2] * wallPool],
     // A moving pointer leans the lamp a little once there is light; at the key
     // light a pointer on the garment takes it, and the held lamp narrows to model it.
-    lean: 0.3 * ramp(t, 0.06, 0.1) * (1 - ramp(t, 0.41, 0.45)),
+    lean: 0.3 * ramp(t, 0.08, 0.13) * (1 - ramp(t, 0.41, 0.45)),
     hold: ramp(t, 0.26, 0.3) * (1 - ramp(t, 0.38, 0.41)),
     heldRadius: 440,
     floor: 0,

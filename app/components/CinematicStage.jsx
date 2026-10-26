@@ -5,11 +5,16 @@ import { useEffect, useRef } from 'react';
 import { createStageRenderer } from './stageRenderer';
 import { stageEdges, stageFocus, stageFrame, stageLayout } from './stageScript';
 
-// Scrubbing follows the scroll through a soft, critically damped spring
-// (stiffness 40), so the separate steps of a mouse wheel blend into one
-// continuous move and a change of direction carries its momentum. It is solved
-// exactly each frame, so it moves the same at any frame rate.
-const SCRUB = Math.sqrt(40);
+// Scrubbing follows the scroll through a critically damped spring, so a change
+// of direction carries its momentum. A mouse wheel scrolls in separate steps, so
+// it gets a soft spring (stiffness 40) that blends them into one move; a
+// trackpad, a finger or the keyboard already scroll smoothly, so they get a
+// firmer one (stiffness 120) that follows without lag. The spring eases from
+// one to the other over about 200 ms, and it is solved exactly each frame, so it
+// moves the same at any frame rate.
+const SCRUB_WHEEL = Math.sqrt(40);
+const SCRUB_GLIDE = Math.sqrt(120);
+const SCRUB_EASE = 0.2;
 // Close enough to the scroll to stop drawing (in shares of the pinned run, and
 // per second): what is left to move is well under a pixel on screen.
 const SCRUB_REST = [2e-5, 2e-4];
@@ -173,6 +178,9 @@ export default function CinematicStage() {
     let t = 0;
     let tv = 0;
     let target = 0;
+    let scrub = SCRUB_WHEEL;
+    let scrubGoal = SCRUB_WHEEL;
+    let lastWheel = -Infinity;
     let stageTop = 0;
     let visible = false;
     let snap = true;
@@ -260,7 +268,10 @@ export default function CinematicStage() {
     const step = (now) => {
       raf = 0;
       const gap = last ? now - last : 0;
+      // The explicit springs below need a short step; the scrub is exact, so it
+      // only guards against a long pause.
       const dt = last ? Math.min(gap / 1000, 1 / 30) : 1 / 60;
+      const scrubDt = last ? Math.min(gap / 1000, 0.25) : 1 / 60;
       // A stage that cannot keep up with the display drops resolution; one that
       // has run fast for a while takes it back.
       if (last) {
@@ -290,11 +301,12 @@ export default function CinematicStage() {
         tv = 0;
         snap = !visible;
       } else {
+        scrub += (scrubGoal - scrub) * (1 - Math.exp(-scrubDt / SCRUB_EASE));
         const x = t - target;
-        const c = tv + SCRUB * x;
-        const decay = Math.exp(-SCRUB * dt);
-        t = target + (x + c * dt) * decay;
-        tv = (tv - SCRUB * c * dt) * decay;
+        const c = tv + scrub * x;
+        const decay = Math.exp(-scrub * scrubDt);
+        t = target + (x + c * scrubDt) * decay;
+        tv = (tv - scrub * c * scrubDt) * decay;
         if (Math.abs(t - target) < SCRUB_REST[0] && Math.abs(tv) < SCRUB_REST[1]) {
           t = target;
           tv = 0;
@@ -490,6 +502,20 @@ export default function CinematicStage() {
     };
     const onKeyDown = (event) => {
       if (event.key === 'Tab') jumpOnce();
+      else scrubGoal = SCRUB_GLIDE;
+    };
+
+    // A wheel step is a line-based delta, or a large one after a pause; a
+    // trackpad sends a stream of small ones.
+    const onWheel = (event) => {
+      const now = event.timeStamp;
+      const notch = event.deltaMode === 1 || (Math.abs(event.deltaY) >= 50 && now - lastWheel > 40);
+      lastWheel = now;
+      scrubGoal = notch ? SCRUB_WHEEL : SCRUB_GLIDE;
+    };
+
+    const onTouchScroll = () => {
+      scrubGoal = SCRUB_GLIDE;
     };
 
     const onVisibility = () => {
@@ -591,6 +617,8 @@ export default function CinematicStage() {
     if (document.readyState === 'complete') onLoad();
     else window.addEventListener('load', onLoad, { once: true });
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('wheel', onWheel, { passive: true });
+    window.addEventListener('touchstart', onTouchScroll, { passive: true });
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     document.documentElement.addEventListener('pointerleave', onPointerLeave);
     stage.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -621,6 +649,8 @@ export default function CinematicStage() {
       nearObserver.disconnect();
       window.removeEventListener('load', onLoad);
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('touchstart', onTouchScroll);
       window.removeEventListener('pointermove', onPointerMove);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       stage.removeEventListener('touchstart', onTouchStart);

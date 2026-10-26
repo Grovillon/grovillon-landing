@@ -71,9 +71,9 @@ export default function KineticGrid({ className }) {
     const canvas = canvasRef.current;
     const host = canvas?.parentElement;
     if (!canvas || !host) return undefined;
-    // Reduced motion keeps the still CSS grid: no gathering, no ripples.
+    // Reduced motion draws the grid still, lamp at rest: no gathering, no ripples.
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (reduceMotion.matches) return undefined;
+    let still = reduceMotion.matches;
     const ctx = canvas.getContext('2d');
     if (!ctx) return undefined;
 
@@ -98,6 +98,7 @@ export default function KineticGrid({ className }) {
     let last = 0;
     let shown = false;
     let tap = null;
+    let press = null;
     let speed = RIPPLE_SPEED[1];
 
     // The grid: crossings on a cols x rows lattice, one cell beyond every edge so
@@ -223,11 +224,15 @@ export default function KineticGrid({ className }) {
       load = lamp.load > 0.001 ? Math.min(lamp.load, 1.2) : 0;
       for (let k = 0; k < ripples.length; k++) {
         const r = ripples[k];
-        const age = (now - r.start) / 1000;
+        // A ripple starts, and a displaced one starts retiring, on the first frame
+        // that draws it, so its age is never negative.
+        if (r.start < 0) r.start = now;
+        if (r.retire < 0) r.retire = now;
+        const age = Math.max((now - r.start) / 1000, 0);
         r.front = speed * age;
         // Fades out over the ripple's life, reaching nothing as it ends, or over
         // RETIRE ms once a newer ripple has displaced it.
-        const retiring = r.retire ? Math.max(1 - (now - r.retire) / RETIRE, 0) : 1;
+        const retiring = r.retire ? Math.min(Math.max(1 - (now - r.retire) / RETIRE, 0), 1) : 1;
         r.fade = Math.max(1 - age / RIPPLE_LIFE, 0) ** 1.1 * retiring;
         r.swell = SWELL * r.fade * Math.min(age / 0.08, 1);
       }
@@ -295,7 +300,7 @@ export default function KineticGrid({ className }) {
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
-      const line = dpr > 1.5 ? 0.75 : 1;
+      const line = dpr >= 1.5 ? 0.75 : 1;
       ctx.lineWidth = line;
       // The lamp lights the lines and dots around it, warm at its centre.
       const reach = LAMP_REACH * (1 + 0.3 * load);
@@ -318,25 +323,28 @@ export default function KineticGrid({ className }) {
         if (r.fade < 0.005) continue;
         const inner = Math.max(r.front - RIPPLE_WIDTH, 0);
         const outer = r.front + RIPPLE_WIDTH;
-        const crest = Math.min((r.front - inner) / (outer - inner), 1);
+        const crest = Math.min(Math.max((r.front - inner) / (outer - inner), 0), 1);
         ctx.save();
-        ctx.beginPath();
-        ctx.rect(r.x - outer, r.y - outer, 2 * outer, 2 * outer);
-        ctx.clip();
-        for (let pass = 0; pass < 2; pass++) {
-          const ring = ctx.createRadialGradient(r.x, r.y, inner, r.x, r.y, outer);
-          ring.addColorStop(0, `rgba(${LAMP}, 0)`);
-          ring.addColorStop(crest, `rgba(${LAMP}, ${CREST[pass] * r.fade})`);
-          ring.addColorStop(1, `rgba(${LAMP}, 0)`);
-          if (pass) {
-            ctx.fillStyle = ring;
-            ctx.fill(dots);
-          } else {
-            ctx.strokeStyle = ring;
-            ctx.stroke(lattice);
+        try {
+          ctx.beginPath();
+          ctx.rect(r.x - outer, r.y - outer, 2 * outer, 2 * outer);
+          ctx.clip();
+          for (let pass = 0; pass < 2; pass++) {
+            const ring = ctx.createRadialGradient(r.x, r.y, inner, r.x, r.y, outer);
+            ring.addColorStop(0, `rgba(${LAMP}, 0)`);
+            ring.addColorStop(crest, `rgba(${LAMP}, ${CREST[pass] * r.fade})`);
+            ring.addColorStop(1, `rgba(${LAMP}, 0)`);
+            if (pass) {
+              ctx.fillStyle = ring;
+              ctx.fill(dots);
+            } else {
+              ctx.strokeStyle = ring;
+              ctx.stroke(lattice);
+            }
           }
+        } finally {
+          ctx.restore();
         }
-        ctx.restore();
       }
       // The grid falls quiet behind the words, ripples included.
       ctx.globalCompositeOperation = 'destination-out';
@@ -368,7 +376,8 @@ export default function KineticGrid({ className }) {
       gather.y += gather.vy * dt;
       for (let i = ripples.length - 1; i >= 0; i--) {
         const r = ripples[i];
-        if ((now - r.start) / 1000 > RIPPLE_LIFE || (r.retire && now - r.retire > RETIRE)) ripples.splice(i, 1);
+        if (r.start < 0) continue;
+        if ((now - r.start) / 1000 > RIPPLE_LIFE || (r.retire > 0 && now - r.retire > RETIRE)) ripples.splice(i, 1);
       }
       const settled =
         Math.abs(lamp.x - aim.x) + Math.abs(lamp.y - aim.y) < 0.05 &&
@@ -392,7 +401,7 @@ export default function KineticGrid({ className }) {
     };
 
     const kick = () => {
-      if (!raf && !stopped && visible && !document.hidden) raf = requestAnimationFrame(step);
+      if (!raf && !stopped && !still && visible && !document.hidden) raf = requestAnimationFrame(step);
     };
 
     const local = (event) => {
@@ -400,18 +409,20 @@ export default function KineticGrid({ className }) {
       return [event.clientX - rect.left, event.clientY - rect.top];
     };
 
+    // Start and retirement times are set by the frame that first draws them (-1
+    // until then), on the same clock as the frames.
     const ripple = (x, y) => {
-      const now = performance.now();
-      ripples.push({ x, y, start: now, retire: 0, front: 0, fade: 0, swell: 0 });
+      if (still) return;
+      ripples.push({ x, y, start: -1, retire: 0, front: 0, fade: 0, swell: 0 });
       // Past the limit, the oldest live ripple fades out rather than vanishing.
       const live = ripples.filter((r) => !r.retire);
-      if (live.length > RIPPLES) live[0].retire = now;
+      if (live.length > RIPPLES) live[0].retire = -1;
       kick();
     };
 
     // Only a mouse or pen gathers the skin; on touch the finger is scrolling.
     const onMove = (event) => {
-      if (event.pointerType === 'touch') return;
+      if (event.pointerType === 'touch' || still) return;
       [aim.x, aim.y] = local(event);
       gather.tx = aim.x;
       gather.ty = aim.y;
@@ -432,7 +443,7 @@ export default function KineticGrid({ className }) {
     // The page scrolls under a still mouse: the skin stays gathered under it,
     // and relaxes once the band has left it.
     const onScroll = () => {
-      if (!pointer.inside || stopped) return;
+      if (!pointer.inside || stopped || still) return;
       const rect = host.getBoundingClientRect();
       const x = pointer.x - rect.left;
       const y = pointer.y - rect.top;
@@ -446,25 +457,30 @@ export default function KineticGrid({ className }) {
       kick();
     };
 
-    // A click ripples at once. A touch ripples on release, and only if it stayed
-    // put and the browser never took it for a scroll.
+    // A click on open space ripples at once. A click on the words ripples on
+    // release, unless it dragged or selected text. A touch ripples on release,
+    // and only if it stayed put and the browser never took it for a scroll.
     const onDown = (event) => {
       if (event.button > 0) return;
       entered = true;
-      // Pressing on the words selects them; it does not ripple.
-      if (event.pointerType !== 'touch' && event.target.closest?.('h2, p')) return;
       if (event.pointerType === 'touch') {
         tap = { id: event.pointerId, x: event.clientX, y: event.clientY };
+        return;
+      }
+      if (event.target.closest?.('h2, p')) {
+        press = { id: event.pointerId, x: event.clientX, y: event.clientY };
         return;
       }
       ripple(...local(event));
     };
 
     const onUp = (event) => {
-      if (event.pointerType !== 'touch' || !tap || tap.id !== event.pointerId) return;
-      const still = Math.hypot(event.clientX - tap.x, event.clientY - tap.y) <= TAP_SLOP;
-      tap = null;
-      if (still) ripple(...local(event));
+      const start = event.pointerType === 'touch' ? tap : press;
+      tap = press = null;
+      if (!start || start.id !== event.pointerId) return;
+      if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > TAP_SLOP) return;
+      if (event.pointerType !== 'touch' && !(window.getSelection()?.isCollapsed ?? true)) return;
+      ripple(...local(event));
     };
 
     // Scrolling takes over, or the pointer leaves: the skin relaxes.
@@ -473,19 +489,29 @@ export default function KineticGrid({ className }) {
         tap = null;
         return;
       }
+      press = null;
       pointer.inside = false;
       rest();
       kick();
     };
 
-    // Reduced motion switched on mid-visit: stop, and hand back to the still grid.
+    // Reduced motion switched on mid-visit: the grid settles at rest and stays
+    // still; switched off again, it answers to the pointer once more.
     const onReduce = () => {
-      if (!reduceMotion.matches) return;
-      stopped = true;
+      still = reduceMotion.matches;
+      if (!still) return;
       if (raf) cancelAnimationFrame(raf);
       raf = 0;
+      last = 0;
       ripples.length = 0;
-      delete host.dataset.grid;
+      pointer.inside = false;
+      rest();
+      lamp.x = aim.x;
+      lamp.y = aim.y;
+      lamp.load = 0;
+      lamp.vx = lamp.vy = lamp.vl = 0;
+      gather.vx = gather.vy = 0;
+      draw(performance.now());
     };
 
     // The first time the heading is well into view, the resting lamp sends one
@@ -495,7 +521,7 @@ export default function KineticGrid({ className }) {
       ([entry]) => {
         if (!entry.isIntersecting) return;
         entryObserver.disconnect();
-        if (entered) return;
+        if (entered || still) return;
         ripple(lamp.x, lamp.y);
       },
       { rootMargin: '0px 0px -50% 0px' }
