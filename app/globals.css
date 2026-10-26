@@ -261,56 +261,29 @@
     mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
   }
 
-  /* The same surface returns under a low, grazing lamp that travels with the reader. */
-  .field-band {
-    position: relative;
-    isolation: isolate;
-  }
-
-  .band-field {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    width: 100%;
-    height: 100%;
-    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
-  }
-
   /* A canvas is shown only once it has drawn, so the relief never pops in over the ground. */
-  .hero-field,
-  .band-field {
+  .hero-field {
     opacity: 0;
     transition: opacity 300ms var(--ease-out);
   }
 
-  [data-field="on"] > .hero-field,
-  [data-field="on"] > .band-field {
+  [data-field="on"] > .hero-field {
     opacity: 1;
   }
 
-  [data-field="off"] > .hero-field,
-  [data-field="off"] > .band-field {
+  [data-field="off"] > .hero-field {
     display: none;
   }
 
   /* Without the relief (no script, no WebGL, or no GPU) a still light takes its place. */
-  .hero::before,
-  .field-band::before {
+  .hero::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
     opacity: 0;
     transition: opacity 600ms var(--ease-out);
-  }
-
-  .hero::before {
     background: radial-gradient(70rem 42rem at 72% 8%, rgb(240 230 214 / 0.07), transparent 70%);
-  }
-
-  .field-band::before {
-    background: radial-gradient(56rem 34rem at 62% 42%, rgb(240 230 214 / 0.05), transparent 70%);
   }
 
   [data-field="off"]::before {
@@ -318,10 +291,54 @@
   }
 
   @media (scripting: none) {
-    .hero::before,
-    .field-band::before {
+    .hero::before {
       opacity: 1;
     }
+  }
+
+  /* Scene C: the hero's crease map in hairlines, answering to the pointer and to touch.
+     The still CSS crease map is what visitors without script or with reduced motion see. */
+  .grid-band {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .grid-field,
+  .grid-band::before {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  .grid-band::before {
+    content: "";
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='152'%3E%3Cpath d='M0 20L128 93.9L256 20' fill='none' stroke='%23ecebe7' stroke-opacity='.1'/%3E%3C/svg%3E");
+    background-size: 256px 152px;
+    -webkit-mask-image:
+      radial-gradient(64rem 40rem at 74% 30%, #000, transparent 75%),
+      linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      radial-gradient(64rem 40rem at 74% 30%, #000, transparent 75%),
+      linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+    mask-composite: intersect;
+  }
+
+  .grid-field {
+    opacity: 0;
+  }
+
+  [data-grid="on"] > .grid-field {
+    opacity: 1;
+  }
+
+  [data-grid="on"]::before {
+    opacity: 0;
   }
 
   /* Media lit from the same lamp: the garment falls off into the ground. */
@@ -366,21 +383,138 @@
     display: block;
   }
 
+  /* A phrase too long for a phone's line breaks evenly, never leaving one word behind. */
+  .passage-line {
+    text-wrap: balance;
+  }
+
   .passage-sentence + .passage-sentence {
     margin-top: 0.9em;
   }
 }
 
-/* Motion. Content is fully visible by default: this state is only ever set by
-   script, and only when the visitor has not asked for reduced motion. */
-@media (prefers-reduced-motion: no-preference) {
-  [data-reveal="pending"] {
-    clip-path: polygon(0px 0px, 0px 0px, 0px 0px);
+/* Scenes A and B: one pinned stage. Without WebGL, without script or with
+   reduced motion, the markup stays two ordinary sections (the rules above).
+   A script in the document head pins it before first paint when it can run
+   ([data-stage]); the stage confirms that ("pending") or reverts it, and shows
+   the canvas once it has drawn ("on"). These rules are unlayered so they win
+   over utilities, and screen-only so a printout is the plain sections. */
+.cine-canvas {
+  display: none;
+}
+
+@media screen {
+  /* The pinned run: 4 screens of scroll on a phone, 4.4 on a landscape screen. */
+  :is([data-stage] .cine, .cine[data-cine]) {
+    --cine-screens: 5;
+    height: calc(var(--cine-screens) * 100vh);
+    height: calc(var(--cine-screens) * 100lvh);
+  }
+
+  :is([data-stage] .cine, .cine[data-cine]) .cine-stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100lvh;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  :is([data-stage] .cine, .cine[data-cine]) .cine-canvas {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  .cine[data-cine="on"] .cine-canvas {
+    opacity: 1;
+  }
+
+  /* The scenes are stacked layers: only lit text takes the pointer, so an unlit
+     line never catches a selection meant for the lit one. */
+  :is([data-stage] .cine, .cine[data-cine]) .cine-scene {
+    position: absolute;
+    inset: 0;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    pointer-events: none;
+  }
+
+  /* The canvas draws the images; their wrappers stay, hidden, to carry the descriptions. */
+  :is([data-stage] .cine, .cine[data-cine]) .cine-media {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  :is([data-stage] .cine, .cine[data-cine]) .cine-media img {
+    display: none;
+  }
+
+  /* Text is lit by the stage, one block at a time. Scene A's heading arrives
+     with the stage, so it is already lit at first paint. */
+  :is([data-stage] .cine, .cine[data-cine]) [data-copy]:not([data-copy="0"]) {
+    opacity: 0;
+  }
+
+  :is([data-stage] .cine, .cine[data-cine]) [data-copy="0"] {
+    pointer-events: auto;
+  }
+
+  :is([data-stage] .cine, .cine[data-cine]) .cine-copy,
+  :is([data-stage] .cine, .cine[data-cine]) .cine-block {
+    position: absolute;
+    top: max(7svh, 3rem);
+    left: var(--gutter);
+    right: var(--gutter);
+    margin: 0;
+  }
+
+  :is([data-stage] .cine, .cine[data-cine]) .cine-block h2 {
+    max-width: 13ch;
+    margin: 0;
+  }
+
+  /* In the stage the closing lines complete the heading, so they take its ink. */
+  :is([data-stage] .cine, .cine[data-cine]) .cine-lines p {
+    color: var(--ink);
+  }
+
+  /* Landscape: the copy sits in the page's left column, the image to its right. */
+  @media (min-width: 720px) and (min-aspect-ratio: 21/20) {
+    :is([data-stage] .cine, .cine[data-cine]) {
+      --cine-screens: 5.4;
+    }
+
+    :is([data-stage] .cine, .cine[data-cine]) .cine-copy,
+    :is([data-stage] .cine, .cine[data-cine]) .cine-block {
+      top: 50%;
+      left: max(var(--gutter), calc((100% - 84rem) / 2 + var(--gutter)));
+      right: auto;
+      width: min(30rem, 31vw);
+      transform: translateY(-50%);
+    }
+
+    :is([data-stage] .cine, .cine[data-cine]) .cine-block h2 {
+      max-width: 12ch;
+    }
   }
 }
 
+/* On paper the stage is the two plain sections, every line at full ink. */
 @media print {
-  [data-reveal] {
-    clip-path: none !important;
+  .cine [data-copy] {
+    opacity: 1 !important;
   }
 }

@@ -1,8 +1,7 @@
 import { Fragment } from 'react';
-import Image from 'next/image';
 import Arrow from './Arrow';
-import LightField from './LightField';
-import Reveal from './Reveal';
+import CinematicStage from './CinematicStage';
+import KineticGrid from './KineticGrid';
 
 export const CONTACT_EMAIL = 'd@grovillon.com';
 
@@ -22,50 +21,13 @@ const PASSAGE = [
 export default function MissionSection() {
   return (
     <>
-      <section aria-labelledby="worn" className="wrap pt-[clamp(3rem,5vw,4rem)]">
-        <div className="grid grid-cols-1 items-start gap-y-8 md:grid-cols-12 md:gap-x-6">
-          <div className="md:col-span-5">
-            <h2 id="worn" className="t-statement">
-              Worn, not carried.
-            </h2>
-            <p className="t-body mt-5 max-w-[28ch]">Designed for the moment conditions stop being ideal.</p>
-          </div>
-          <Reveal className="-mx-[var(--gutter)] md:col-span-7 md:mx-0 md:mr-[calc(var(--gutter)*-1)]">
-            <Image
-              src="/images/garment.png"
-              alt="A close-fitting dark garment with contoured panels"
-              width={1536}
-              height={1024}
-              sizes="(min-width: 768px) 68vw, 100vw"
-              className="garment-img"
-            />
-          </Reveal>
-        </div>
-      </section>
-
-      <section aria-labelledby="complexity" className="wrap pt-[clamp(7rem,13vw,11rem)] text-center">
-        <h2 id="complexity" className="t-statement mx-auto max-w-[15ch]">
-          Its complexity is not visible.
-        </h2>
-        <p className="t-lead mt-6 text-ink-2">By design.</p>
-        <p className="t-lead text-ink-2">Silently present.</p>
-        <Reveal className="mx-auto mt-12 w-full max-w-[19rem] md:mt-16 md:max-w-[26rem]">
-          <Image
-            src="/images/6 layers textile.png"
-            alt="Layered material, shown separated"
-            width={1024}
-            height={1536}
-            sizes="(min-width: 768px) 26rem, 19rem"
-            className="layers-img"
-          />
-        </Reveal>
-      </section>
+      <CinematicStage />
 
       <section
         aria-labelledby="conditions"
-        className="field-band pb-[clamp(7rem,15vw,13rem)] pt-[clamp(5rem,11vw,10rem)]"
+        className="grid-band pb-[clamp(7rem,15vw,13rem)] pt-[clamp(5rem,11vw,10rem)]"
       >
-        <LightField variant="scroll" className="band-field" />
+        <KineticGrid className="grid-field" />
         <div className="wrap">
           <div className="grid grid-cols-1 gap-y-12 md:grid-cols-12 md:gap-x-6 md:gap-y-20">
             <div className="md:col-span-5">
