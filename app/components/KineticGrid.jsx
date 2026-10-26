@@ -32,6 +32,15 @@ const CREST = 0.75; // alpha of the lamp-coloured light along the pulse's front
 const RIPPLES = 3;
 const RETIRE = 150; // ms for a pulse displaced by a newer one to fade out
 const TAP_SLOP = 10; // px a finger may move and still count as a tap
+// The quiet zone around each line of text, outermost step first: px beyond the
+// line's box, and how much of the creases' remaining light the step takes. No
+// crease crosses a word; they fade out over the last 18 px before it.
+const QUIET = [
+  [18, 0.3],
+  [12, 0.43],
+  [6, 0.6],
+  [2, 1],
+];
 const LAMP_REACH = 280; // px
 const SPRING = [170, 26];
 const INK = '236, 235, 231';
@@ -65,15 +74,23 @@ export default function KineticGrid({ className }) {
     let shown = false;
     let tap = null;
     let speed = RIPPLE_SPEED[1];
-    // Where the words are, so the creases fall quiet behind them.
+    // Where the words are, line by line, so the creases fall quiet behind them:
+    // one path per step of the quiet zone, so overlapping lines fill it once.
     let quiet = [];
     const measureQuiet = () => {
       const base = host.getBoundingClientRect();
       const range = document.createRange();
-      quiet = Array.from(host.querySelectorAll('h2, .t-body, .passage-line')).map((el) => {
-        range.selectNodeContents(el);
-        const r = range.getBoundingClientRect();
-        return [r.left - base.left, r.top - base.top, r.width, r.height];
+      const lines = [];
+      const text = document.createTreeWalker(host, NodeFilter.SHOW_TEXT);
+      while (text.nextNode()) {
+        if (!text.currentNode.data.trim()) continue;
+        range.selectNodeContents(text.currentNode);
+        for (const r of range.getClientRects()) lines.push([r.left - base.left, r.top - base.top, r.width, r.height]);
+      }
+      quiet = QUIET.map(([pad, take]) => {
+        const zone = new Path2D();
+        for (const [x, y, w, h] of lines) zone.rect(x - pad, y - pad, w + 2 * pad, h + 2 * pad);
+        return [zone, `rgba(0, 0, 0, ${take})`];
       });
     };
 
@@ -171,14 +188,11 @@ export default function KineticGrid({ className }) {
         ctx.stroke(lattice);
         ctx.restore();
       }
-      // The creases fall quiet behind the words, with a soft edge; less so on a
-      // phone, where the words cover most of the band.
+      // The creases fall quiet behind the words, pulses included.
       ctx.globalCompositeOperation = 'destination-out';
-      const narrow = width < 720;
-      ctx.fillStyle = `rgba(0, 0, 0, ${narrow ? 0.4 : 0.25})`;
-      const pads = narrow ? [12, 6] : [14, 9, 4];
-      for (const [x, y, w, h] of quiet) {
-        for (const pad of pads) ctx.fillRect(x - pad, y - pad, w + 2 * pad, h + 2 * pad);
+      for (const [zone, take] of quiet) {
+        ctx.fillStyle = take;
+        ctx.fill(zone);
       }
       ctx.globalCompositeOperation = 'source-over';
       if (!shown) {

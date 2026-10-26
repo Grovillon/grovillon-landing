@@ -136,7 +136,7 @@
       },
       "passage": {
         "displayName": "Passage",
-        "purpose": "A long passage set one phrase per line and grouped by sentence (lines on the line height, sentences 0.9em apart), in Chalk Ink; each phrase balances its own lines."
+        "purpose": "A long passage set one phrase per line and grouped by sentence (lines on the line height, sentences 0.9em apart), in Chalk Ink; on a phone it scales, to no less than 1.125rem, until its longest phrase holds a line."
       },
       "lead": {
         "displayName": "Lead",
@@ -378,7 +378,7 @@
       },
       {
         "name": "The Asymmetry Rule",
-        "body": "Content is left-set on asymmetric splits of the 12-column grid (5 and 7, or a 5-column heading over a passage stepped to columns 6 to 12); in the stage, copy holds the left column and the image the rest. Centring is kept for a short interlude: one statement, its lead lines and a narrow image, never a whole page.",
+        "body": "Content is left-set on asymmetric splits of the 12-column grid (5 and 7, or a 5-column heading over a passage stepped to columns 6 to 12); in the stage, copy holds the left column and the image the rest. No block of content is centred.",
         "section": "layout"
       },
       {

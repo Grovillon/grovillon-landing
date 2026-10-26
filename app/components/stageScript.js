@@ -56,6 +56,7 @@ const HERO_LOOK = [0.19, 0.12, 1100];
 const WALL_LOOK = [0.1, 0.055, 820];
 const MATCH = [360, 360]; // where the pool falls on the top sheet, render px before the stack closes
 const PULL = 0.24; // scene B's pull-back from the close-up, in B's own 0..1
+const FLOOR = 0.3; // the least fill a held lamp leaves on scene B's sheets
 // Depth of field in scene B: blur in mip levels per sheet away from the lamp,
 // when the stack is fully open; nothing is out of focus while it is closed.
 const FOCUS = 0.5;
@@ -258,6 +259,7 @@ function garmentScene(t, layout, center) {
     lean: 0.3 * ramp(t, -0.05, 0) * (1 - ramp(t, 0.4, 0.44)),
     hold: ramp(t, 0.2, 0.25) * (1 - ramp(t, 0.37, 0.4)),
     heldRadius: 440,
+    floor: 0,
     // The heading arrives with the stage, so it shows at the fold below the
     // hero, and goes out before the camera moves in.
     copy: [1 - ramp(t, 0.32, 0.35), 0, 0, 0],
@@ -359,6 +361,9 @@ function stackScene(t, layout, center) {
     hold: ramp(b, 0.36, 0.4) * (1 - ramp(b, 0.58, 0.62)),
     // Continuous with scene A's held radius across the cut.
     heldRadius: mix(440, 380, pull),
+    // A held lamp dims the sheets it leaves no further than this, so each of the
+    // six keeps its outline and none reads as a hole in the one below it.
+    floor: FLOOR * pull,
     copy: [0, ramp(b, 0.56, 0.6), ramp(b, 0.62, 0.66), ramp(b, 0.68, 0.72)],
   };
 }

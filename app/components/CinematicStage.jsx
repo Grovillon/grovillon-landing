@@ -350,8 +350,9 @@ export default function CinematicStage() {
       frame.lamp[1] = origin[1] + (sy + (held.y - sy) * share - frame.anchor[1]) / zoom;
       // A held lamp narrows and models the image: away from it the image falls
       // darker, and let go, the image returns to its photographed light. In
-      // scene B the focus follows the lamp into the layers.
-      frame.fill *= 1 - 0.75 * share;
+      // scene B the sheets keep a floor of light and the focus follows the
+      // lamp into the layers.
+      frame.fill = Math.max(frame.fill * (1 - 0.75 * share), Math.min(frame.fill, frame.floor));
       frame.radius += (frame.heldRadius - frame.radius) * share;
       stageFocus(frame);
 
@@ -665,33 +666,35 @@ export default function CinematicStage() {
           </div>
         </section>
 
-        <section aria-labelledby="complexity" className="cine-scene cine-stack wrap pt-[clamp(7rem,13vw,11rem)] text-center">
-          <div className="cine-block">
-            <h2 id="complexity" className="t-statement mx-auto max-w-[15ch]" data-copy="1">
-              Its complexity is not visible.
-            </h2>
-            <div className="cine-lines mt-6">
-              <p className="t-lead text-ink-2" data-copy="2">
-                By design.
-              </p>
-              <p className="t-lead text-ink-2" data-copy="3">
-                Silently present.
-              </p>
+        <section aria-labelledby="complexity" className="cine-scene cine-stack wrap pt-[clamp(7rem,13vw,11rem)]">
+          <div className="grid grid-cols-1 gap-y-12 md:grid-cols-12 md:items-center md:gap-x-6">
+            <div className="cine-block md:col-span-5">
+              <h2 id="complexity" className="t-statement max-w-[15ch]" data-copy="1">
+                Its complexity is not visible.
+              </h2>
+              <div className="cine-lines mt-6">
+                <p className="t-lead text-ink-2" data-copy="2">
+                  By design.
+                </p>
+                <p className="t-lead text-ink-2" data-copy="3">
+                  Silently present.
+                </p>
+              </div>
             </div>
-          </div>
-          <div
-            className="cine-media mx-auto mt-12 w-full max-w-[19rem] md:mt-16 md:max-w-[26rem]"
-            role="img"
-            aria-label="Layered material, shown separated"
-          >
-            <Image
-              src="/images/6 layers textile.png"
-              alt=""
-              width={1024}
-              height={1536}
-              sizes="(min-width: 768px) 26rem, 19rem"
-              className="layers-img"
-            />
+            <div
+              className="cine-media w-full max-w-[19rem] md:col-span-7 md:max-w-[26rem] md:justify-self-center"
+              role="img"
+              aria-label="Layered material, shown separated"
+            >
+              <Image
+                src="/images/6 layers textile.png"
+                alt=""
+                width={1024}
+                height={1536}
+                sizes="(min-width: 768px) 26rem, 19rem"
+                className="layers-img"
+              />
+            </div>
           </div>
         </section>
       </div>
