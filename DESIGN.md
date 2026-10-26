@@ -124,18 +124,19 @@ components:
 
 **Creative North Star: "The Low-Observable Surface"**
 
-The page is a matte graphite surface that absorbs light and shows only what one lamp chooses to reveal. On a hardware GPU the ground under the hero and one mid-page band becomes a folded-plate relief, flat facets meeting at zigzag creases that run at ±30°, raked by a single neutral-warm lamp; everywhere else a still pool of the same light rests on the grain in its place. Either way the visitor meets a dark material first and an interface second.
+The page is a matte graphite surface that absorbs light and shows only what one lamp chooses to reveal. On a hardware GPU the ground under the hero becomes a folded-plate relief, flat facets meeting at zigzag creases that run at ±30°, raked by a single neutral-warm lamp; below it the same lamp descends into one pinned stage, where it finds the approved images in the dark, and then into a band where the relief's creases return as hairlines. Without a GPU, a still pool of the same light, plain sections and a still crease map stand in. Either way the visitor meets a dark material first and an interface second.
 
 The system is sparse and exact rather than dramatic. One family, Archivo, carries every word, and its width axis does the expressive work: expanded light capitals for the title, slightly widened light statements, normal width for reading. Ink is a tinted neutral in three steps. Content is separated by 1px hairlines and dark space, never by boxes, and the only solid fill on a screen is the primary button. Density is low: wide, fluid gaps of ground between subjects, short measures, nothing competing with the light.
 
-Motion is rationed and mostly belongs to the light. The lamp sweeps in once and settles, follows a mouse on a spring, and travels with the reader through the band; media opens once with a hard wipe cut at the crease angle. Type never moves, and nothing depends on motion, script or WebGL to be read. The system rejects the dark-tech default outright: a centred glowing headline over an orb or particle field, rows of glass cards, a neon accent, and the same fade-up on every section. Discretion is the brand's posture, so the visuals earn credibility through craft and never through claims.
+Motion belongs to the light and to the reader's hand. The hero lamp sweeps in once and settles, then follows a mouse on a spring. In the stage, every move is a pure function of scroll position, scrubbed through a spring so it plays backwards exactly as forwards; scenes change by a cut on the lamp's pool, never through black, and a hand moving on the subject may lean or hold the light. Type never moves: it is lit or unlit. Nothing depends on motion, script or WebGL to be read. The system rejects the dark-tech default outright: a centred glowing headline over an orb or particle field, rows of glass cards, a neon accent, and the same fade-up on every section. Discretion is the brand's posture, so the visuals earn credibility through craft and never through claims.
 
 **Key Characteristics:**
 - A matte graphite ground under a static 128px grain tile; never flat black.
-- One neutral-warm lamp, the only light; nothing else glows.
-- A ±30° crease angle shared by the relief and the media reveal.
+- One neutral-warm lamp, the only light; nothing else glows, and unlit areas fall to the ground, never below it.
+- A ±30° crease angle shared by the relief, its wall in the stage and the crease map.
 - Archivo alone; width (125, 112, 106, 100) is the expressive axis and weight stays light.
-- Hairlines instead of boxes, square corners, no shadows.
+- Hairlines instead of boxes, square corners, no UI shadows.
+- Scenes scrubbed by scroll, cut on the light, and answering only to a hand on the subject.
 - Complete and legible with motion reduced, scripts off or no GPU.
 
 ## Colors
@@ -143,11 +144,11 @@ Motion is rationed and mostly belongs to the light. The lamp sweeps in once and 
 A near-monochrome graphite palette: three tinted-neutral inks on a cool near-black ground, and one neutral-warm lamp that exists as light, not paint.
 
 ### Primary
-- **Neutral-Warm Lamp** (#f0e6d6): The key light and the system's only chroma. It lights the relief (the shader uses a full-brightness version of this warm white), tints the still light that stands in for the relief (7% in the hero, 5% in the band, a radial falloff to nothing), draws the focus ring and backs selected text (88%, with ground-coloured text).
+- **Neutral-Warm Lamp** (#f0e6d6): The key light and the system's only chroma. It lights the hero relief and the stage's wall (the shaders use a full-brightness version of this warm white), leaves only a trace of its warmth on the images the stage lights (so the black garment never reads bronze), tints the hero's still light (7%, a radial falloff to nothing), lights the crease map's strokes near its lamp and colours its pulses, draws the focus ring and backs selected text (88%, with ground-coloured text).
 
 ### Neutral
-- **Graphite Ground** (#0a0b0c): The page and every background. It is tiled with a 128px grain whose noise (±3 levels per channel) averages exactly to this value, so the surface reads matte rather than flat. Also the browser theme colour and the label colour on the primary button.
-- **Chalk Ink** (#ecebe7): The title, statements, the tagline, the passage, list titles and all hovered text; the fill of the primary button. About 16.5:1 on the ground.
+- **Graphite Ground** (#0a0b0c): The page and every background. It is tiled with a 128px grain whose noise (±3 levels per channel) averages exactly to this value, so the surface reads matte rather than flat. It is also the floor of every lit scene: unlit pixels fall to it and never below. The browser theme colour and the label colour on the primary button.
+- **Chalk Ink** (#ecebe7): The title, statements, the tagline, the passage, list titles and all hovered text; the fill of the primary button; scene B's closing lines while they are lit in the stage. About 16.5:1 on the ground. At 10–12% it is also the crease map's resting stroke (12% on the canvas, 10% in its still stand-in).
 - **Lit Ink** (#f8f5ef): Chalk Ink brightened toward the lamp; only the primary button's hover fill.
 - **Ash Ink** (#b3b4b0): Supporting sentences, secondary lead lines and quiet links at rest, including the header address. About 9.4:1.
 - **Smoke Ink** (#8e9092): Fine print only. About 6.1:1, still above AA for small text.
@@ -155,9 +156,9 @@ A near-monochrome graphite palette: three tinted-neutral inks on a cool near-bla
 - **Strong Hairline** (rgb(236 235 231 / 0.26)): The resting underline of inline links.
 
 ### Named Rules
-**The One Lamp Rule.** Light has one source and one colour. The lamp is the only thing on the page that emits light; ink, hairlines and the button reflect it and never glow.
+**The One Lamp Rule.** Light has one source and one colour. In every scene the lamp is the only thing that emits light; ink, hairlines, the button and the images reflect it and never glow.
 
-**The Light-Not-Paint Rule.** The lamp colour appears only as light (the relief and its still stand-in), as the focus ring and as the text selection. It is never a fill, a text colour, a border or an accent.
+**The Light-Not-Paint Rule.** The lamp colour appears only as light (the relief and its still stand-in, the stage's lamp, the crease map's lamp and pulses), as the focus ring and as the text selection. It is never a fill, a text colour, a border or an accent.
 
 **The Three Inks Rule.** Text on the ground takes ink, ink-2 or ink-3 and nothing else: ink for what is read first, ink-2 for what supports it, ink-3 for fine print. The one inversion is the primary button, ground on ink. Interaction may raise ink-2 to ink; nothing changes hue.
 
@@ -171,8 +172,8 @@ A near-monochrome graphite palette: three tinted-neutral inks on a cool near-bla
 
 ### Hierarchy
 - **Display** (300, clamp(2.375rem, 8.1vw, 6rem), 0.95): 125% width, uppercase, +0.012em. The page title only, one per page, left-set; 38px on a phone, 96px on a desktop.
-- **Statement** (300, clamp(1.875rem, 3.9vw, 3.5rem), 1.06): 112% width, −0.006em, sentence case. Section headings.
-- **Passage** (330, clamp(1.375rem, 2.35vw, 2.125rem), 1.32): Normal width, −0.004em, Chalk Ink. A long passage set one phrase per line and grouped by sentence: lines inside a sentence sit on the line height, sentences 0.9em apart.
+- **Statement** (300, clamp(1.875rem, 3.9vw, 3.5rem), 1.06): 112% width, −0.006em, sentence case. Section headings; in the stage held to 13ch (12ch on landscape).
+- **Passage** (330, clamp(1.375rem, 2.35vw, 2.125rem), 1.32): Normal width, −0.004em, Chalk Ink. A long passage set one phrase per line and grouped by sentence: lines inside a sentence sit on the line height, sentences 0.9em apart; each phrase balances its own lines, so a phrase too long for a phone never leaves one word behind.
 - **Lead** (400, clamp(1.1875rem, 1.55vw, 1.4375rem), 1.42): The tagline, short answer lines under a statement, a closing contact line; Chalk Ink or Ash Ink.
 - **Role** (400, clamp(1.125rem, 1.85vw, 1.5rem), 1.3): 106% width. Titles inside hairline lists.
 - **Body** (380, 1.0625rem, 1.65): Ash Ink. Supporting sentences, held to 28–42ch.
@@ -186,38 +187,44 @@ Headings balance their lines and paragraphs avoid orphans (`text-wrap: balance` 
 
 **The Light Type Rule.** Large type is light: 300 for the title and statements, 330 for the passage. Nothing is bold or italic; the heaviest weight in the system is the button's 560.
 
-**The Still Type Rule.** Type never moves. No fade-ups, typing effects, split letters or scroll-linked text; every word is in the server HTML and visible before any script runs.
+**The Still Type Rule.** Type never moves. Outside the stage every word is simply visible. In the stage each text block is lit or unlit as a state: it switches on at a point in the scroll and fades there in place (about 300ms in, 200ms out), never scrubbed and never resting half-lit. There is no translation, typing effect or split letters, every word is in the server HTML, and unlit text takes no pointer, so a selection never catches it.
 
 ## Layout
 
-One centred container, at most 84rem wide, with a fluid side gutter (20px on a phone, 72px on a wide desktop). A single breakpoint at 48rem (768px) turns the one-column phone stack into a 12-column grid with 1.5rem column gaps; nothing else in the layout is breakpoint-driven.
+One centred container, at most 84rem wide, with a fluid side gutter (20px on a phone, 72px on a wide desktop). A breakpoint at 48rem (768px) turns the one-column phone stack into a 12-column grid with 1.5rem column gaps. The stage alone has a second, shape-based switch: landscape is at least 720px wide with an aspect ratio of at least 21/20; anything else is portrait.
 
-Compositions are asymmetric and left-set: a 5-column statement beside 7 columns of media; a 5-column heading with its passage stepped down and right below it, in columns 6 to 12; a 5-column heading beside a 7-column list. Media may break the container: the fall-off image runs out through the right gutter from 48rem and edge to edge on a phone.
+The page runs: hero, the pinned stage (scenes A and B), the crease band (scene C), the roles, the footer. Compositions are asymmetric and left-set: a 5-column heading over a passage stepped down and right into columns 6 to 12; a 5-column heading beside a 7-column list. In the plain sections that stand in for the stage, a 5-column statement sits beside 7 columns of media that run out through the right gutter from 48rem and edge to edge on a phone, and scene B is a short centred interlude.
 
-Fields are full-bleed and sit under the content. The hero is at least max(36rem, 82svh) tall, with its content pushed to the lower left (8rem above it, clamp(4.5rem, 13svh, 8.5rem) below). The mid-page band carries clamp(5rem, 11vw, 10rem) of padding above its content and clamp(7rem, 15vw, 13rem) below.
+The stage is one screen tall (100lvh) and pinned through a run of 4 screens of scroll on portrait and 4.4 on landscape. On landscape its copy sits in the page's left column, vertically centred and min(30rem, 31vw) wide, with the image to its right; on portrait the copy sits at the top, max(7svh, 3rem) down, above the image. Scene A's heading is lit from first paint, so on a phone it shows below the hero at the fold.
+
+Fields are full-bleed and sit under the content. The hero is at least max(36rem, 82svh) tall, with its content pushed to the lower left (8rem above it, clamp(4.5rem, 13svh, 8.5rem) below). The crease band carries clamp(5rem, 11vw, 10rem) of padding above its content and clamp(7rem, 15vw, 13rem) below.
 
 Vertical rhythm is generous and fluid. Between plain sections the gap is the section token (7rem on a phone, 11rem on a desktop). A field brings its own padding, so the section after the hero or the band opens with only clamp(3rem, 5vw, 4rem) or clamp(3rem, 6vw, 5rem), and the band follows the content above it directly, its own top padding giving the gap. The footer sits clamp(6rem, 12vw, 10rem) below the last section. Inside a group the steps are small and fixed, mostly stack-xs from a tagline to its sentence, stack-sm from a heading to its supporting line, stack-md (2.5rem from 48rem) from the title to its copy block, and stack-lg before a closing line or an image. Supporting sentences hold to 28–42ch, and the hero's copy block to 38rem.
 
-Touch targets: controls and the header address 3rem tall, the mark 2.75rem, list rows at least 4.5rem. Hover effects, and the lamp that follows the pointer, exist only under `(hover: hover) and (pointer: fine)`.
+Touch targets: controls and the header address 3rem tall, the mark 2.75rem, list rows at least 4.5rem. Hover effects, and any lamp that follows the pointer, exist only for a fine pointer; a swipe is always a scroll.
 
 ### Named Rules
-**The Asymmetry Rule.** Content is left-set on asymmetric splits of the 12-column grid (5 and 7, or a 5-column heading over a passage stepped to columns 6 to 12). Centring is kept for a short interlude: one statement, its lead lines and a narrow image, never a whole page.
+**The Asymmetry Rule.** Content is left-set on asymmetric splits of the 12-column grid (5 and 7, or a 5-column heading over a passage stepped to columns 6 to 12); in the stage, copy holds the left column and the image the rest. Centring is kept for a short interlude: one statement, its lead lines and a narrow image, never a whole page.
 
 ## Elevation & Depth
 
-Flat, with no shadows anywhere: no box-shadow, no drop-shadow, no blur, no glass. Depth is light falling on form. On a hardware GPU the ground under the hero, and again under one mid-page band, is a folded-plate relief: straight folds and zigzag creases whose segments run at ±30° divide it into flat facets. A single point lamp hangs just above it; each facet is shaded only by its angle to the lamp and its distance from it, with a faint specular sheen, and the creases are drawn as fine lines that brighten only near the lamp. Away from the lamp the relief sinks back into the ground, and masks finish the job: the hero field is solid to 58% of its height and gone at its bottom edge; the band fades in over its first 22% and out over its last 22%. The relief carries the same ±3-level grain as the page's tile, so relief and ground read as one matte surface. Images take depth the same way: lit from above and dissolving into the ground through masks, never framed or lifted.
+Flat, with no UI shadows anywhere: no box-shadow, no drop-shadow, no backdrop blur, no glass. Depth is light falling on form. On a hardware GPU the ground under the hero is a folded-plate relief: straight folds and zigzag creases whose segments run at ±30° divide it into flat facets. A single point lamp hangs just above it; each facet is shaded only by its angle to the lamp and its distance from it, with a faint specular sheen, and the creases are drawn as fine lines that brighten only near the lamp. Away from the lamp the relief sinks back into the ground, and a mask finishes the job: the hero field is solid to 58% of its height and gone at its bottom edge. The relief carries the same ±3-level grain as the page's tile, so relief and ground read as one matte surface.
+
+In the stage the same relief stands as a wall 0.45 camera-distance units behind the garment, so camera moves give real parallax. Inside a lit scene the one lamp may be occluded, and that is the only shadow the system knows: the garment's silhouette darkens the wall behind it (falling down and to the left, as from the hero's lamp), and each sheet of the layered material darkens the sheet below where they rest close. Scene B also has a camera's depth of field: sheets away from the lamp soften as the stack opens, and nothing is soft while it is closed; the inner layers are only ever suggested, kept in shadow and out of sharp focus. The stage's edges fade into the ground (its top 10% while it scrolls in; as it leaves, a lower fade rising from 30% to 80% of its height by the time 35% of the stage has left, so the scene sets). Images outside the stage take depth the same way: lit from above and dissolving into the ground through masks, never framed or lifted.
 
 ### Named Rules
-**The Depth-Is-Light Rule.** Nothing is raised. Surfaces get depth only from the lamp falling across facets and from masks that let forms fall off into the ground.
+**The Depth-Is-Light Rule.** Nothing is raised. Surfaces get depth only from the lamp falling across facets and images, from the lamp being occluded inside a lit scene, and from masks that let forms fall off into the ground.
 
-**The Still Light Rule.** When the relief cannot run on a hardware GPU (a software WebGL renderer, no WebGL, or no script), a still radial pool of lamp light sits where the lamp would rest. Content never depends on the relief.
+**The Still Light Rule.** When the relief cannot run on a hardware GPU (a software WebGL renderer, no WebGL, or no script), a still radial pool of lamp light sits where the hero's lamp would rest. Content never depends on the relief.
+
+**The Pixel Truth Rule.** Scenes draw only the approved images' own pixels. Light scales how much of a pixel shows and focus softens it; nothing adds surface, detail or geometry. Unlit areas fall to the ground colour, never below it.
 
 ## Shapes
 
-Square, hard-edged and sparse. Every surface and control has square corners: the button, list rows, image bounds and the focus ring. Lines are 1px hairlines, and only horizontal: one above each list row, one closing the list, one above the footer. The only angled geometry is the crease: the relief's zigzags at ±30° and the media reveal's wipe edge at 30°. Images are unframed, cut-outs and renders that dissolve into the ground through masks. The mark is the one round form, a circular monogram drawn in the current text colour; arrows are 18px line drawings with a 1.5px stroke and square caps, so even the icons have no rounded ends. A down arrow jumps within the page; an up-right arrow marks a link that leaves it (every mail link).
+Square, hard-edged and sparse. Every surface and control has square corners: the button, list rows, image bounds and the focus ring. Interface lines are 1px hairlines, and only horizontal: one above each list row, one closing the list, one above the footer. The only angled geometry is the crease: the relief's zigzags at ±30°, and the crease map that draws them as hairlines. Images are unframed, cut-outs and renders that dissolve into the ground through masks. The mark is the one round form, a circular monogram drawn in the current text colour; arrows are 18px line drawings with a 1.5px stroke and square caps, so even the icons have no rounded ends. A down arrow jumps within the page; an up-right arrow marks a link that leaves it (every mail link).
 
 ### Named Rules
-**The Crease Angle Rule.** Folds, cuts and wipes run at the relief's 30° crease angle and no other. Don't introduce skews, other diagonal wipes or angled section edges.
+**The Crease Angle Rule.** Folds and creases run at the relief's 30° angle and no other: the hero relief, the stage's wall and the crease map. Don't introduce skews, diagonal wipes or angled section edges.
 
 **The No-Box Rule.** Content is never boxed: no cards, panels, outlined containers or framed images. Separation is a 1px hairline or dark space.
 
@@ -241,48 +248,79 @@ An open ledger, not a stack of cards.
 
 ### Navigation
 - **Header:** the mark (2rem, Chalk Ink) top left links back to the top; the contact address sits top right as a quiet link (Ash Ink, 3rem tall), so the address is on screen from the first moment and a visitor without a mail app can still read it. The header floats over the hero with no bar, background or border and does not stick; there is no menu. Hover raises the address to Chalk Ink.
+- **In-page jumps:** a link or a Tab keypress that would carry the reader across the stage jumps instead of scrolling smoothly, so the film never flashes past.
 - **Footer:** a Hairline above; the mark (2.25rem) beside the label-type wordmark, both in Ash Ink; the copyright in Smoke Ink.
 
 ### Relief Field (signature)
-The ground itself, drawn in WebGL behind the hero and once more behind a mid-page band.
-- **Form:** straight folds and ±30° zigzag creases cut the plane into flat facets; one point lamp shades each facet by angle and distance; only the creases are drawn as lines. Lengths are measured against a reference height (the hero's own height, or the viewport height for the band) so the folds keep one physical size, and a field narrower than its reference height switches to a finer fold.
+The ground itself, drawn in WebGL behind the hero.
+- **Form:** straight folds and ±30° zigzag creases cut the plane into flat facets; one point lamp shades each facet by angle and distance; only the creases are drawn as lines. Lengths are measured against the hero's own height so the folds keep one physical size, and a field narrower than its height switches to a finer fold.
 - **Hero lamp:** sweeps once from left of centre to rest at upper right, opposite the title (1700ms, cubic-bezier(0.77, 0, 0.175, 1)), while warming from dark to full (1200ms, ease-out). With a mouse it then follows the pointer on a spring (stiffness 170, damping 26) and returns to rest when the pointer leaves. A pointer that arrives mid-entrance takes the lamp with its momentum: the spring's stiffness ramps in over 200ms, critically damped throughout, so the lamp carries on briefly before turning.
-- **Band lamp:** lower, dimmer and grazing. It crosses from 8% to 92% of the width as the band passes through the viewport, held level with the reader's eye line (42% of the viewport height), on a softer spring (stiffness 90, damping 19) along the horizontal only.
 - **Rendering:** shown only after its first frame (a 300ms fade), so it never pops in; drawn at CSS-pixel resolution with 4× supersampling; paused off-screen and in hidden tabs; rebuilt after a lost context.
-- **Fallback:** drawn only on a hardware GPU. Software renderers, no WebGL and no script all get the still light (600ms fade in): a radial pool of lamp light near the lamp's rest, 7% at 72% across and 8% down in the hero, 5% at 62% and 42% in the band. The direction first called for the relief everywhere; the build reserves it for hardware GPUs, and the build is the rule.
-- **Reduced motion:** no sweep and no following. The hero lamp starts at rest at full strength; the band lamp parks at mid-width.
+- **Fallback:** drawn only on a hardware GPU. Software renderers, no WebGL and no script all get the still light (600ms fade in): a radial pool of lamp light near the lamp's rest, 7% at 72% across and 8% down. The direction first called for the relief everywhere; the build reserves it for hardware GPUs, and the build is the rule.
+- **Reduced motion:** no sweep and no following. The lamp starts at rest at full strength.
 
-### Media (signature)
+### Cinematic Stage (signature)
+One pinned stage below the hero, drawn in WebGL on a hardware GPU, in which the lamp descends onto the two approved images. Scene A runs over the first half of the pinned run and scene B over the second, with a hard cut between them.
+- **Scrub:** the scenes follow scroll position through a critically damped spring (stiffness 140, damping 2√140), so a wheel step glides and the film plays backwards exactly as forwards. A jump (first frame, the stage off screen, a resize) lands directly. Every scrubbed move and ramp eases with glide, cubic-bezier(0.45, 0, 0.55, 1); moving lights follow velocity-continuous paths, and a repeated key is a hold.
+- **Lamp model:** each image is shown at the lamp's exposure, a pool that falls off with distance under a lamp at a set height and radius, blended toward the image as photographed by a fill amount; the lit colour never falls below the ground. Images take only a trace of the lamp's warmth (tint 65% to 100% white as the fill rises); the wall keeps the full lamp colour. Grain is ±3/255, as on the page.
+- **Scene A, the garment:** the garment stands in front of the hero's relief, which is its back wall. The stage arrives with its heading lit and its lamp already glowing at 55% where the hero's lamp rests, reaching full strength as the stage pins, while the wall's look eases from the hero's to a dimmer one, so the join reads as one surface. The camera opens close on the shoulder and pulls back to the whole garment, while the lamp crosses it from upper right to lower left (roughly along the crease angle) and curves up to settle as a key light over the left shoulder (radius widening 300 → 560 → 680 image px). The heading then goes out, and the camera pushes onto the right shoulder seam while the beam narrows to a pool of 130 image px at the centre of the stage. Over that last stretch the relief behind the garment falls dark and the lamp eases down to 40%, so the scene ends as one pool of light on black.
+- **The cut:** scene B opens on the same pool, at the same screen position, radius, zoom and lamp height, falling on the top sheet's fabric, at about the same brightness: the garment's fabric is lighter than the top sheet's, and light only ever scales an image down, so scene A dims to meet it. The sheets below the top one start in shadow (30% of their shade) and come into the light as the camera pulls back (over the first 24% of scene B, in log-space zoom) while the lamp lowers and widens to 520. The cut never passes through black.
+- **Scene B, the sheets:** six sheets cut from the approved render. Each pair of sheets moves between 30% and 100% of the render's own spacing, never wider and never sideways, and each sheet sits at least as low as the sheet below it, so no surface the render does not contain is ever shown. The pairs part top-first under a low lamp crossing from left to right (radius 520 → 600 → 640), the sheets away from the lamp softening out of focus; the third sheet is kept darker (80% shade) and never in sharp focus while the stack is open, and the base sheet softens least, so it never reads as a reflection; then they close top-first as the heading, "By design." and "Silently present." are lit in turn, and the fill rises so the closed stack returns to its photographed light. The camera keeps the stack framed (alone in the frame, then beside the statement) and recedes slightly at the end. On a portrait screen the stack then sets into the dark over the last 12% of the scene, so the statement ends the film on its own. The sheets are monochrome, with the same filter as the static image (grayscale 1, brightness 0.96, contrast 1.06), and the inner sheets are a little darker than the outer ones.
+- **Hand on the subject (fine pointer):** only a moving mouse moves the light; a pointer event without a change of position does not count. A mouse that moves on the subject (the garment's silhouette, or the sheets plus a 24px margin) leans the lamp 30% toward itself through most of each scene, and scrolling hands it back. In each scene's hold (scene A at its key light, scene B while the stack is open), moving on the subject takes the lamp and moving off it lets go; a still pointer keeps what it has until the hold ends or the pointer leaves the stage. A held lamp models the image: the fill drops by up to 75% and the radius moves toward 440 image px in scene A, easing to 380 render px through scene B's pull-back so it carries across the cut; in scene B focus follows it into the layers. The held lamp springs as the hero's does (170, 26), and once the hand has let go and the share has gone, it rests exactly on the scripted lamp. A resting pointer, anywhere, changes nothing.
+- **Touch:** a single still press of 400ms within 10px on the subject takes the light; any movement past 10px, a scroll or lifting the finger lets go. A swipe is always a scroll.
+- **Text:** four blocks (scene A's heading and line; scene B's heading and its two closing lines), each lit or unlit as a state (see the Still Type Rule). Scene A's heading and line start lit, as the stylesheet shows them; on screen every change fades, including on a reload into the stage, and only off screen does a block land on its state directly. In the stage scene B's closing lines take Chalk Ink.
+- **Rendering:** the canvas is shown only after its first frame (300ms, ease-out); it draws only while something moves and the stage is visible, and lowers its resolution rather than drop frames.
+- **Fallback:** reduced motion (also when switched on mid-visit), no WebGL, a software renderer, no script, images that do not arrive, and print all get the same markup as plain sections at full ink: scene A as a 5/7 split with the garment under the fall-off treatment, scene B as a centred interlude with the layered material under the lit-from-above treatment.
+
+### Crease Map (signature)
+Scene C: the hero's crease map drawn as hairlines behind the band, at half the hero's scale. Zigzag creases of 30° segments, 128px per fold and 152px apart (the relief's own proportions), 0.75px on dense screens and 1px otherwise.
+- **Lamp:** the band has its own lamp, resting upper right (78% across). Strokes are lit by a radial gradient around it reaching 280px (×1.4 under a pointer): lamp colour at 40% at its centre (75% under a pointer), Chalk Ink at 20% (30%) at 45% of its reach, and Chalk Ink at 12% beyond.
+- **Bend (mouse and pen only):** the pointer carries the lamp on the hero's spring (170, 26), and the creases bend around it like a surface pressed by the hand: 22px of movement on a ring 160px from the pointer, none directly under it. When the pointer leaves, the surface relaxes and the lamp returns to rest.
+- **Pulse:** a click, or a still tap (released within 10px), sends the lamp's light running out across the still surface: a lamp-coloured crest at 75% over a ±60px band, stroked 1.25× as thick as the creases, travelling at about 62% of the band's width per second (340–900px/s) and fading out over 1.5s. A mouse or pen press on the words selects them and sends no pulse. At most three run at once; a fourth retires the oldest over 150ms. When the band's heading first comes well into view, the resting lamp sends one pulse, unless the visitor has already interacted.
+- **Quiet zones:** the creases fall quiet behind each line of text (heading, body, passage lines), feathered (about 58% removed at the core on a band 720px and wider, about 64% on a narrower one).
+- **Touch:** a tap pulses; a swipe only scrolls; touch never bends the surface.
+- **Fallback:** without script or with reduced motion (also when switched on mid-visit), a still CSS crease map: one 256×152 tile of the same zigzag at 10% Chalk Ink, under a radial mask centred 74% across and 30% down and the band's vertical fade (in over its first 22%, out over its last 22%). The canvas fades in over it (300ms) after its first draw.
+- **Provenance:** a reconstruction from the brief's description of the client's component, whose source was not supplied; treat its exact values as provisional.
+
+### Media
+Used where the stage stands down, as plain sections.
 - **Fall-off treatment:** a colour image whose lower edge dissolves into the ground (solid to 72%, transparent at the bottom); it may bleed out of the container through the gutter.
 - **Lit-from-above treatment:** a monochrome image (greyscale, 96% brightness, 106% contrast) under a graded mask (solid to 48%, 62% at 74%, 20% at 92%, gone at the bottom), so its top catches the light and its lower part falls away into shadow while staying legible.
-- **Reveal:** media that starts below the fold opens once from its top-left corner behind a hard clip-path edge at the 30° crease angle (900ms, cubic-bezier(0.33, 1, 0.68, 1); the visible sweep takes about 200ms, slow enough for the edge to read as passing light), as it crosses 88% of the viewport height. Media already in view at load is never hidden; there is no reveal under reduced motion, without script, or in print. The direction first described reveals as the lamp's light passing over; the build cuts a hard 30° edge instead, and the build is the rule.
 
 ### Named Rules
 **The One Filled Control Rule.** The primary button is the only solid fill on a screen and appears once there; every other action is text with an arrow.
 
 **The Brighten Rule.** Interaction only brightens: ink-2 rises to ink, a strong hairline to ink, ink to lit ink, and arrows lean 3px toward where they lead. Nothing changes hue, grows or lifts.
 
-**The Reveal Once Rule.** Media opens once and stays open; what the reader can already see is never hidden.
+**The Scrub Rule.** Scenes are pure functions of scroll position, never of timers, and play backwards exactly as forwards. Only the text's on/off fade and the visitor's held lamp have time of their own.
+
+**The Cut on the Light Rule.** A change of scene inside the stage is a match on the lamp's pool: the same place, size, scale and brightness on both sides, one pool on black, never a fade to black.
+
+**The Hand on the Subject Rule.** The light answers only to a hand moving on the subject: moving on it leans the light, and in a hold takes it; moving off it lets go. A resting pointer, or a swipe, changes nothing.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** keep every surface on the graphite ground with its grain tile, and let the relief or its still light be the only thing that brightens it.
-- **Do** rest the lamp away from the type: in the hero it settles upper right while the title sits lower left.
+- **Do** keep every surface on the graphite ground with its grain tile, and let the lamp (on the relief, in the stage, on the crease map, or as the still light) be the only thing that brightens it.
+- **Do** rest the lamp away from the type: in the hero it settles upper right while the title sits lower left; in the stage the copy holds the left column and the light works on the image to its right.
 - **Do** separate content with 1px hairlines (line, 12% ink) and dark space, and keep surfaces and controls square-cornered.
 - **Do** set every word in Archivo and change width before weight: 125% title; 112% statements, labels and controls; 106% list titles; 100% reading.
-- **Do** cut any new fold, wipe or diagonal at the 30° crease angle.
-- **Do** ease arrivals and responses with cubic-bezier(0.23, 1, 0.32, 1), press controls to scale(0.97), and keep hover effects behind `(hover: hover) and (pointer: fine)`.
-- **Do** make every view complete without motion, script or WebGL: content visible by default, the reveal's hidden state set only by script and only when motion is allowed, the still light in place of the relief.
-- **Do** use only approved images or abstract material, lit by the same lamp and falling off into the ground through masks; ship any derived or generated raster with its provenance embedded, and treat client originals in CSS only.
+- **Do** run any new fold or crease at the 30° crease angle.
+- **Do** ease arrivals and responses with cubic-bezier(0.23, 1, 0.32, 1), press controls to scale(0.97), and keep hover effects behind `(hover: hover) and (pointer: fine)`; ease scroll-scrubbed moves with cubic-bezier(0.45, 0, 0.55, 1).
+- **Do** drive scenes from scroll position through a spring, so they play backwards exactly as forwards, and change scene on a match of the lamp's pool in place, size and brightness.
+- **Do** make every view complete without motion, script or WebGL: content visible by default, the still light in place of the relief, plain sections in place of the stage, the still crease map in place of the canvas.
+- **Do** use only approved images or abstract material, lit by the same lamp and falling off into the ground; draw only their own pixels, ship any derived raster with its provenance, and treat client originals in CSS only.
 
 ### Don't:
-- **Don't** add glow, bloom or halos to type, controls, the mark or images; the only soft light is the lamp on the relief or its still stand-in.
+- **Don't** add glow, bloom or halos to type, controls, the mark or images; the only soft light is the lamp.
 - **Don't** use frosted glass, cards, panels or framed images.
 - **Don't** use gradients as decoration (gradient text, gradient buttons, tinted gradient backdrops); a gradient is only ever the lamp's falloff or a mask into the ground.
 - **Don't** introduce an accent colour, or use the lamp colour as paint.
-- **Don't** add box or drop shadows; depth comes only from light on the relief.
+- **Don't** add box or drop shadows to the interface; the only shadows are the lamp's light occluded inside a lit scene.
 - **Don't** set a centred, glowing headline over an orb or particle field.
-- **Don't** animate text into view or give every section the same entrance; only media reveals, once.
+- **Don't** move text into view, type it out or split it, or give every section the same entrance; in the stage text is lit in place, nowhere else does it animate.
+- **Don't** cut between scenes through black, or drive a scene from a timer.
+- **Don't** let a resting pointer or a swipe move the light; only a hand moving on the subject, or a still press on it, may.
+- **Don't** add surface, detail or geometry the approved images do not contain, or open the layered material wider than its own render.
 - **Don't** set anything bold or italic, or add a second typeface.
 - **Don't** add technical detail of the product or invented claims to any visual.

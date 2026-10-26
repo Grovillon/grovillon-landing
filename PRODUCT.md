@@ -33,7 +33,8 @@ web
 
 - [Repo] Next.js 16 App Router, React 19, Tailwind CSS 4.
 - [Brief] Confidentiality is a hard constraint: no technical detail of how the product works, and no specifications, demonstrations, partnerships, test results, certifications or commercial claims. Where a visual is needed, use abstract imagery rather than a depiction of the technology.
-- [Brief] Existing routes, authentication-related code, access-request and reset integrations, and server code are preserved untouched.
+- [Brief] The legacy authentication, access-request and password-reset code has been removed (round 2); no replacement authentication, user store or provider may be introduced.
+- [Brief] Motion may be ambitious (round 3: cinematic, scroll-driven scenes), but every visual stays an artistic presentation of approved imagery or abstract material, never an engineering demonstration.
 - [Brief] The page must stay usable when animation fails and must respect reduced-motion preferences.
 
 ## Brand Commitments
