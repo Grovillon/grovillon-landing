@@ -240,7 +240,9 @@ export function stageLayout(width, height, entry = 0.25) {
         holdD: 1,
         pushD: PUSH,
         anchor: [Math.max(0.645 * width, copyRight + 24 + 0.45 * GARMENT.width * fit), 0.5 * height],
-        closeAnchor: [0.62 * width, 0.5 * height],
+        // The shoulder at mid-screen: the garment is lit on the left, its collar
+        // about a third across, and the pull-back carries it to the right.
+        closeAnchor: [0.5 * width, 0.5 * height],
       },
       stack: {
         // The camera keeps the stack framed: closer while it is closed, further back as it opens.
