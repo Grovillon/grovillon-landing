@@ -237,12 +237,12 @@
       },
       {
         "name": "garment-reveal",
-        "value": "t 0-0.21 of the pinned run, camera still at the opening framing (landscape: the shoulder at mid-screen, the garment on the left, its collar about a third across); a soft light front spreads from above the right shoulder across the garment while the fill rises to 0.5",
+        "value": "t 0-0.21 of the pinned run, camera still at the opening framing (landscape: the garment on the left, its chest 29% across, inside a veil darkening the relief to 62% across and gone by 90%, which lifts during the pull-back); a soft light front spreads from above the right shoulder across the garment while the fill rises to 0.5 (0.35 landscape); camera and lamp held still to 0.235",
         "purpose": "Scene A: the garment, solid throughout and unlit in its own pool of shade on the lit relief, is lit gradually where it stands; nothing moves, scales or fades."
       },
       {
         "name": "garment-moves",
-        "value": "pull-back t 0.215-0.35 (2x landscape, about 1.6x portrait); key light held to 0.43 (radius 680); push onto the right shoulder seam t 0.43-0.51 to 0.38 of the hold's camera distance (radius to 260, then 200)",
+        "value": "pull-back t 0.235-0.35 (1.4x landscape, carrying the garment from the left to the right while the veil lifts by 0.33; about 1.6x portrait); key light held to 0.43 (radius 680); push onto the right shoulder seam t 0.43-0.51 to 0.38 of the hold's camera distance (radius to 260, then 200)",
         "purpose": "Scene A's camera, scale changing at an even rate about the point both framings share."
       },
       {

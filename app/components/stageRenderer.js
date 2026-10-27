@@ -5,7 +5,8 @@
 // (the same folds at the same size, the same lamp model and grain) under a
 // steady lamp of its own, and it does not change while the stage is on screen.
 // Scene A draws the garment in front of it, a solid object standing in its own
-// soft pool of shade on the relief: unlit, it is as dark as the shade around
+// soft pool of shade on the relief (on a landscape screen, first on the left,
+// where a veil darkens the relief): unlit, it is as dark as the shade around
 // it, and it comes out of the dark only where light falls on it. Scene B draws
 // the six sheets of the layered material over it as sprites under their own
 // lamp, each darkened where the sheet above it rests close and softened by the
@@ -119,13 +120,23 @@ vec3 relief(vec2 frag) {
                + shade(p + vec2(-0.125, -0.375) * s, px)
                + shade(p + vec2(-0.375, 0.125) * s, px));
 }
+
+// The veil over the left of the relief, where the garment first stands. It is
+// the relief's, so it is there before the garment arrives and no light on the
+// garment lifts it: as dark as the shade against the garment up to uVeil.x,
+// gone by uVeil.y (css px), at strength uVeil.z.
+uniform vec3 uVeil;
+vec3 veiled(vec3 col, vec2 frag) {
+  float veil = 0.97 * uVeil.z * (1.0 - smoothstep(uVeil.x, uVeil.y, frag.x / uScale));
+  return uGround + (col - uGround) * (1.0 - veil);
+}
 `;
 
 const RELIEF_FRAGMENT = `${COMMON}
 ${RELIEF}
 void main() {
   vec2 frag = fragPos();
-  gl_FragColor = vec4(finish(relief(frag), frag), 1.0);
+  gl_FragColor = vec4(finish(veiled(relief(frag), frag), frag), 1.0);
 }
 `;
 
@@ -246,7 +257,7 @@ void main() {
     back = uGround + (back - uGround) * (1.0 - UNDER * under);
     if (under < 0.998) back = mix(relief(frag), back, under);
     back = uGround + (back - uGround) * (1.0 - pool);
-    col += back * (1.0 - a);
+    col += veiled(back, frag) * (1.0 - a);
   }
 
   gl_FragColor = vec4(finish(col, frag), 1.0);
@@ -353,6 +364,8 @@ function link(gl, vertex, fragment, names) {
 }
 
 const SHARED = ['uRes', 'uScale', 'uGround', 'uLamp', 'uLight', 'uRadius', 'uIntensity', 'uFill', 'uEdges'];
+// No veil: a scene other than the garment's (stageScript's frame.veil).
+const NO_VEIL = [0, 1, 0];
 const RELIEF_UNIFORMS = [
   'uUnit',
   'uOrigin',
@@ -363,6 +376,7 @@ const RELIEF_UNIFORMS = [
   'uLook',
   'uReliefLamp',
   'uSupersample',
+  'uVeil',
 ];
 
 function createPrograms(gl) {
@@ -474,7 +488,7 @@ export function createStageRenderer(canvas) {
     gl.uniform1f(p.uFill, frame.fill);
   };
 
-  const setRelief = (p, lift) => {
+  const setRelief = (p, lift, veil) => {
     const { unit, origin, cell, depth, lamp, look } = surface;
     gl.uniform1f(p.uUnit, unit);
     gl.uniform2f(p.uOrigin, 0, origin);
@@ -486,6 +500,7 @@ export function createStageRenderer(canvas) {
     gl.uniform3f(p.uReliefLamp, lamp[0], origin + lamp[1], lamp[2] + lift);
     // Facets have hard edges: supersampled on a low-density screen.
     gl.uniform1f(p.uSupersample, size.supersample ? 1 : 0);
+    gl.uniform3f(p.uVeil, veil[0], veil[1], veil[2]);
   };
 
   const fullscreen = (p) => {
@@ -494,11 +509,11 @@ export function createStageRenderer(canvas) {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
   };
 
-  const drawRelief = (edges, lift) => {
+  const drawRelief = (edges, lift, veil) => {
     const p = programs.relief;
     fullscreen(p);
     setShared(p, null, edges);
-    setRelief(p, lift);
+    setRelief(p, lift, veil);
     gl.disable(gl.BLEND);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
@@ -507,7 +522,7 @@ export function createStageRenderer(canvas) {
     const p = programs.garment;
     fullscreen(p);
     setShared(p, frame, edges);
-    setRelief(p, lift);
+    setRelief(p, lift, frame.veil);
     gl.uniform2f(p.uAnchor, frame.anchor[0], frame.anchor[1]);
     gl.uniform2f(p.uCam, frame.cam[0], frame.cam[1]);
     gl.uniform1f(p.uZoom, frame.zoomGarment);
@@ -588,7 +603,7 @@ export function createStageRenderer(canvas) {
       if (frame.scene === 'garment' && frame.shown && textures.garment) {
         drawGarment(frame, edges, lift);
       } else {
-        drawRelief(edges, lift);
+        drawRelief(edges, lift, frame.veil || NO_VEIL);
         if (frame.scene === 'stack' && frame.shown && textures.atlas) drawSheets(frame, edges);
       }
       return true;

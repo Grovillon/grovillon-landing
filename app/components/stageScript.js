@@ -55,11 +55,13 @@ const LAMP_HEIGHT = 1700; // scene A's lamp above the image, image px
 // The garment comes into the light from above its right shoulder, below where
 // the relief's lamp hangs: its front spreads from this image point, starting
 // at the garment's nearest edge (image px), over the garment's bounds, until
-// REVEAL; the camera stays still until then.
+// REVEAL; the camera, and the light, stay still until MOVE, so the lit
+// garment rests a moment before anything moves.
 const LIGHT_FROM = [1160, -120];
 const NEAREST = 345;
 const BOUNDS = [220, 66, 1350, 1024];
 const REVEAL = 0.21;
+const MOVE = 0.235;
 // How gradually the light comes: over this much of the front's travel a point
 // goes from unlit to fully lit; and as the light gathers onto the seam at the
 // end, over this much of the frame's half-diagonal. The garment itself is
@@ -235,14 +237,21 @@ export function stageLayout(width, height, entry = 0.25) {
       entry,
       garment: {
         fit,
-        // Camera distances: close on the shoulder, the whole garment, the push-in.
-        closeD: 0.5,
+        // Camera distances: the garment on the left, the whole garment, the push-in.
+        closeD: 0.7,
         holdD: 1,
         pushD: PUSH,
         anchor: [Math.max(0.645 * width, copyRight + 24 + 0.45 * GARMENT.width * fit), 0.5 * height],
-        // The shoulder at mid-screen: the garment is lit on the left, its collar
-        // about a third across, and the pull-back carries it to the right.
-        closeAnchor: [0.5 * width, 0.5 * height],
+        // The opening framing puts the chest (image px) under a third of the way
+        // across, inside the dark of the veil, which darkens the relief from the
+        // left edge to `veil[0]` and is gone by `veil[1]` (px); the pull-back
+        // carries the garment out of it, to the right.
+        close: [745, 420],
+        closeAnchor: [0.29 * width, 0.5 * height],
+        veil: [0.62 * width, 0.9 * width],
+        // The fill the front brings: low, so the light falls from the right
+        // and the garment's left, under the copy, stays in shadow.
+        revealFill: 0.35,
       },
       stack: {
         // The camera keeps the stack framed: closer while it is closed, further back as it opens.
@@ -262,7 +271,10 @@ export function stageLayout(width, height, entry = 0.25) {
       holdD: 0.62,
       pushD: PUSH * 0.62,
       anchor: [0.5 * width, 0.58 * height],
+      close: [1010, 330],
       closeAnchor: [0.5 * width, 0.56 * height],
+      veil: null,
+      revealFill: 0.5,
     },
     stack: {
       openZoom: Math.min((0.84 * width) / 861, (0.6 * height) / OPEN_HEIGHT),
@@ -296,24 +308,26 @@ export function reliefLayout(width, unit, offset) {
 const FAR = 1e6;
 
 // Scene A: the stage arrives with the relief lit and the garment unlit in its
-// shade, unseen. With the camera still, light falls on the garment from above
-// its right shoulder and spreads down and across it, slowly. Only once it is
-// fully lit does the camera move: it pulls back from the shoulder to the whole
-// garment while the lamp crosses it, the lamp settles as a key light, and the
-// camera pushes onto the right shoulder seam while the light gathers there and
-// goes out. The garment, dark again in its shade, then leaves unseen.
+// shade, unseen; on a landscape screen it stands on the left, where a veil
+// darkens the relief. With the camera still, light falls on the garment from
+// above its right shoulder and spreads down and across it, slowly. Only once
+// it is fully lit does the camera move: it pulls back to the whole garment
+// while the lamp crosses it and the veil lifts, the lamp settles as a key
+// light, and the camera pushes onto the right shoulder seam while the light
+// gathers there and goes out. The garment, dark again in its shade, then
+// leaves unseen.
 function garmentScene(t, layout, center) {
-  const { fit, closeD, holdD, pushD, anchor, closeAnchor } = layout.garment;
+  const { fit, closeD, holdD, pushD, anchor, close, closeAnchor, veil, revealFill } = layout.garment;
   const framings = [
-    { cam: [1010, 330], anchor: closeAnchor, zoom: fit / closeD },
+    { cam: close, anchor: closeAnchor, zoom: fit / closeD },
     { cam: [768, 470], anchor, zoom: fit / holdD },
     { cam: SEAM, anchor: center, zoom: fit / pushD },
   ];
-  // The camera holds the opening framing, close on the shoulder, until the
-  // garment is in the light.
+  // The camera holds the opening framing until the garment has been in the
+  // light a moment.
   const view = camera(
     track(t, [
-      [REVEAL + 0.005, 0],
+      [MOVE, 0],
       [0.35, 1],
       [0.43, 1],
       [0.51, 2],
@@ -352,6 +366,7 @@ function garmentScene(t, layout, center) {
   const lamp = path(t, [
     [0, [1110, -160]],
     [REVEAL, [1110, 200]],
+    [MOVE, [1110, 200]],
     [0.33, [420, 440]],
     [0.375, [600, 240]],
     [0.43, [640, 260]],
@@ -361,7 +376,7 @@ function garmentScene(t, layout, center) {
   // The pool widens as the light comes down, and narrows for the push-in.
   const radius = track(t, [
     [0, 360],
-    [REVEAL, 360],
+    [MOVE, 360],
     [0.33, 560],
     [0.375, 680],
     [0.43, 680],
@@ -369,11 +384,11 @@ function garmentScene(t, layout, center) {
     [0.56, 200],
   ]);
   // The lamp is on from the start: the front alone decides what it reaches.
-  // Half the fill comes with the front, so the whole garment reads once it is
-  // lit; the fill rises as the lamp crosses and falls away for the push-in.
+  // Some fill comes with the front, so the whole garment reads once it is lit;
+  // the fill rises as the lamp crosses and falls away for the push-in.
   const intensity = 1;
   const fill =
-    mix(0.5 * glide(ramp(t, 0, REVEAL)), 0.82, glide(ramp(t, 0.25, 0.34))) * (1 - glide(ramp(t, 0.43, 0.48)));
+    mix(revealFill * glide(ramp(t, 0, REVEAL)), 0.82, glide(ramp(t, 0.25, 0.34))) * (1 - glide(ramp(t, 0.43, 0.48)));
   return {
     scene: 'garment',
     cam: view.cam,
@@ -392,6 +407,11 @@ function garmentScene(t, layout, center) {
     light,
     present,
     shown: present > 0,
+    // The veil over the left of the relief, px: dark to its first edge, gone
+    // by its second, at full strength until the garment is lit, lifting as
+    // the camera draws back; with the garment's shade, it comes and goes with
+    // `present`.
+    veil: veil ? [veil[0], veil[1], 1 - glide(ramp(t, MOVE, 0.33))] : [0, 1, 0],
     // A moving pointer leans the lamp a little once most of the garment is
     // lit, never while it is still dark; at the key light a pointer on the
     // garment takes it, and the held lamp narrows to model it.
