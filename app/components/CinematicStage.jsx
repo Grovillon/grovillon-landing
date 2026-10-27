@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { createStageRenderer } from './stageRenderer';
-import { reliefLayout, stageEdges, stageFocus, stageFrame, stageLayout } from './stageScript';
+import { reliefLayout, reliefLift, stageEdges, stageFocus, stageFrame, stageLayout } from './stageScript';
 
 // Scrubbing follows the scroll through a critically damped spring, so a change
 // of direction carries its momentum. A mouse wheel scrolls in separate steps, so
@@ -21,10 +21,14 @@ const SCRUB_REST = [2e-5, 2e-4];
 // The pointer-held lamp uses the hero's spring.
 const LAMP = [170, 26];
 const DPR_STEPS = [2, 1.5, 1, 0.75];
-// Textures load once the hero's entrance has played, and if they take longer
-// than the patience to arrive, the page stays as plain sections.
+// The stage wakes once the hero's entrance has played: its relief draws at
+// once and its textures start loading. If they take longer than the patience
+// to arrive, the page goes back to plain sections once the stage is off screen.
+// A subject whose texture lands while the stage is on screen joins it over
+// ARRIVAL seconds: the garment as it stands unlit, in its shade, then its light.
 const QUIET_START = 2000;
 const TEXTURE_PATIENCE = 12000;
+const ARRIVAL = { garment: 0.4, atlas: 0.3 };
 // The garment's matte, for telling whether the pointer is on it: image px per cell.
 const MATTE_CELL = 16;
 // On touch, only a deliberate still press takes the light: a swipe is a scroll.
@@ -96,8 +100,10 @@ async function decode(src) {
 }
 
 // Scenes A and B share one pinned stage in front of the hero's relief, which
-// stays lit throughout: the garment comes out of the dark as light falls on it
-// and dissolves back into the relief, and after a pause the stack falls in.
+// stays lit throughout: the garment waits unlit in its shade until light falls
+// on it, and goes dark again before it leaves; after a pause the stack falls in.
+// The relief needs no texture, so it is there as soon as the stage wakes; each
+// subject joins it when its texture arrives.
 // Without WebGL, without script or with reduced motion, the same markup stays
 // two ordinary sections.
 export default function CinematicStage() {
@@ -201,6 +207,9 @@ export default function CinematicStage() {
     let lost = false;
     let disposed = false;
     let fresh = false;
+    let awake = false;
+    // How far each subject has faded in since its texture arrived, 0..1.
+    const arrival = { garment: 0, atlas: 0 };
     const timers = new Set();
     const later = (fn, ms) => {
       const id = window.setTimeout(() => {
@@ -271,8 +280,8 @@ export default function CinematicStage() {
           copies[i].style.pointerEvents = events;
         }
       });
-      if (lost || !renderer.ready) return;
-      renderer.draw(frame, stageEdges(stageTop, height, unit, trackTop - stageTop));
+      if (lost || !awake || !renderer.live) return;
+      renderer.draw(frame, stageEdges(stageTop, height, unit, trackTop - stageTop), reliefLift(stageTop, unit));
       if (track.dataset.cine === 'pending') track.dataset.cine = 'on';
     };
 
@@ -304,6 +313,12 @@ export default function CinematicStage() {
       }
       last = now;
       measure();
+      // Textures that never came: the stage stands down once the reader is
+      // not looking at it, so the page does not change under them.
+      if (tired && !visible) {
+        standDown();
+        return;
+      }
 
       let moving = false;
       const jump = snap || !visible;
@@ -327,6 +342,26 @@ export default function CinematicStage() {
       }
 
       const frame = stageFrame(t, layout, width, height);
+      // A subject whose texture has just arrived joins the scene where the
+      // reader is looking; off screen it is simply there. The relief behind it
+      // is already showing. The garment comes as it stands unlit, its shade
+      // and then its dark form, and only then its light, so it is never seen
+      // through; the stack fades in.
+      for (const name of ['garment', 'atlas']) {
+        if (!renderer.has(name) || arrival[name] >= 1) continue;
+        arrival[name] = visible ? Math.min(arrival[name] + dt / ARRIVAL[name], 1) : 1;
+        if (arrival[name] < 1) moving = true;
+      }
+      const arrived = (x) => {
+        const y = clamp01(x);
+        return y * y * (3 - 2 * y);
+      };
+      if (frame.scene === 'garment') {
+        frame.present *= arrived(2 * arrival.garment);
+        frame.light *= arrived(2 * arrival.garment - 1);
+      } else {
+        frame.show *= arrived(arrival.atlas);
+      }
 
       // The held lamp springs in stage pixels, towards the pointer while one is
       // there and back onto the scripted lamp when it leaves, so it stays under
@@ -402,8 +437,9 @@ export default function CinematicStage() {
         }
       });
 
-      // A first frame is drawn as soon as the textures arrive, even off screen,
-      // so the canvas is already showing when the reader reaches it.
+      // A first frame is drawn as soon as the stage wakes, and again as each
+      // texture arrives, even off screen, so the canvas is already showing
+      // when the reader reaches it.
       if (visible || fresh) render(frame);
       fresh = false;
       if (moving && visible && !document.hidden) raf = requestAnimationFrame(step);
@@ -556,17 +592,50 @@ export default function CinematicStage() {
       resize();
       snap = true;
       kick();
+      // A texture that arrived while the context was lost is uploaded now.
+      if (queue.length && !uploading) {
+        uploading = true;
+        requestAnimationFrame(upload);
+      }
     };
 
-    // Textures load after the page itself, or as soon as the reader nears the
-    // stage, but never during the hero's entrance. Each is uploaded in its own
-    // frame. On a connection too slow to bring them in time, the stage stands down.
+    // The stage wakes after the page itself has loaded, or as soon as the
+    // reader nears the stage, but never during the hero's entrance; a reader
+    // already scrolling away from the hero wakes it at once. Awake, it draws
+    // the relief and loads the textures, each uploaded in its own frame as it
+    // arrives. On a connection too slow to bring them in time, the stage
+    // stands down.
     let loading = false;
     let patience = 0;
+    let tired = false;
     const standDown = () => {
       if (disposed) return;
       setLayoutMode(null);
       dispose();
+    };
+    const giveUp = () => {
+      tired = true;
+      kick();
+    };
+    const queue = [];
+    let uploading = false;
+    const upload = () => {
+      uploading = false;
+      if (disposed || lost || !queue.length) return;
+      const [name, image] = queue.shift();
+      renderer.setImage(name, image);
+      if (name === 'garment') {
+        later(() => {
+          if (!disposed) matte = buildMatte(image);
+        }, 0);
+      }
+      snap = true;
+      fresh = true;
+      kick();
+      if (queue.length) {
+        uploading = true;
+        requestAnimationFrame(upload);
+      }
     };
     const load = (now) => {
       if (loading || disposed) return;
@@ -576,31 +645,34 @@ export default function CinematicStage() {
         return;
       }
       loading = true;
-      patience = later(standDown, TEXTURE_PATIENCE);
-      Promise.all([decode('/images/stage/garment.webp'), decode('/images/stage/layers.webp')])
-        .then(([garment, atlas]) => {
-          if (disposed) {
-            garment.close?.();
-            atlas.close?.();
-            return;
-          }
-          cancel(patience);
-          requestAnimationFrame(() => {
-            if (disposed || lost) return;
-            renderer.setImage('garment', garment);
-            requestAnimationFrame(() => {
-              if (disposed || lost) return;
-              renderer.setImage('atlas', atlas);
-              snap = true;
-              fresh = true;
-              kick();
-              later(() => {
-                if (!disposed) matte = buildMatte(garment);
-              }, 0);
-            });
-          });
-        })
-        .catch(standDown);
+      awake = true;
+      fresh = true;
+      kick();
+      patience = later(giveUp, TEXTURE_PATIENCE);
+      let pending = 2;
+      for (const [name, src] of [
+        ['garment', '/images/stage/garment.webp'],
+        ['atlas', '/images/stage/layers.webp'],
+      ]) {
+        decode(src)
+          .then((image) => {
+            if (disposed) {
+              image.close?.();
+              return;
+            }
+            pending -= 1;
+            if (!pending) {
+              cancel(patience);
+              tired = false;
+            }
+            queue.push([name, image]);
+            if (!uploading) {
+              uploading = true;
+              requestAnimationFrame(upload);
+            }
+          })
+          .catch(giveUp);
+      }
     };
     const nearObserver = new IntersectionObserver(
       ([entry]) => {
@@ -617,6 +689,9 @@ export default function CinematicStage() {
     resize();
     measure();
     kick();
+    // A page that opens below the hero (a reload, a link to a section) wakes
+    // the stage at once.
+    if (window.scrollY > 0.25 * window.innerHeight) load(true);
 
     const resizeObserver = new ResizeObserver(() => {
       resize();
@@ -679,6 +754,7 @@ export default function CinematicStage() {
         copy.style.removeProperty('opacity');
         copy.style.removeProperty('pointer-events');
       });
+      for (const [, image] of queue.splice(0)) image.close?.();
       renderer.destroy();
     }
 

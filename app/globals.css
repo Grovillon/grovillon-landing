@@ -544,22 +544,40 @@
 /* ── Mail chooser (MailLink.jsx) ─────────────────────────────────────────
    Every email link stays a mailto: link; with script a plain click opens this
    chooser instead (webmail, the mail app, or the address copied), anchored to
-   the link and kept inside the viewport. A control, not content: the ground with
-   its grain, one hairline round it, no fill, no shadow, square corners. It grows
-   out of the link's side over 180ms and leaves faster; with reduced motion it
-   simply appears and goes. */
+   the link, kept inside the viewport and carried with the page as it scrolls.
+   A control, not content: the ground with its grain, one hairline round it, no
+   fill, no shadow, square corners; its first line, in the quiet ink, says what
+   it writes to. It grows out of the link's side over 180ms and leaves faster;
+   with reduced motion it simply appears and goes. */
 .mail-menu {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   z-index: 60;
   min-width: 13rem;
+  max-width: min(20rem, 100vw - 1rem);
   background: var(--ground) url("/images/grain.png") repeat;
   background-size: 128px 128px;
   border: 1px solid var(--line-strong);
   transition:
     opacity 180ms var(--ease-out),
     transform 180ms var(--ease-out);
+}
+
+/* Focused only by a press on its quiet line, to keep the arrow keys working. */
+.mail-menu:focus {
+  outline: none;
+}
+
+/* On phones a role row's chooser opens as wide as the row, at the page's gutters. */
+@media (max-width: 47.99rem) {
+  .role-row {
+    --mail-span: row;
+  }
+}
+
+.mail-menu[data-span="row"] {
+  max-width: none;
 }
 
 .mail-menu[data-state="enter"],
@@ -624,8 +642,23 @@
     background-color 200ms ease;
 }
 
-.mail-item + .mail-item {
+.mail-item + .mail-item,
+.mail-note + .mail-item {
   border-top: 1px solid var(--line);
+}
+
+/* The address (and subject) it writes to: not a choice, so quiet and inert. */
+.mail-note {
+  padding: 0.5rem 1rem;
+  overflow: hidden;
+  color: var(--ink-3);
+  font-stretch: 112%;
+  font-weight: 400;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: default;
 }
 
 .mail-item:focus-visible {

@@ -4,8 +4,9 @@
 // The background is the hero's folded-plate relief, drawn as the hero draws it
 // (the same folds at the same size, the same lamp model and grain) under a
 // steady lamp of its own, and it does not change while the stage is on screen.
-// Scene A draws the garment in front of it, shown where the light has reached
-// it; the garment's matte throws a soft shadow on the relief. Scene B draws
+// Scene A draws the garment in front of it, a solid object standing in its own
+// soft pool of shade on the relief: unlit, it is as dark as the shade around
+// it, and it comes out of the dark only where light falls on it. Scene B draws
 // the six sheets of the layered material over it as sprites under their own
 // lamp, each darkened where the sheet above it rests close and softened by the
 // camera's depth of field.
@@ -49,12 +50,11 @@ float exposure(vec2 p) {
 vec3 tint() { return mix(uLamp, vec3(1.0), 0.65 + 0.35 * uFill); }
 
 // Below the join with the hero (uEdges.x device px from the stage's top) the
-// relief fades up from the ground over uEdges.w device px; as the stage leaves,
-// the fade rises from its lower edge, so the scene sets.
+// relief fades up from the ground over uEdges.w device px; as the stage leaves
+// (weight uEdges.y), it fades out over uEdges.z device px to its bottom edge.
 vec3 finish(vec3 col, vec2 frag) {
-  float y = frag.y / uRes.y;
   float top = smoothstep(uEdges.x, uEdges.x + uEdges.w, frag.y);
-  float bottom = mix(1.0, smoothstep(0.0, 0.3 + 0.5 * uEdges.z, 1.0 - y), uEdges.y);
+  float bottom = mix(1.0, smoothstep(0.0, uEdges.z, uRes.y - frag.y), uEdges.y);
   // The page's grain, at the size the hero draws it (one css px), so the stage,
   // the relief and the page read as one surface.
   return mix(uGround, col, top * bottom) + (hash(floor(frag / max(uScale, 1.0))) - 0.5) * (6.0 / 255.0);
@@ -134,20 +134,26 @@ ${RELIEF}
 uniform vec2 uAnchor;
 uniform vec2 uCam;
 uniform float uZoom;
+uniform float uLevel;
 uniform vec4 uShow;
 uniform vec4 uShowAt;
-uniform float uLast;
+uniform vec2 uPresent;
 uniform sampler2D uGarment;
 
 const vec2 TEXTURE = vec2(2048.0, 1024.0);
 const vec2 IMAGE = vec2(1536.0, 1024.0);
-// The garment's shadow on the relief: how far towards the relief's lamp its
-// matte is looked up (the shadow falls away from the lamp, a little larger
-// than the garment), and how dark it and the wider soft shade around the
-// garment fall.
+// The garment stands in its own shade on the relief: a pool of shadow, darkest
+// against the garment and fading smoothly into the lit relief, close in (NEAR)
+// and further out (WIDE), with the shadow it throws away from the relief's lamp
+// (THROW, CAST). Where light falls on the garment the pool lifts a little
+// (SPILL). Behind its matte the relief shows its mean light, without folds, and
+// UNDER nearer the ground.
+const float NEAR = 0.97;
+const float WIDE = 0.4;
 const float THROW = 0.07;
-const float CAST = 0.55;
-const float HALO = 0.35;
+const float CAST = 0.4;
+const float SPILL = 0.3;
+const float UNDER = 0.35;
 
 // The photograph is cropped at the waist; as on the page, its lower edge fades out.
 float crop(vec2 p) {
@@ -155,19 +161,53 @@ float crop(vec2 p) {
   return inside * (1.0 - smoothstep(0.7 * IMAGE.y, IMAGE.y, p.y));
 }
 
-// The same crop for the wide soft shade, whose blur reaches past the image's
-// edges: it fades out over the margin instead of stopping there.
-float softCrop(vec2 p) {
-  vec2 edge = min(p, IMAGE - p);
-  return smoothstep(-160.0, 40.0, min(edge.x, edge.y)) * (1.0 - smoothstep(0.7 * IMAGE.y, IMAGE.y, p.y));
+// The pool's reach: it fades out past the image's sides, and below the waist
+// it carries on a little further than the photograph, so the garment's cropped
+// lower edge fades into the shade, not into the lit relief.
+float poolCrop(vec2 p) {
+  vec2 edge = vec2(min(p.x, IMAGE.x - p.x), p.y);
+  return smoothstep(-160.0, 40.0, min(edge.x, edge.y)) * (1.0 - smoothstep(0.8 * IMAGE.y, 1.2 * IMAGE.y, p.y));
 }
 
-// How much of the garment shows at an image point: within the light's front,
-// and within the dissolve's reach of the seam, each with a soft edge.
-float shown(vec2 p) {
-  float front = 1.0 - smoothstep(uShow.x - uShow.y, uShow.x, length(p - uShowAt.xy));
-  float gone = 1.0 - smoothstep(uShow.z - uShow.w, uShow.z, length(p - uShowAt.zw));
-  return front * gone * uLast;
+// The garment's matte, blurred over so many mip levels of the image, so the blur
+// keeps its size on the garment at any zoom and resolution (uLevel undoes the
+// sampler's own choice of level).
+float matte(vec2 p, float level) {
+  return texture2D(uGarment, p / TEXTURE, level + uLevel).a;
+}
+
+// How much light reaches an image point, 0..1: inside the light's front, and
+// inside its reach of the seam as it gathers there at the end, each eased
+// across its soft width; uPresent.x puts out what is left.
+float lightAt(vec2 p) {
+  float front = clamp((uShow.x - length(p - uShowAt.xy)) / uShow.y, 0.0, 1.0);
+  float kept = clamp((uShow.z - length(p - uShowAt.zw)) / uShow.w, 0.0, 1.0);
+  return smoothstep(0.0, 1.0, front) * smoothstep(0.0, 1.0, kept) * uPresent.x;
+}
+
+// The relief's light with its folds averaged out: the mean of a cell's four
+// facets under the lamp, as a heavy blur would leave it.
+vec3 reliefMean(vec2 frag) {
+  vec2 p = frag / (uScale * uUnit) + uOrigin;
+  vec3 lv = vec3(uReliefLamp.xy - p, uReliefLamp.z);
+  float dist = length(lv);
+  vec3 l = lv / dist;
+  float att = 1.0 / (1.0 + (dist * dist) / (uLook.z * uLook.z));
+  float diff = 0.0;
+  for (int i = 0; i < 4; i++) {
+    float s1 = i < 2 ? 1.0 : -1.0;
+    float s2 = i == 0 || i == 2 ? 1.0 : -1.0;
+    vec3 n = normalize(vec3(-s1 * (uDepth.x - uDepth.y * s2 * uSlope), -uDepth.y * s2, 1.0));
+    diff += max(dot(n, l), 0.0);
+  }
+  return uGround + uLamp * (0.25 * diff * att * uLook.x);
+}
+
+// Above the waist the relief behind the garment is its mean wherever the
+// garment's matte is; it returns to the folds below the photograph's edge.
+float underCrop(vec2 p) {
+  float inside = step(0.0, p.x) * step(0.0, p.y) * step(p.x, IMAGE.x) * step(p.y, IMAGE.y);
+  return inside * (1.0 - smoothstep(0.88 * IMAGE.y, IMAGE.y, p.y));
 }
 
 vec2 toImage(vec2 css) { return uCam + (css - uAnchor) / uZoom; }
@@ -176,21 +216,38 @@ void main() {
   vec2 frag = fragPos();
   vec2 css = frag / uScale;
   vec2 pg = toImage(css);
+  // uPresent.y: the garment and its shade are there at all (1 throughout,
+  // except while its texture arrives and once it is dark at the end). Its
+  // shade comes first and goes last: the unlit garment and the relief in full
+  // shade are the same ground colour, so it comes and goes unseen.
+  float here = clamp((uPresent.y - 0.65) / 0.35, 0.0, 1.0);
+  float shaded = smoothstep(0.0, 0.65, uPresent.y);
+  float light = lightAt(pg);
 
-  // The garment shades the relief behind it only where it shows: a soft shadow
-  // cast away from the relief's lamp, and a wider, fainter shade around it, so
-  // it comes and goes through a gradient and never with a hard edge.
-  vec2 lamp = (uReliefLamp.xy - uOrigin) * uUnit;
-  vec2 q = toImage(css + (lamp - css) * THROW);
-  float shadow = texture2D(uGarment, q / TEXTURE, 4.5).a * crop(q) * shown(q);
-  float halo = texture2D(uGarment, pg / TEXTURE, 7.0).a * softCrop(pg) * shown(pg);
-  vec3 back = relief(frag);
-  back = uGround + (back - uGround) * (1.0 - CAST * shadow) * (1.0 - HALO * halo);
-
+  // The garment is solid: it never shows the relief through it. Unlit, it
+  // falls to the ground colour, and so does the relief in its shade around
+  // it, so it hides in the dark until the light finds it.
   vec4 g = texture2D(uGarment, pg / TEXTURE) * crop(pg);
-  float v = shown(pg);
-  vec3 lit = max(g.rgb * exposure(pg) * tint(), uGround * g.a);
-  vec3 col = back * (1.0 - v * g.a) + v * lit;
+  float a = here * g.a;
+  vec3 col = here * max(g.rgb * exposure(pg) * light * tint(), uGround * g.a);
+
+  if (a < 0.998) {
+    vec2 lamp = (uReliefLamp.xy - uOrigin) * uUnit;
+    vec2 q = toImage(css + (lamp - css) * THROW);
+    float fade = poolCrop(pg);
+    float near = smoothstep(0.0, 0.5, 0.5 * (matte(pg, 6.5) + matte(pg, 7.5))) * fade;
+    float wide = matte(pg, 8.0) * fade;
+    float thrown = matte(q, 4.5) * poolCrop(q);
+    float pool = 1.0 - (1.0 - NEAR * near) * (1.0 - WIDE * wide) * (1.0 - CAST * thrown);
+    pool *= shaded * (1.0 - SPILL * light);
+    float under = smoothstep(0.1, 0.6, matte(pg, 4.0)) * underCrop(pg) * here;
+
+    vec3 back = reliefMean(frag);
+    back = uGround + (back - uGround) * (1.0 - UNDER * under);
+    if (under < 0.998) back = mix(relief(frag), back, under);
+    back = uGround + (back - uGround) * (1.0 - pool);
+    col += back * (1.0 - a);
+  }
 
   gl_FragColor = vec4(finish(col, frag), 1.0);
 }
@@ -223,6 +280,7 @@ uniform vec2 uAboveAt;
 uniform float uShadow;
 uniform float uShade;
 uniform float uBlur;
+uniform float uRim;
 uniform float uOpacity;
 varying vec2 vRender;
 varying vec2 vAtlas;
@@ -236,13 +294,16 @@ void main() {
   vec2 q = vRender - uAbove.xy - vec2(0.0, 7.0);
   float inside = step(-16.0, q.x) * step(-16.0, q.y) * step(q.x, uAbove.z + 16.0) * step(q.y, uAbove.w + 16.0);
   float shade = texture2D(uAtlas, (uAboveAt + q) / ATLAS, 3.0).a * inside * uShadow;
+  // A faint rim of light just inside the sheet's outline, so a dark sheet over
+  // the relief's dark panel keeps its shape.
+  float rim = clamp(2.0 * (tex.a - texture2D(uAtlas, vAtlas / ATLAS, uBlur + 3.0).a), 0.0, 1.0) * uRim;
   if (tex.a < 0.004) discard;
 
   // The page shows this render in monochrome: grayscale(1) brightness(0.96) contrast(1.06).
   vec3 c = tex.rgb / tex.a;
   float y = dot(c, vec3(0.2126, 0.7152, 0.0722)) * 0.96;
   y = clamp((y - 0.5) * 1.06 + 0.5, 0.0, 1.0);
-  vec3 col = max(vec3(y) * exposure(vRender) * uShade * (1.0 - shade) * tint(), uGround);
+  vec3 col = max(vec3(y) * exposure(vRender) * uShade * (1.0 - shade) * tint(), uGround) + rim * tint();
 
   vec2 frag = fragPos();
   float a = tex.a * uOpacity;
@@ -312,9 +373,10 @@ function createPrograms(gl) {
     'uAnchor',
     'uCam',
     'uZoom',
+    'uLevel',
     'uShow',
     'uShowAt',
-    'uLast',
+    'uPresent',
     'uGarment',
   ]);
   const sheets = link(gl, SHEET_VERTEX, SHEET_FRAGMENT, [
@@ -331,6 +393,7 @@ function createPrograms(gl) {
     'uShadow',
     'uShade',
     'uBlur',
+    'uRim',
     'uOpacity',
   ]);
   if (!relief || !garment || !sheets) return null;
@@ -411,15 +474,16 @@ export function createStageRenderer(canvas) {
     gl.uniform1f(p.uFill, frame.fill);
   };
 
-  const setRelief = (p) => {
+  const setRelief = (p, lift) => {
     const { unit, origin, cell, depth, lamp, look } = surface;
     gl.uniform1f(p.uUnit, unit);
     gl.uniform2f(p.uOrigin, 0, origin);
     gl.uniform2f(p.uCell, cell[0], cell[1]);
     gl.uniform2f(p.uDepth, depth[0], depth[1]);
     gl.uniform3f(p.uLook, look[0], look[1], look[2]);
-    // The lamp rests on the stage where the hero's rests on the hero.
-    gl.uniform3f(p.uReliefLamp, lamp[0], origin + lamp[1], lamp[2]);
+    // The lamp rests on the stage where the hero's rests on the hero; while
+    // the stage approaches it hangs `lift` higher (stageScript's reliefLift).
+    gl.uniform3f(p.uReliefLamp, lamp[0], origin + lamp[1], lamp[2] + lift);
     // Facets have hard edges: supersampled on a low-density screen.
     gl.uniform1f(p.uSupersample, size.supersample ? 1 : 0);
   };
@@ -430,26 +494,27 @@ export function createStageRenderer(canvas) {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
   };
 
-  const drawRelief = (edges) => {
+  const drawRelief = (edges, lift) => {
     const p = programs.relief;
     fullscreen(p);
     setShared(p, null, edges);
-    setRelief(p);
+    setRelief(p, lift);
     gl.disable(gl.BLEND);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
 
-  const drawGarment = (frame, edges) => {
+  const drawGarment = (frame, edges, lift) => {
     const p = programs.garment;
     fullscreen(p);
     setShared(p, frame, edges);
-    setRelief(p);
+    setRelief(p, lift);
     gl.uniform2f(p.uAnchor, frame.anchor[0], frame.anchor[1]);
     gl.uniform2f(p.uCam, frame.cam[0], frame.cam[1]);
     gl.uniform1f(p.uZoom, frame.zoomGarment);
+    gl.uniform1f(p.uLevel, Math.log2(frame.zoomGarment * size.scale));
     gl.uniform4f(p.uShow, frame.show[0], frame.show[1], frame.show[2], frame.show[3]);
     gl.uniform4f(p.uShowAt, frame.showAt[0], frame.showAt[1], frame.showAt[2], frame.showAt[3]);
-    gl.uniform1f(p.uLast, frame.last);
+    gl.uniform2f(p.uPresent, frame.light, frame.present);
     gl.disable(gl.BLEND);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
@@ -483,13 +548,18 @@ export function createStageRenderer(canvas) {
       gl.uniform1f(p.uShadow, sheet.shadow);
       gl.uniform1f(p.uShade, sheet.shade);
       gl.uniform1f(p.uBlur, sheet.blur);
+      gl.uniform1f(p.uRim, sheet.rim);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
   };
 
   return {
-    get ready() {
-      return Boolean(textures.garment && textures.atlas) && !gl.isContextLost();
+    // The relief needs only the programs; each subject waits for its texture.
+    get live() {
+      return Boolean(programs) && !gl.isContextLost();
+    },
+    has(name) {
+      return Boolean(textures[name]);
     },
     // One texture per call, so each upload is its own short task.
     setImage(name, image) {
@@ -511,14 +581,15 @@ export function createStageRenderer(canvas) {
       }
       gl.viewport(0, 0, w, h);
     },
-    // The relief is always drawn; a subject only while some of it shows.
-    draw(frame, edges) {
-      if (!this.ready) return false;
-      if (frame.scene === 'garment' && frame.shown) {
-        drawGarment(frame, edges);
+    // The relief is always drawn; a subject only while some of it shows and
+    // once its texture is in.
+    draw(frame, edges, lift = 0) {
+      if (!this.live) return false;
+      if (frame.scene === 'garment' && frame.shown && textures.garment) {
+        drawGarment(frame, edges, lift);
       } else {
-        drawRelief(edges);
-        if (frame.scene === 'stack' && frame.shown) drawSheets(frame, edges);
+        drawRelief(edges, lift);
+        if (frame.scene === 'stack' && frame.shown && textures.atlas) drawSheets(frame, edges);
       }
       return true;
     },
