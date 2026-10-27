@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-26T20:30:00Z",
+  "generatedAt": "2026-10-27T12:00:00Z",
   "title": "Design System: Grovillon Project",
   "extensions": {
     "colorMeta": {
@@ -160,7 +160,7 @@
       },
       "control-quiet": {
         "displayName": "Quiet Control",
-        "purpose": "Quiet-link text, 112% width."
+        "purpose": "Quiet-link text, the header address and the mail chooser's choices, 112% width."
       }
     },
     "shadows": [],
@@ -213,7 +213,7 @@
       {
         "name": "relief-fade",
         "value": "opacity 300ms cubic-bezier(0.23, 1, 0.32, 1)",
-        "purpose": "The hero relief, the stage canvas and the grid canvas appear only after their first frame, so they never pop in."
+        "purpose": "The hero relief, the stage canvas and the grid canvas appear only after their first frame, so they never pop in. The stage's first frame is its relief, drawn as soon as the stage wakes, before any texture."
       },
       {
         "name": "still-light-fade",
@@ -223,7 +223,7 @@
       {
         "name": "glide",
         "value": "cubic-bezier(0.45, 0, 0.55, 1)",
-        "purpose": "Light changes in the stage (strength, fill, the wall's light); the page's strong ease-in-out would compress a change into a few frames under a scrub. Keyframed moves run through a monotone cubic instead."
+        "purpose": "Light changes in the stage (fill, the garment's light going out, the stack's closing and its lamp's last dimming); the page's strong ease-in-out would compress a change into a few frames under a scrub. Keyframed moves run through a monotone cubic instead."
       },
       {
         "name": "scrub-spring",
@@ -236,9 +236,34 @@
         "purpose": "Scrubbed moves flow through their keys with continuous velocity and never overshoot; they rest only at either end, on a held value and where they turn back."
       },
       {
-        "name": "cut-in-the-dark",
-        "value": "scene A's wall light out over t 0.41-0.47 and its lamp over t 0.43-0.495; scene B's light up over t 0.53-0.61 (glide); the closed stack falls over t 0.51-0.73, each sheet easing to rest over 130 render px",
-        "purpose": "The change of scene happens in black: one subject's light goes out, and the next comes up with the falling stack, which lands top sheet first and opens downward."
+        "name": "garment-reveal",
+        "value": "t 0-0.21 of the pinned run, camera still at the opening framing; a soft light front spreads from above the right shoulder across the garment while the fill rises to 0.5",
+        "purpose": "Scene A: the garment, solid throughout and unlit in its own pool of shade on the lit relief, is lit gradually where it stands; nothing moves, scales or fades."
+      },
+      {
+        "name": "garment-moves",
+        "value": "pull-back t 0.215-0.35 (2x landscape, about 1.6x portrait); key light held to 0.43 (radius 680); push onto the right shoulder seam t 0.43-0.51 to 0.38 of the hold's camera distance (radius to 260, then 200)",
+        "purpose": "Scene A's camera, scale changing at an even rate about the point both framings share."
+      },
+      {
+        "name": "cut-on-the-relief",
+        "value": "light gathers onto the seam t 0.43-0.555 and what is left goes out t 0.49-0.56 (glide); the garment and its shade lift off unseen t 0.56-0.615; the closed stack falls from rest above the frame over t 0.615-0.785, each sheet easing to rest over 130 render px",
+        "purpose": "The change of scene over a relief that stays lit: the garment goes dark before it leaves unseen, a pause on the relief alone, then the stack enters already lit, top sheet landing first and the layers opening downward."
+      },
+      {
+        "name": "stack-close",
+        "value": "pairs close top-first from t 0.845 (+0.017 per pair, 0.05 each, glide); fill 0.45 to 0.85 over 0.85-0.935; lamp strength -25% over 0.955-0.995; camera recedes 4% over 0.95-1; on portrait the stack dissolves over 0.93-0.975",
+        "purpose": "Scene B's ending, as the heading (0.855), \"By design.\" (0.89) and \"Silently present.\" (0.92) are lit."
+      },
+      {
+        "name": "relief-lamp-lift",
+        "value": "one hero height higher while the stage's top is more than 0.7 hero heights below the viewport's top, settling (smoothstep) by 0.3; fixed once pinned",
+        "purpose": "Holds the stage relief's own lamp back while the hero's pool is on screen, so the stage's light is faint and even at the fold."
+      },
+      {
+        "name": "subject-arrival",
+        "value": "garment 0.4s (shade, then dark form, then light); stack 0.3s fade; smoothstep",
+        "purpose": "A texture that arrives while the stage is on screen joins the relief already showing; off screen the subject is simply there."
       },
       {
         "name": "text-light",
@@ -257,7 +282,7 @@
       },
       {
         "name": "grid-ripple",
-        "value": "a wave moving crossings outward (7px at its start, 100px crest to crest, rising over 24px ahead of the front, dying over 70px behind) under a lamp-coloured band +/-40px (lines 30%, dots 95%); about 40% of the band width per second (300-600px/s), fading over 1.5s; at most 3, a fourth retires the oldest over 150ms",
+        "value": "a wave moving crossings outward (7px at its start, 100px crest to crest, rising over 24px ahead of the front, dying over 70px behind) under a lamp-coloured band +/-40px (lines 22%, dots 70%); about 40% of the band width per second (300-600px/s), fading over 1.5s; at most 3, a fourth retires the oldest over 150ms",
         "purpose": "A click on open space at once, a click on the words on release unless it dragged or selected, a still tap on release, and one arrival ripple when the band's heading first reaches the upper half of the viewport."
       },
       {
@@ -267,13 +292,18 @@
       },
       {
         "name": "stage-edges",
-        "value": "top 10% fade while scrolling in; lower fade rising from 30% to 80% of the stage height by the time 35% of the stage has left",
-        "purpose": "The stage arrives out of the ground and sets into it."
+        "value": "below the join with the hero the relief fades up from the ground over 0.25 hero heights (scrolling with the join); as the stage leaves it fades out over 0.22 hero heights to its bottom edge, eased in over the first 10% of the stage's height leaving",
+        "purpose": "The stage's relief runs on from the hero's across the join and sets into the ground at the next section."
       },
       {
         "name": "reduced-motion",
         "value": "prefers-reduced-motion: reduce",
-        "purpose": "No lamp sweep, no pointer following, no smooth scroll; the hero lamp sits at rest at full strength, the stage is plain sections and the grid canvas draws still, at rest (also when switched on mid-visit)."
+        "purpose": "No lamp sweep, no pointer following, no smooth scroll; the hero lamp sits at rest at full strength, the stage is plain sections, the grid canvas draws still, at rest (also when switched on mid-visit), and the mail chooser appears and goes without motion."
+      },
+      {
+        "name": "mail-chooser",
+        "value": "opacity and transform from translateY(-4px) scale(0.97) (4px the other way when above its link), 180ms in, 120ms out, cubic-bezier(0.23, 1, 0.32, 1); none with reduced motion",
+        "purpose": "The mail chooser grows out of its link's side and leaves faster."
       }
     ],
     "breakpoints": [
@@ -292,7 +322,7 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The one solid fill on a screen: Chalk Ink block, ground-coloured label, square, 3rem tall; brightens to Lit Ink and leans its up-right arrow on hover.",
+      "description": "The one solid fill on a screen: Chalk Ink block, ground-coloured label, square, 3rem tall; brightens to Lit Ink and leans its up-right arrow on hover. \"Write to us\" opens the mail chooser (a mailto: link without script).",
       "html": "<div class=\"ds-btn-primary-stage\"><a class=\"ds-btn-primary\" href=\"#\">Write to us<svg class=\"ds-btn-primary-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 15 15 5M7.5 5H15v7.5\"/></svg></a></div>",
       "css": ".ds-btn-primary-stage { padding: 1.5rem; background: var(--ground, #0a0b0c); } .ds-btn-primary { display: inline-flex; align-items: center; gap: 0.75rem; min-height: 3rem; padding: 0 1.25rem 0 1.375rem; background-color: var(--ink, #ecebe7); color: var(--ground, #0a0b0c); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; font-stretch: 112%; font-weight: 560; font-size: 0.9375rem; letter-spacing: 0.01em; text-decoration: none; border-radius: 0; transition: background-color 200ms ease, transform 160ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)); } .ds-btn-primary-arrow { flex: none; transition: transform 200ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)); } @media (hover: hover) and (pointer: fine) { .ds-btn-primary:hover { background-color: var(--ink-lit, #f8f5ef); } .ds-btn-primary:hover .ds-btn-primary-arrow { transform: translate(3px, -3px); } } .ds-btn-primary:focus-visible { outline: 2px solid var(--lamp, #f0e6d6); outline-offset: 4px; } .ds-btn-primary:active { transform: scale(0.97); }"
     },
@@ -316,17 +346,25 @@
       "name": "Header",
       "kind": "nav",
       "refersTo": "nav-link",
-      "description": "A bare header over the field: the mark top left and the contact address top right as a quiet link in Ash Ink, so the address is on screen from the first moment; no bar, background or menu.",
+      "description": "A bare header over the field: the mark (3rem) top left and the contact address top right as a quiet link in Ash Ink that opens the mail chooser, so the address is on screen from the first moment; no bar, background or navigation menu.",
       "html": "<header class=\"ds-nav\"><a class=\"ds-nav-mark\" href=\"#\" aria-label=\"Back to top\"><svg viewBox=\"0 0 1198 1200\" aria-hidden=\"true\" focusable=\"false\"><path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M564 2a401 401 0 0 0-76 10l-43 10A609 609 0 0 0 15 467a638 638 0 0 0 9 295c5 18 5 20 10 33a613 613 0 0 0 268 324c14 8 46 25 56 29 35 15 72 28 73 26l3-5 21-62-21-8-22-8A544 544 0 0 1 96 750l-12-50v-5h55l55 1v122h211l3-4 3-3V648l-1-164-31-34-154-163c-24-25-24-25-20-33q3-7 20-21l10-9 19 18a1839 1839 0 0 1 122 130l70 76 11 12v332h291l7 8c13 12 21 15 39 15 14-1 20-3 29-11 21-21 19-61-4-77-8-5-13-7-26-6q-27 0-37 16l-2 4H504V586l-1-155-4-1c-4-1-7-4-33-33q-26-28-28-33-2-2 3-6l31-28c32-31 42-38 59-38 7 0 9 0 15 3q13 7 24 21c3 4 4 5 4 13 2 16 7 32 14 40q7 8 19 13c9 3 24 3 32 0q19-7 28-27c2-5 2-6 2-20s0-15-2-20q-8-14-21-21c-7-3-8-3-21-4-15-1-18-2-27-11l-39-46-8-9V79l2-2c4-2 6-2 20-3 11-1 38 0 55 1 12 2 39 3 40 3l3-5 23-62c-1-2-30-6-54-8-16-1-57-2-76-1m202 0c-20 4-38 21-44 42-4 11-4 27 0 37 6 18 22 34 38 38h26q16-3 26 0c4 1 22 10 24 13 2 2 17 9 21 9l3 1v98h-70l-69 1-1 75v75l-7 5q-9 4-15 19c-2 4-2 6-2 18s0 13 3 19q6 12 17 19c10 6 17 8 30 8 10 0 11 0 17-3q15-6 23-23l5-8-1-12c0-11 0-12-3-18l-12-15-8-9v-50l1-49 46-1h46v189l-20 18-114 100q-7 3-62 3l-41-1-12-9c-15-13-21-16-35-15q-15-1-25 6-24 13-22 43c0 19 11 37 26 44 7 4 20 5 28 3a59 59 0 0 0 32-22l4-3h47c15 2 50 3 60 2l9-1 8-7 52-43c14-12 15-12 19-12q3-1 10 7l54 59 7 8v61l1 113v51l7 1 10 3a388 388 0 0 1 71 78 524 524 0 0 1-183 124c-9 4-25 8-33 9-12 0-13 0-19-8s-29-33-44-47l-38-41q-7-9-8-16v-4l-72-1h-72l-1-48 1-49 102-1h101l15 14c41 40 41 40 45 65 2 14 4 20 12 27q18 18 44 15 17-3 29-18c7-9 9-15 9-27q0-21-13-35-10-11-29-14-19-1-23-4a283 283 0 0 1-57-70H598l-140 1-1 36v36h-79l-5-6q-16-20-36-20c-6 0-17 3-23 6q-24 12-24 42-1 23 14 37 11 13 28 13 31 1 41-18l4-6h80v36l1 36h158l9 9 52 54 13 14q11 11 0 11l-33 3a1128 1128 0 0 1-126-1l-27 69q-2 1 3 2a663 663 0 0 0 177 0 753 753 0 0 0 147-41 592 592 0 0 0 272-872 649 649 0 0 0-130-145 477 477 0 0 0-123-75q-12-7-16-19c-8-18-14-25-28-32-11-6-28-8-40-6M483 88a500 500 0 0 0-141 55c-21 11-65 40-66 44l11 13 99 109 14 15 5-4 64-54 33-27 1-77V84h-3zm429 267v174h-18c-19 1-16-1-32 15l-9 8 2 3 63 70 15 17v77l2 1 10 1c10 0 16-2 31-13 15-12 18-13 31-13 10 0 11 0 18 3 35 17 38 70 4 88q-22 10-42 3-9-6-17-16-5-7-16-7-12 0-17 4c-2 2-3 2-3 13-3 53-2 62 6 72 20 25 64 72 67 72l33-41a545 545 0 0 0 83-246 969 969 0 0 0-4-114 409 409 0 0 0-13-67c-5-19-23-70-26-73-1-1-47-2-49-1l-1 76v74l3 3 7 7q18 17 12 42-2 13-12 23a44 44 0 0 1-37 13c-10-1-11-1-21-6-22-10-31-39-18-62q3-7 14-18l5-6v-96l1-97h32l33-1c4-1-16-35-37-62a504 504 0 0 0-99-94zm-747-48a484 484 0 0 0-89 247c-1 16-2 88-1 92 1 2 6 2 83 2h83v118h118V506l-11-12-63-66-2 2c-2 5-18 26-31 42l-31 42q-4 7-7 26c-4 27-37 44-63 32a48 48 0 0 1-24-69c9-14 19-19 42-21 20-1 23-4 51-47a285 285 0 0 1 31-45l-14-15-67-74z\"/></svg></a><a class=\"ds-nav-link\" href=\"#\">name@example.com</a></header>",
-      "css": ".ds-nav { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.25rem 1.5rem; background: var(--ground, #0a0b0c); color: var(--ink, #ecebe7); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; } .ds-nav-mark { display: inline-flex; align-items: center; min-height: 2.75rem; margin-left: -0.5rem; padding: 0 0.5rem; color: var(--ink, #ecebe7); } .ds-nav-mark svg { width: 2.5rem; height: 2.5rem; } .ds-nav-link { display: inline-flex; align-items: center; min-height: 3rem; margin-right: -0.5rem; padding: 0 0.5rem; color: var(--ink-2, #b3b4b0); font-stretch: 112%; font-weight: 500; font-size: 0.9375rem; text-decoration: none; transition: color 200ms ease; } @media (hover: hover) and (pointer: fine) { .ds-nav-link:hover { color: var(--ink, #ecebe7); } } .ds-nav-link:focus-visible, .ds-nav-mark:focus-visible { outline: 2px solid var(--lamp, #f0e6d6); outline-offset: 4px; }"
+      "css": ".ds-nav { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.25rem 1.5rem; background: var(--ground, #0a0b0c); color: var(--ink, #ecebe7); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; } .ds-nav-mark { display: inline-flex; align-items: center; min-height: 2.75rem; margin-left: -0.5rem; padding: 0 0.5rem; color: var(--ink, #ecebe7); } .ds-nav-mark svg { width: 3rem; height: 3rem; } .ds-nav-link { display: inline-flex; align-items: center; min-height: 3rem; margin-right: -0.5rem; padding: 0 0.5rem; color: var(--ink-2, #b3b4b0); font-stretch: 112%; font-weight: 500; font-size: 0.9375rem; text-decoration: none; transition: color 200ms ease; } @media (hover: hover) and (pointer: fine) { .ds-nav-link:hover { color: var(--ink, #ecebe7); } } .ds-nav-link:focus-visible, .ds-nav-mark:focus-visible { outline: 2px solid var(--lamp, #f0e6d6); outline-offset: 4px; }"
     },
     {
       "name": "Hairline List",
       "kind": "custom",
       "refersTo": "role-row",
-      "description": "An open ledger of full-width link rows separated by 1px hairlines, titles in Chalk Ink; each row opens an email, so its arrow points up and out; a 3.5% tint and the arrow lean on hover.",
+      "description": "An open ledger of full-width link rows separated by 1px hairlines, titles in Chalk Ink; each row writes to the address with the role as subject through the mail chooser, so its arrow points up and out; a 3.5% tint and the arrow lean on hover.",
       "html": "<div class=\"ds-rows-stage\"><ul class=\"ds-rows\"><li><a class=\"ds-row\" href=\"#\"><span class=\"ds-row-title\">First listed role</span><svg class=\"ds-row-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 15 15 5M7.5 5H15v7.5\"/></svg></a></li><li><a class=\"ds-row\" href=\"#\"><span class=\"ds-row-title\">Second listed role</span><svg class=\"ds-row-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 15 15 5M7.5 5H15v7.5\"/></svg></a></li><li><a class=\"ds-row\" href=\"#\"><span class=\"ds-row-title\">Third listed role</span><svg class=\"ds-row-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 15 15 5M7.5 5H15v7.5\"/></svg></a></li></ul></div>",
       "css": ".ds-rows-stage { padding: 1.5rem; background: var(--ground, #0a0b0c); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; } .ds-rows { margin: 0; padding: 0; list-style: none; border-bottom: 1px solid var(--line, rgb(236 235 231 / 0.12)); } .ds-row { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; min-height: 4.5rem; padding: 1.25rem 0.25rem; border-top: 1px solid var(--line, rgb(236 235 231 / 0.12)); color: var(--ink, #ecebe7); text-decoration: none; transition: color 200ms ease, background-color 200ms ease; } .ds-row-title { font-stretch: 106%; font-weight: 400; font-size: clamp(1.125rem, 1.85vw, 1.5rem); line-height: 1.3; } .ds-row-arrow { flex: none; transition: transform 200ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)); } @media (hover: hover) and (pointer: fine) { .ds-row:hover { background-color: rgb(236 235 231 / 0.035); } .ds-row:hover .ds-row-arrow { transform: translate(3px, -3px); } } .ds-row:active { background-color: rgb(236 235 231 / 0.06); transition-duration: 100ms; } .ds-row:focus-visible { outline: 2px solid var(--lamp, #f0e6d6); outline-offset: 4px; }"
+    },
+    {
+      "name": "Mail Chooser",
+      "kind": "custom",
+      "refersTo": "mail-chooser",
+      "description": "A transient control behind every email link (header address, Write to us, each role row, the closing line): a plain click opens it under its link, a quiet Smoke Ink line with the address (and role), then Gmail, Outlook, Email app and Copy address (then Copied). Ground with grain, one Strong Hairline outline, no shadow, square; 180ms in, 120ms out. Without script, or with a modifier or middle click, the link stays a mailto: link. Not an exception to the No-Box Rule: it holds controls, not content.",
+      "html": "<div class=\"ds-mail-stage\"><div class=\"ds-mail\" role=\"menu\" aria-label=\"Write to address@example.com\"><div class=\"ds-mail-note\" role=\"none\">address@example.com · First listed role</div><a class=\"ds-mail-item\" role=\"menuitem\" href=\"#\">Gmail<svg class=\"ds-mail-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 15 15 5M7.5 5H15v7.5\"/></svg></a><a class=\"ds-mail-item\" role=\"menuitem\" href=\"#\">Outlook<svg class=\"ds-mail-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 15 15 5M7.5 5H15v7.5\"/></svg></a><a class=\"ds-mail-item\" role=\"menuitem\" href=\"#\">Email app<svg class=\"ds-mail-arrow\" viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"square\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 15 15 5M7.5 5H15v7.5\"/></svg></a><button class=\"ds-mail-item\" role=\"menuitem\" type=\"button\">Copy address</button></div></div>",
+      "css": ".ds-mail-stage { padding: 1.5rem; background: var(--ground, #0a0b0c); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; } .ds-mail { min-width: 13rem; max-width: min(20rem, 100vw - 1rem); background: var(--ground, #0a0b0c) url(\"/images/grain.png\") 0 0 / 128px 128px repeat; border: 1px solid var(--line-strong, rgb(236 235 231 / 0.26)); border-radius: 0; } .ds-mail-note { padding: 0.5rem 1rem; overflow: hidden; color: var(--ink-3, #8e9092); font-stretch: 112%; font-weight: 400; font-size: 0.9375rem; line-height: 1.6; white-space: nowrap; text-overflow: ellipsis; } .ds-mail-item { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; width: 100%; min-height: 3rem; padding: 0 0.875rem 0 1rem; border: 0; border-top: 1px solid var(--line, rgb(236 235 231 / 0.12)); background-color: transparent; color: var(--ink-2, #b3b4b0); font: inherit; font-stretch: 112%; font-weight: 500; font-size: 0.9375rem; line-height: 1.6; text-align: left; text-decoration: none; cursor: pointer; transition: color 200ms ease, background-color 200ms ease; } .ds-mail-arrow { flex: none; transition: transform 200ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)); } .ds-mail-item:focus-visible { outline: 2px solid var(--lamp, #f0e6d6); outline-offset: -2px; color: var(--ink, #ecebe7); background-color: rgb(236 235 231 / 0.035); } .ds-mail-item:active { background-color: rgb(236 235 231 / 0.06); transition-duration: 100ms; } @media (hover: hover) and (pointer: fine) { .ds-mail-item { min-height: 2.5rem; } .ds-mail-item:hover { color: var(--ink, #ecebe7); background-color: rgb(236 235 231 / 0.035); } .ds-mail-item:hover .ds-mail-arrow { transform: translate(3px, -3px); } }"
     },
     {
       "name": "Relief Field (still light)",
@@ -338,21 +376,21 @@
     {
       "name": "Grid Band (still)",
       "kind": "custom",
-      "description": "Scene C as every visitor without script sees it: a square grid of 8% Chalk Ink hairlines with a 14% dot at each crossing, at the band's --grid-cell (44px, 54px from 48rem), under the band's vertical fade. With script the canvas draws the same grid here, lit by its lamp, gathering toward the pointer and rippling; with reduced motion it draws it still.",
+      "description": "Scene C as every visitor without script sees it: a square grid of 5% Chalk Ink hairlines with a 9% dot at each crossing, at the band's --grid-cell (44px, 54px from 48rem), under the band's vertical fade. With script the canvas draws the same grid here, lit by its lamp, gathering toward the pointer and rippling; with reduced motion it draws it still.",
       "html": "<section class=\"ds-grid\"><h2 class=\"ds-grid-title\">Built for high-demand conditions.</h2></section>",
-      "css": ".ds-grid { --grid-cell: 44px; position: relative; isolation: isolate; min-height: 22rem; padding: 4rem 1.5rem; background: url(\"/images/grain.png\") 0 0 / 128px 128px repeat var(--ground, #0a0b0c); color: var(--ink, #ecebe7); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; } .ds-grid::before { content: \"\"; position: absolute; inset: 0; z-index: -1; background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M0 22.5H44M22.5 0V44' fill='none' stroke='%23ecebe7' stroke-opacity='.08'/%3E%3Ccircle cx='22.5' cy='22.5' r='1.1' fill='%23ecebe7' fill-opacity='.14'/%3E%3C/svg%3E\"); background-size: var(--grid-cell) var(--grid-cell); background-position: 50% 0; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent); } @media (min-width: 48rem) { .ds-grid { --grid-cell: 54px; } .ds-grid::before { background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='54'%3E%3Cpath d='M0 27.5H54M27.5 0V54' fill='none' stroke='%23ecebe7' stroke-opacity='.08'/%3E%3Ccircle cx='27.5' cy='27.5' r='1.1' fill='%23ecebe7' fill-opacity='.14'/%3E%3C/svg%3E\"); } } .ds-grid-title { margin: 0; max-width: 13ch; font-stretch: 112%; font-weight: 300; font-size: clamp(1.875rem, 3.9vw, 3.5rem); line-height: 1.06; letter-spacing: -0.006em; text-wrap: balance; }"
+      "css": ".ds-grid { --grid-cell: 44px; position: relative; isolation: isolate; min-height: 22rem; padding: 4rem 1.5rem; background: url(\"/images/grain.png\") 0 0 / 128px 128px repeat var(--ground, #0a0b0c); color: var(--ink, #ecebe7); font-family: var(--font-archivo, Archivo), ui-sans-serif, system-ui, sans-serif; } .ds-grid::before { content: \"\"; position: absolute; inset: 0; z-index: -1; background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M0 22.5H44M22.5 0V44' fill='none' stroke='%23ecebe7' stroke-opacity='.05'/%3E%3Ccircle cx='22.5' cy='22.5' r='1.1' fill='%23ecebe7' fill-opacity='.09'/%3E%3C/svg%3E\"); background-size: var(--grid-cell) var(--grid-cell); background-position: 50% 0; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent); } @media (min-width: 48rem) { .ds-grid { --grid-cell: 54px; } .ds-grid::before { background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='54'%3E%3Cpath d='M0 27.5H54M27.5 0V54' fill='none' stroke='%23ecebe7' stroke-opacity='.05'/%3E%3Ccircle cx='27.5' cy='27.5' r='1.1' fill='%23ecebe7' fill-opacity='.09'/%3E%3C/svg%3E\"); } } .ds-grid-title { margin: 0; max-width: 13ch; font-stretch: 112%; font-weight: 300; font-size: clamp(1.875rem, 3.9vw, 3.5rem); line-height: 1.06; letter-spacing: -0.006em; text-wrap: balance; }"
     }
   ],
   "narrative": {
     "northStar": "The Low-Observable Surface",
-    "overview": "The page is a matte graphite surface that absorbs light and shows only what one lamp chooses to reveal. On a hardware GPU the ground under the hero becomes a folded-plate relief, flat facets meeting at zigzag creases that run at ±30°, raked by a single neutral-warm lamp; below it the same lamp descends into one pinned stage, where it finds the approved images in the dark, and then into a band where a square grid of hairlines lies over the ground like a second skin. Without a GPU, a still pool of the same light and plain sections stand in; without script, a still grid. Either way the visitor meets a dark material first and an interface second.\n\nThe system is sparse and exact rather than dramatic. One family, Archivo, carries every word, and its width axis does the expressive work: expanded light capitals for the title, slightly widened light statements, normal width for reading. Ink is a tinted neutral in three steps. Content is separated by 1px hairlines and dark space, never by boxes, and the only solid fill on a screen is the primary button. Density is low: wide, fluid gaps of ground between subjects, short measures, nothing competing with the light.\n\nMotion belongs to the light and to the reader's hand. The hero lamp sweeps in once and settles, then follows a mouse on a spring. In the stage, every move is a pure function of scroll position, scrubbed through a soft spring so it plays backwards exactly as forwards; a scene ends as its light goes out and the next begins with its light coming up, and a hand moving on the subject may lean or hold the light. Type never moves: it is lit or unlit. Nothing depends on motion, script or WebGL to be read. The system rejects the dark-tech default outright: a centred glowing headline over an orb or particle field, rows of glass cards, a neon accent, and the same fade-up on every section. Discretion is the brand's posture, so the visuals earn credibility through craft and never through claims.",
+    "overview": "The page is a matte graphite surface that absorbs light and shows only what one lamp chooses to reveal. On a hardware GPU the ground under the hero becomes a folded-plate relief, flat facets meeting at zigzag creases that run at ±30°, raked by a single neutral-warm lamp; below it the same relief runs on behind one pinned stage, where the lamp finds the approved images in their own shade, and then into a band where a square grid of hairlines lies over the ground like a second skin. Without a GPU, a still pool of the same light and plain sections stand in; without script, a still grid. Either way the visitor meets a dark material first and an interface second.\n\nThe system is sparse and exact rather than dramatic. One family, Archivo, carries every word, and its width axis does the expressive work: expanded light capitals for the title, slightly widened light statements, normal width for reading. Ink is a tinted neutral in three steps. Content is separated by 1px hairlines and dark space, never by boxes, and the only solid fill on a screen is the primary button. Density is low: wide, fluid gaps of ground between subjects, short measures, nothing competing with the light.\n\nMotion belongs to the light and to the reader's hand. The hero lamp sweeps in once and settles, then follows a mouse on a spring. In the stage, every move is a pure function of scroll position, scrubbed through a soft spring so it plays backwards exactly as forwards; the relief behind the stage stays lit and still, a subject's light goes out before it leaves and the next arrives already lit, and a hand moving on the subject may lean or hold the light. Type never moves: it is lit or unlit. Nothing depends on motion, script or WebGL to be read. The system rejects the dark-tech default outright: a centred glowing headline over an orb or particle field, rows of glass cards, a neon accent, and the same fade-up on every section. Discretion is the brand's posture, so the visuals earn credibility through craft and never through claims.",
     "keyCharacteristics": [
       "A matte graphite ground under a static 128px grain tile; never flat black.",
       "One neutral-warm lamp, the only light; nothing else glows, and unlit areas fall to the ground, never below it.",
-      "A ±30° crease angle shared by the relief and its wall in the stage; scene C's grid is square and draws no creases.",
+      "A ±30° crease angle shared by the hero's relief and its continuation behind the stage; scene C's grid is square and draws no creases.",
       "Archivo alone; width (125, 112, 106, 100) is the expressive axis and weight stays light.",
       "Hairlines instead of boxes, square corners, no UI shadows.",
-      "Scenes scrubbed by scroll, lit from darkness, and answering only to a hand on the subject.",
+      "Scenes scrubbed by scroll, subjects lit out of their own shade, and answering only to a hand on the subject.",
       "Complete and legible with motion reduced, scripts off or no GPU."
     ],
     "rules": [
@@ -368,7 +406,7 @@
       },
       {
         "name": "The Three Inks Rule",
-        "body": "Text on the ground takes ink, ink-2 or ink-3 and nothing else: ink for what is read first, ink-2 for what supports it, ink-3 for fine print. The one inversion is the primary button, ground on ink. Interaction may raise ink-2 to ink; nothing changes hue.",
+        "body": "Text on the ground takes ink, ink-2 or ink-3 and nothing else: ink for what is read first, ink-2 for what supports it, ink-3 for fine print and the mail chooser's quiet line. The one inversion is the primary button, ground on ink. Interaction may raise ink-2 to ink; nothing changes hue.",
         "section": "colors"
       },
       {
@@ -393,7 +431,7 @@
       },
       {
         "name": "The Depth-Is-Light Rule",
-        "body": "Nothing is raised. Surfaces get depth only from the lamp falling across facets and images, from the lamp being occluded inside a lit scene, and from masks that let forms fall off into the ground.",
+        "body": "Nothing is raised. Surfaces get depth only from the lamp falling across facets and images, from the lamp being occluded inside the stage, and from masks that let forms fall off into the ground.",
         "section": "elevation"
       },
       {
@@ -403,17 +441,17 @@
       },
       {
         "name": "The Pixel Truth Rule",
-        "body": "Scenes draw only the approved images' own pixels. Light scales how much of a pixel shows and focus softens it; nothing adds surface, detail or geometry. Unlit areas fall to the ground colour, never below it.",
+        "body": "Scenes draw only the approved images' own pixels. Light scales how much of a pixel shows and focus softens it (and on the base sheet a faint rim of light traces its own outline); nothing adds surface, detail or geometry. Unlit areas fall to the ground colour, never below it.",
         "section": "elevation"
       },
       {
         "name": "The Crease Angle Rule",
-        "body": "Folds and creases run at the relief's 30° angle and no other: the hero relief and the stage's wall. Scene C's grid draws no creases; its lines run square to the page. Don't introduce skews, diagonal wipes or angled section edges.",
+        "body": "Folds and creases run at the relief's 30° angle and no other: the hero relief and its continuation behind the stage. Scene C's grid draws no creases; its lines run square to the page. Don't introduce skews, diagonal wipes or angled section edges.",
         "section": "shapes"
       },
       {
         "name": "The No-Box Rule",
-        "body": "Content is never boxed: no cards, panels, outlined containers or framed images. Separation is a 1px hairline or dark space.",
+        "body": "Content is never boxed: no cards, panels, outlined containers or framed images. Separation is a 1px hairline or dark space. The mail chooser's outline is not an exception: it is a transient control that opens on a click and closes again, never a container for content.",
         "section": "shapes"
       },
       {
@@ -428,12 +466,12 @@
       },
       {
         "name": "The Scrub Rule",
-        "body": "Scenes are pure functions of scroll position, never of timers, and play backwards exactly as forwards. Only the text's on/off fade and the visitor's held lamp have time of their own.",
+        "body": "Scenes are pure functions of scroll position, never of timers, and play backwards exactly as forwards. Only the text's on/off fade, the visitor's held lamp and a late subject's arrival have time of their own.",
         "section": "components"
       },
       {
-        "name": "The Cut in the Dark Rule",
-        "body": "A change of scene inside the stage happens in the dark: the light on one scene goes out completely, there is a short breath of black, and the next scene's light comes up with its subject. Nothing is on screen at the cut, so nothing jumps.",
+        "name": "The Unseen Exit Rule",
+        "body": "The relief behind the stage stays lit through a change of scene; only the subjects come and go. A subject's light goes out until it is as dark as the shade it stands in, then it and its shade leave unseen; after a pause on the relief alone, the next subject enters from outside the frame, already in its light. At the change of scene nothing appears or vanishes in view, so nothing jumps.",
         "section": "components"
       },
       {
@@ -449,7 +487,7 @@
       "Do set every word in Archivo and change width before weight: 125% title; 112% statements, labels and controls; 106% list titles; 100% reading.",
       "Do run any new fold or crease at the 30° crease angle.",
       "Do ease arrivals and responses with cubic-bezier(0.23, 1, 0.32, 1), press controls to scale(0.97), and keep hover effects behind `(hover: hover) and (pointer: fine)`; ease scroll-scrubbed moves with cubic-bezier(0.45, 0, 0.55, 1).",
-      "Do drive scenes from scroll position through a soft spring, so they play backwards exactly as forwards, and change scene in the dark, the light going out on one subject and coming up with the next.",
+      "Do drive scenes from scroll position through a soft spring, so they play backwards exactly as forwards, and change scene behind a lit relief: the light goes out on one subject before it leaves unseen, and the next enters already lit.",
       "Do make every view complete without motion, script or WebGL: content visible by default, the still light in place of the relief, plain sections in place of the stage, the still CSS grid in place of the grid's canvas.",
       "Do use only approved images or abstract material, lit by the same lamp and falling off into the ground; draw only their own pixels, ship any derived raster with its provenance, and treat client originals in CSS only."
     ],
@@ -458,10 +496,10 @@
       "Don't use frosted glass, cards, panels or framed images.",
       "Don't use gradients as decoration (gradient text, gradient buttons, tinted gradient backdrops); a gradient is only ever the lamp's falloff or a mask into the ground.",
       "Don't introduce an accent colour, or use the lamp colour as paint.",
-      "Don't add box or drop shadows to the interface; the only shadows are the lamp's light occluded inside a lit scene.",
+      "Don't add box or drop shadows to the interface, the mail chooser included; the only shadows are the lamp's light occluded inside the stage.",
       "Don't set a centred, glowing headline over an orb or particle field.",
       "Don't move text into view, type it out or split it, or give every section the same entrance; in the stage text is lit in place, nowhere else does it animate.",
-      "Don't cut between two lit frames, ease a move to a stop at every keyframe, or drive a scene from a timer.",
+      "Don't cut from one lit subject to another, ease a move to a stop at every keyframe, or drive a scene from a timer.",
       "Don't let a resting pointer or a swipe move the light; only a hand moving on the subject, or a still press on it, may.",
       "Don't add surface, detail or geometry the approved images do not contain, or open the layered material wider than its own render.",
       "Don't set anything bold or italic, or add a second typeface.",
