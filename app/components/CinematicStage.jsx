@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { createStageRenderer } from './stageRenderer';
+import { lamps, onLamp } from './pageLamp';
 import { reliefLayout, reliefLift, stageEdges, stageFocus, stageFrame, stageLayout } from './stageScript';
 
 // Scrubbing follows the scroll through a critically damped spring, so a change
@@ -37,8 +38,14 @@ const PRESS_SLOP = 10;
 // Text is lit and dimmed as states, never scrubbed: about 300 ms in, 200 ms out.
 const LIGHT_IN = 0.09;
 const LIGHT_OUT = 0.06;
+// Where the stage's relief meets the hero's it is lit by the hero's lamp, and
+// it takes its own back over the last HANDOVER of the screen before it pins;
+// leaving over the grid band, it is lit by the band's lamp.
+const HANDOVER = 0.2;
 
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
+const ease = (x) => x * x * (3 - 2 * x);
+const mixLamp = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
 
 // A coarse matte of the garment from its texture's alpha, grown by two cells so
 // the pointer counts as on the garment just past its edge.
@@ -174,6 +181,7 @@ export default function CinematicStage() {
     let height = 1;
     let unit = 1;
     let layout = stageLayout(1, 1);
+    let relief = null;
     const startStep = Math.max(
       DPR_STEPS.findIndex((step) => step <= Math.min(window.devicePixelRatio || 1, 2)),
       0
@@ -265,7 +273,8 @@ export default function CinematicStage() {
       // hero's top, so the stage's folds run on from the hero's.
       const heroRect = hero?.getBoundingClientRect();
       unit = heroRect?.height || window.innerHeight;
-      renderer.setRelief(reliefLayout(width, unit, heroRect ? track.getBoundingClientRect().top - heroRect.top : 0));
+      relief = reliefLayout(width, unit, heroRect ? track.getBoundingClientRect().top - heroRect.top : 0);
+      renderer.setRelief(relief);
       // The relief is supersampled on a low-density screen, decided once: a
       // lower step must cost less than the one it replaces.
       renderer.resize(width, height, DPR_STEPS[dprStep], dprStep === startStep && DPR_STEPS[startStep] < 1.5);
@@ -287,8 +296,36 @@ export default function CinematicStage() {
         }
       });
       if (lost || !awake || !renderer.live) return;
-      renderer.draw(frame, stageEdges(stageTop, height, unit, trackTop - stageTop), reliefLift(stageTop, unit));
+      const light = reliefLight();
+      renderer.draw(frame, stageEdges(stageTop, height, unit, trackTop - stageTop, light.joined, light.continued), light);
       if (track.dataset.cine === 'pending') track.dataset.cine = 'on';
+      // The hero's relief no longer needs to fade out above the join: the
+      // stage's runs on from it under the same lamp (globals.css).
+      if (light.joined) document.documentElement.dataset.relief = 'on';
+    };
+
+    // The relief's lamp, in the hero's pattern. While the join with the hero is
+    // on screen the stage's relief is lit by the hero's own lamp, wherever the
+    // pointer has taken it, so the two read as one surface with no seam; the
+    // stage takes its own steady lamp back over the last HANDOVER of the screen
+    // before it pins. Leaving over the grid band, whose relief runs on from the
+    // stage's and rests its lamp where the stage's hangs, it is lit by the band's
+    // lamp, which the pointer moves there. With no hero lamp to share, the
+    // stage's own lamp hangs higher while the stage approaches.
+    const reliefLight = () => {
+      const own = [relief.lamp[0], relief.origin + relief.lamp[1], relief.lamp[2]];
+      const hero = lamps.hero;
+      const band = lamps.band;
+      if (stageTop > 0 && hero) {
+        const k = ease(clamp01(stageTop / (HANDOVER * height)));
+        return { lamp: mixLamp(own, [hero.x, hero.y, hero.z], k), gain: 1 + (hero.gain - 1) * k, joined: true };
+      }
+      if (stageTop < 0 && band) {
+        const k = ease(clamp01(-stageTop / (0.05 * height)));
+        return { lamp: mixLamp(own, [band.x, band.y, band.z], k), gain: 1 + (band.gain - 1) * k, continued: true };
+      }
+      const lift = stageTop > 0 ? reliefLift(stageTop, unit) : 0;
+      return { lamp: [own[0], own[1], own[2] + lift], gain: 1, joined: Boolean(hero), continued: Boolean(band) };
     };
 
     const step = (now) => {
@@ -704,6 +741,10 @@ export default function CinematicStage() {
       snap = true;
       kick();
     });
+    // A shared lamp that moves while its join is on screen lights the stage too.
+    const offLamp = onLamp((name) => {
+      if (visible && ((name === 'hero' && stageTop > 0) || (name === 'band' && stageTop < 0))) kick();
+    });
     resizeObserver.observe(stage);
     if (hero) resizeObserver.observe(hero);
     // The web font can rewrap scene B's copy after the first measure.
@@ -763,6 +804,8 @@ export default function CinematicStage() {
         copy.style.removeProperty('pointer-events');
       });
       for (const [, image] of queue.splice(0)) image.close?.();
+      offLamp();
+      delete document.documentElement.dataset.relief;
       renderer.destroy();
     }
 

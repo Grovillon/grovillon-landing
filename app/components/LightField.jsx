@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { clearLamp, setLamp } from './pageLamp';
+import { reliefLayout } from './stageScript';
 
 const VERTEX = `
 attribute vec2 aPos;
@@ -283,6 +285,11 @@ export default function LightField({ className, variant = 'hero' }) {
       gl.uniform3f(scene.uLight, light.x + origin[0], light.y + origin[1], layout.z);
       gl.uniform1f(scene.uIntensity, intensity);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      // The hero's lamp and the band's light the stage's relief where it meets
+      // theirs (pageLamp.js).
+      if (variant === 'hero' || variant === 'band') {
+        setLamp(variant, light.x + origin[0], light.y + origin[1], layout.z, intensity);
+      }
       if (!shown) {
         shown = true;
         host.dataset.field = 'on';
@@ -327,7 +334,14 @@ export default function LightField({ className, variant = 'hero' }) {
       const height = Math.round(rect.height * dpr);
       const hero = config.aligned ? document.querySelector('.hero')?.getBoundingClientRect() : null;
       const unit = variant === 'hero' ? rect.height : hero?.height || window.innerHeight;
-      const place = hero ? [0, (rect.top - hero.top) / unit] : [0, 0];
+      // Below a pinned stage an aligned canvas runs on from the stage's relief,
+      // which held still through the pinned run: its pattern continues the
+      // stage's from the stage's bottom edge, not from where the page has
+      // scrolled to.
+      const cine = config.aligned ? document.querySelector('.cine[data-cine]') : null;
+      const pinned = cine?.querySelector('.cine-stage');
+      const run = pinned ? cine.offsetHeight - pinned.clientHeight : 0;
+      const place = hero ? [0, (rect.top - hero.top - run) / unit] : [0, 0];
       if (
         !force &&
         width === canvas.width &&
@@ -342,6 +356,14 @@ export default function LightField({ className, variant = 'hero' }) {
       unitCss = unit;
       origin = place;
       layout = config.layout(rect.width, unitCss, rect.height);
+      if (pinned) {
+        // ... and its lamp rests where the stage's lamp hangs, above it.
+        const lamp = reliefLayout(rect.width, unitCss, 0).lamp;
+        layout.rest = [lamp[0], lamp[1] - pinned.clientHeight / unitCss];
+        layout.z = lamp[2];
+      }
+      // The band's grid rests its own lamp there too (KineticGrid reads it).
+      if (variant === 'band') host.dataset.lamp = `${layout.rest[0] * unitCss},${layout.rest[1] * unitCss}`;
       if (!scene) return;
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(scene.uRes, canvas.width, canvas.height);
@@ -551,6 +573,8 @@ export default function LightField({ className, variant = 'hero' }) {
         gl.deleteBuffer(scene.buffer);
         gl.deleteProgram(scene.program);
       }
+      if (variant === 'hero' || variant === 'band') clearLamp(variant);
+      if (variant === 'band') delete host.dataset.lamp;
     };
   }, [variant]);
 

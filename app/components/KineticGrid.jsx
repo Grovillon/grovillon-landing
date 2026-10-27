@@ -148,9 +148,17 @@ export default function KineticGrid({ className }) {
       });
     };
 
+    // The lamp rests where the band's relief rests its own (LightField writes it on
+    // the band: below a pinned stage, where the stage's lamp hangs, above the band),
+    // so the grid and the relief under it share one light; otherwise upper right.
     const rest = () => {
-      aim.x = width * 0.78;
-      aim.y = Math.min(height * 0.3, 320);
+      const shared = host.dataset.lamp?.split(',').map(Number);
+      if (shared?.length === 2 && shared.every(Number.isFinite)) {
+        [aim.x, aim.y] = shared;
+      } else {
+        aim.x = width * 0.78;
+        aim.y = Math.min(height * 0.3, 320);
+      }
       aim.load = 0;
     };
 
@@ -515,14 +523,14 @@ export default function KineticGrid({ className }) {
     };
 
     // The first time the heading is well into view, the resting lamp sends one
-    // ripple out through the skin, from open space beside the words.
+    // ripple out through the skin, from where its light meets the band.
     const heading = host.querySelector('h2');
     const entryObserver = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
         entryObserver.disconnect();
         if (entered || still) return;
-        ripple(lamp.x, lamp.y);
+        ripple(lamp.x, Math.max(lamp.y, 0));
       },
       { rootMargin: '0px 0px -50% 0px' }
     );
@@ -530,6 +538,19 @@ export default function KineticGrid({ className }) {
     const visibilityObserver = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
       if (visible && !shown && !stopped) draw(performance.now());
+      kick();
+    });
+
+    // The band's relief moves its resting lamp when the stage above it pins or
+    // goes back to plain sections; a lamp at rest goes with it.
+    const lampObserver = new MutationObserver(() => {
+      if (aim.load) return;
+      rest();
+      if (still || !visible) {
+        lamp.x = aim.x;
+        lamp.y = aim.y;
+        if (visible) draw(performance.now());
+      }
       kick();
     });
 
@@ -556,6 +577,7 @@ export default function KineticGrid({ className }) {
     lamp.y = aim.y;
     resizeObserver.observe(host);
     visibilityObserver.observe(host);
+    lampObserver.observe(host, { attributes: true, attributeFilter: ['data-lamp'] });
     if (heading) entryObserver.observe(heading);
     host.addEventListener('pointermove', onMove, { passive: true });
     host.addEventListener('pointerdown', onDown, { passive: true });
@@ -571,6 +593,7 @@ export default function KineticGrid({ className }) {
       if (raf) cancelAnimationFrame(raf);
       resizeObserver.disconnect();
       visibilityObserver.disconnect();
+      lampObserver.disconnect();
       entryObserver.disconnect();
       host.removeEventListener('pointermove', onMove);
       host.removeEventListener('pointerdown', onDown);

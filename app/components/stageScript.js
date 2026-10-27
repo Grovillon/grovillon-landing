@@ -362,7 +362,9 @@ function garmentScene(t, layout, center) {
   const goneSoft = (GONE_SOFT * Math.hypot(center[0], center[1])) / view.zoom;
   const gone = t < 0.43 ? FAR : mix(reach / view.zoom + goneSoft, 0.5 * goneSoft, ramp(t, 0.43, 0.555));
   const light = 1 - glide(ramp(t, 0.49, 0.56));
-  const present = 1 - ramp(t, 0.56, 0.615);
+  // Then the garment, dark, and its shade leave together: the dark lifts off the
+  // relief as one, and no shade is left behind on its own.
+  const leave = 1 - glide(ramp(t, 0.56, 0.615));
   // Light falls on the garment from above the frame, over the right shoulder.
   // It carries on across the garment on the page's 30-degree angle, curves up
   // to a key light over the left shoulder and drifts there, then crosses back
@@ -405,16 +407,17 @@ function garmentScene(t, layout, center) {
     // Where light reaches the garment, in image px: within the light's front
     // (its radius about LIGHT_FROM, and how much of it is soft) and within its
     // reach of the seam as it gathers there (likewise). `light` puts out what
-    // is left; `present` is the garment and its shade, there until it is dark.
+    // is left; `present` is the garment and its shade as they arrive (with a
+    // late texture), `leave` the two of them going together at the end.
     show: [front, frontSoft, gone, goneSoft],
     showAt: [LIGHT_FROM[0], LIGHT_FROM[1], SEAM[0], SEAM[1]],
     light,
-    present,
-    shown: present > 0,
+    present: 1,
+    leave,
+    shown: leave > 0,
     // The veil over the left of the relief, px: dark to its first edge, gone
     // by its second, at full strength until the garment is lit, lifting as
-    // the camera draws back; with the garment's shade, it comes and goes with
-    // `present`.
+    // the camera draws back. It is the relief's, there before the garment.
     veil: veil ? [veil[0], veil[1], 1 - glide(ramp(t, MOVE, 0.33))] : [0, 1, 0],
     // The shade round the garment eases once it is lit and the camera moves it,
     // where it only has to ground it in the key light, and deepens again as the
@@ -584,10 +587,17 @@ export function stageFocus(frame) {
 // the stage pins, then above it), and never changes shape. As the stage
 // leaves, its relief fades out towards its own bottom edge, the next section's
 // top; a 0..1 weight, eased, brings that fade in as the edge rises into view.
+// Where the next relief runs on from the stage's under the same lamp (`joined`
+// to the hero's, `continued` by the grid band's) there is no fade at that edge.
 // Returns [join, exit weight, exit fade, join fade]. `unit` is the hero's height.
-export function stageEdges(stageTop, height, unit, join) {
+export function stageEdges(stageTop, height, unit, join, joined = false, continued = false) {
   const ease = (x) => x * x * (3 - 2 * x);
-  return [join, ease(clamp01(-stageTop / (0.1 * height))), EXIT_FADE * unit, JOIN_FADE * unit];
+  return [
+    join,
+    continued ? 0 : ease(clamp01(-stageTop / (0.1 * height))),
+    EXIT_FADE * unit,
+    joined ? 0 : JOIN_FADE * unit,
+  ];
 }
 
 // How much higher the relief's lamp hangs while the stage approaches (in hero

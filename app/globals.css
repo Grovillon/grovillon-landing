@@ -253,8 +253,27 @@
     z-index: -1;
     width: 100%;
     height: 100%;
-    -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+  }
+
+  /* The relief fades into the ground towards the hero's foot: a layer of the page's
+     own ground over it (its grain in register with the page's). Once the stage's
+     relief runs on from the hero's under the same lamp ([data-relief], set by the
+     stage), the fade lifts and the two read as one surface. */
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: var(--ground) url("/images/grain.png") repeat;
+    background-size: 128px 128px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 58%, #000 100%);
+    mask-image: linear-gradient(to bottom, transparent 58%, #000 100%);
+    transition: opacity 800ms var(--ease-out);
+  }
+
+  [data-relief="on"] .hero::after {
+    opacity: 0;
   }
 
   /* A canvas is shown only once it has drawn, so the relief never pops in over the ground. */
@@ -344,6 +363,13 @@
 
   [data-field="on"] > .band-field {
     opacity: 1;
+  }
+
+  /* Below a pinned stage the band's relief runs on from the stage's (same folds,
+     same lamp), so it does not fade in at its top. */
+  .cine[data-cine="on"] ~ .grid-band > .band-field {
+    -webkit-mask-image: linear-gradient(to bottom, #000 66%, transparent);
+    mask-image: linear-gradient(to bottom, #000 66%, transparent);
   }
 
   [data-field="off"] > .band-field {

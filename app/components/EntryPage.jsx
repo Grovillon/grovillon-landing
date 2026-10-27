@@ -35,10 +35,11 @@ export default function EntryPage() {
               </p>
             </div>
             <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-2">
-              <MailLink address={CONTACT_EMAIL} className="lo-btn">
+              {/* Straight to the reader's own mail app; the other addresses offer the chooser. */}
+              <a href={`mailto:${CONTACT_EMAIL}`} className="lo-btn">
                 Write to us
                 <Arrow direction="out" className="lo-arrow" />
-              </MailLink>
+              </a>
               <a href="#roles" className="lo-link">
                 Open roles
                 <Arrow direction="down" className="lo-arrow" />

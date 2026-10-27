@@ -52,10 +52,11 @@ float exposure(vec2 p) {
 vec3 tint() { return mix(uLamp, vec3(1.0), 0.65 + 0.35 * uFill); }
 
 // Below the join with the hero (uEdges.x device px from the stage's top) the
-// relief fades up from the ground over uEdges.w device px; as the stage leaves
-// (weight uEdges.y), it fades out over uEdges.z device px to its bottom edge.
+// relief fades up from the ground over uEdges.w device px (none where it runs on
+// from the hero's); as the stage leaves (weight uEdges.y), it fades out over
+// uEdges.z device px to its bottom edge (none over the grid band's relief).
 vec3 finish(vec3 col, vec2 frag) {
-  float top = smoothstep(uEdges.x, uEdges.x + uEdges.w, frag.y);
+  float top = uEdges.w > 0.0 ? smoothstep(uEdges.x, uEdges.x + uEdges.w, frag.y) : step(uEdges.x, frag.y);
   float bottom = mix(1.0, smoothstep(0.0, uEdges.z, uRes.y - frag.y), uEdges.y);
   // The page's grain, at the size the hero draws it (one css px), so the stage,
   // the relief and the page read as one surface.
@@ -76,6 +77,7 @@ uniform float uCos;
 uniform vec2 uDepth;
 uniform vec3 uLook;
 uniform vec3 uReliefLamp;
+uniform float uReliefGain;
 uniform float uSupersample;
 
 float distTo(float x, float period) {
@@ -101,11 +103,11 @@ vec3 shade(vec2 p, float px) {
   float att = 1.0 / (1.0 + (dist * dist) / (uLook.z * uLook.z));
   vec3 hv = normalize(l + vec3(0.0, 0.0, 1.0));
   float spec = pow(max(dot(n, hv), 0.0), 40.0) * 0.08;
-  float light = (diff + spec) * att;
+  float light = (diff + spec) * att * uReliefGain;
   float crease = distTo(yy, h) * uCos;
   float line = 1.0 - smoothstep(0.0, px * 1.1, crease);
   vec3 col = uGround + uLamp * light * uLook.x;
-  col += uLamp * line * att * uLook.y * (0.35 + diff);
+  col += uLamp * line * att * uReliefGain * uLook.y * (0.35 + diff);
   return col;
 }
 
@@ -151,6 +153,7 @@ uniform vec4 uShow;
 uniform vec4 uShowAt;
 uniform vec2 uPresent;
 uniform float uPool;
+uniform float uLeave;
 uniform sampler2D uGarment;
 
 const vec2 TEXTURE = vec2(2048.0, 1024.0);
@@ -213,7 +216,7 @@ vec3 reliefMean(vec2 frag) {
     vec3 n = normalize(vec3(-s1 * (uDepth.x - uDepth.y * s2 * uSlope), -uDepth.y * s2, 1.0));
     diff += max(dot(n, l), 0.0);
   }
-  return uGround + uLamp * (0.25 * diff * att * uLook.x);
+  return uGround + uLamp * (0.25 * diff * att * uReliefGain * uLook.x);
 }
 
 // Above the waist the relief behind the garment is its mean wherever the
@@ -233,8 +236,10 @@ void main() {
   // except while its texture arrives and once it is dark at the end). Its
   // shade comes first and goes last: the unlit garment and the relief in full
   // shade are the same ground colour, so it comes and goes unseen.
-  float here = clamp((uPresent.y - 0.65) / 0.35, 0.0, 1.0);
-  float shaded = smoothstep(0.0, 0.65, uPresent.y);
+  // uLeave: at the end of scene A, the garment, dark by then, and its shade
+  // go together, so the shade never stays behind on its own.
+  float here = clamp((uPresent.y - 0.65) / 0.35, 0.0, 1.0) * uLeave;
+  float shaded = smoothstep(0.0, 0.65, uPresent.y) * uLeave;
   float light = lightAt(pg);
 
   // The garment is solid: it never shows the relief through it. Unlit, it
@@ -387,6 +392,7 @@ const RELIEF_UNIFORMS = [
   'uDepth',
   'uLook',
   'uReliefLamp',
+  'uReliefGain',
   'uSupersample',
   'uVeil',
 ];
@@ -404,6 +410,7 @@ function createPrograms(gl) {
     'uShowAt',
     'uPresent',
     'uPool',
+    'uLeave',
     'uGarment',
   ]);
   const sheets = link(gl, SHEET_VERTEX, SHEET_FRAGMENT, [
@@ -502,16 +509,19 @@ export function createStageRenderer(canvas) {
     gl.uniform1f(p.uFill, frame.fill);
   };
 
-  const setRelief = (p, lift, veil) => {
+  const setRelief = (p, light, veil) => {
     const { unit, origin, cell, depth, lamp, look } = surface;
     gl.uniform1f(p.uUnit, unit);
     gl.uniform2f(p.uOrigin, 0, origin);
     gl.uniform2f(p.uCell, cell[0], cell[1]);
     gl.uniform2f(p.uDepth, depth[0], depth[1]);
     gl.uniform3f(p.uLook, look[0], look[1], look[2]);
-    // The lamp rests on the stage where the hero's rests on the hero; while
-    // the stage approaches it hangs `lift` higher (stageScript's reliefLift).
-    gl.uniform3f(p.uReliefLamp, lamp[0], origin + lamp[1], lamp[2] + lift);
+    // The relief's lamp, in the hero's pattern: the stage's own, which rests on
+    // the stage where the hero's rests on the hero, unless the stage passes in
+    // another (CinematicStage: the hero's or the band's, where the reliefs meet).
+    const at = light?.lamp || [lamp[0], origin + lamp[1], lamp[2]];
+    gl.uniform3f(p.uReliefLamp, at[0], at[1], at[2]);
+    gl.uniform1f(p.uReliefGain, light ? light.gain : 1);
     // Facets have hard edges: supersampled on a low-density screen.
     gl.uniform1f(p.uSupersample, size.supersample ? 1 : 0);
     gl.uniform3f(p.uVeil, veil[0], veil[1], veil[2]);
@@ -523,20 +533,20 @@ export function createStageRenderer(canvas) {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
   };
 
-  const drawRelief = (edges, lift, veil) => {
+  const drawRelief = (edges, light, veil) => {
     const p = programs.relief;
     fullscreen(p);
     setShared(p, null, edges);
-    setRelief(p, lift, veil);
+    setRelief(p, light, veil);
     gl.disable(gl.BLEND);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
 
-  const drawGarment = (frame, edges, lift) => {
+  const drawGarment = (frame, edges, light) => {
     const p = programs.garment;
     fullscreen(p);
     setShared(p, frame, edges);
-    setRelief(p, lift, frame.veil);
+    setRelief(p, light, frame.veil);
     gl.uniform2f(p.uAnchor, frame.anchor[0], frame.anchor[1]);
     gl.uniform2f(p.uCam, frame.cam[0], frame.cam[1]);
     gl.uniform1f(p.uZoom, frame.zoomGarment);
@@ -545,6 +555,7 @@ export function createStageRenderer(canvas) {
     gl.uniform4f(p.uShowAt, frame.showAt[0], frame.showAt[1], frame.showAt[2], frame.showAt[3]);
     gl.uniform2f(p.uPresent, frame.light, frame.present);
     gl.uniform1f(p.uPool, frame.pool);
+    gl.uniform1f(p.uLeave, frame.leave);
     gl.disable(gl.BLEND);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
@@ -614,12 +625,12 @@ export function createStageRenderer(canvas) {
     },
     // The relief is always drawn; a subject only while some of it shows and
     // once its texture is in.
-    draw(frame, edges, lift = 0) {
+    draw(frame, edges, light = null) {
       if (!this.live) return false;
       if (frame.scene === 'garment' && frame.shown && textures.garment) {
-        drawGarment(frame, edges, lift);
+        drawGarment(frame, edges, light);
       } else {
-        drawRelief(edges, lift, frame.veil || NO_VEIL);
+        drawRelief(edges, light, frame.veil || NO_VEIL);
         if (frame.scene === 'stack' && frame.shown && textures.atlas) drawSheets(frame, edges);
       }
       return true;
