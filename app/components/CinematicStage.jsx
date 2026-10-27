@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { createStageRenderer } from './stageRenderer';
-import { stageEdges, stageFocus, stageFrame, stageLayout } from './stageScript';
+import { reliefLayout, stageEdges, stageFocus, stageFrame, stageLayout } from './stageScript';
 
 // Scrubbing follows the scroll through a critically damped spring, so a change
 // of direction carries its momentum. A mouse wheel scrolls in separate steps, so
@@ -95,10 +95,11 @@ async function decode(src) {
   }
 }
 
-// Scenes A and B share one pinned stage, and the cut between them is made in
-// the dark: scene A's light goes out, and scene B's comes with the falling
-// stack. Without WebGL, without script or with reduced motion, the same markup
-// stays two ordinary sections.
+// Scenes A and B share one pinned stage in front of the hero's relief, which
+// stays lit throughout: the garment comes out of the dark as light falls on it
+// and dissolves back into the relief, and after a pause the stack falls in.
+// Without WebGL, without script or with reduced motion, the same markup stays
+// two ordinary sections.
 export default function CinematicStage() {
   const trackRef = useRef(null);
 
@@ -107,6 +108,8 @@ export default function CinematicStage() {
     const stage = track?.querySelector('.cine-stage');
     const canvas = track?.querySelector('.cine-canvas');
     if (!track || !stage || !canvas) return undefined;
+    // The stage's background continues the hero's relief.
+    const hero = document.querySelector('.hero');
 
     // Moving between the static and pinned layouts changes the page's height.
     // Keep the reader where they are: below the stage, shift by the difference;
@@ -161,6 +164,7 @@ export default function CinematicStage() {
 
     let width = 1;
     let height = 1;
+    let unit = 1;
     let layout = stageLayout(1, 1);
     const startStep = Math.max(
       DPR_STEPS.findIndex((step) => step <= Math.min(window.devicePixelRatio || 1, 2)),
@@ -182,6 +186,7 @@ export default function CinematicStage() {
     let scrubGoal = SCRUB_WHEEL;
     let lastWheel = -Infinity;
     let stageTop = 0;
+    let trackTop = 0;
     let visible = false;
     let snap = true;
     // The lamp as the visitor holds it: a point in stage pixels and a share.
@@ -233,6 +238,7 @@ export default function CinematicStage() {
       // counts in the same unit, so the motion keeps its pace through the pin.
       target = -rect.top / Math.max(rect.height - height, 1);
       stageTop = rect.top > 0 ? rect.top : Math.min(0, rect.bottom - height);
+      trackTop = rect.top;
       visible = rect.bottom > 0 && rect.top < view;
     };
 
@@ -240,6 +246,11 @@ export default function CinematicStage() {
       width = stage.clientWidth;
       height = stage.clientHeight;
       layout = stageLayout(width, height, window.innerHeight / Math.max(track.offsetHeight - height, 1));
+      // The relief's unit is the hero's height, and its pattern starts at the
+      // hero's top, so the stage's folds run on from the hero's.
+      const heroRect = hero?.getBoundingClientRect();
+      unit = heroRect?.height || window.innerHeight;
+      renderer.setRelief(reliefLayout(width, unit, heroRect ? track.getBoundingClientRect().top - heroRect.top : 0));
       // The relief is supersampled on a low-density screen, decided once: a
       // lower step must cost less than the one it replaces.
       renderer.resize(width, height, DPR_STEPS[dprStep], dprStep === startStep && DPR_STEPS[startStep] < 1.5);
@@ -261,7 +272,7 @@ export default function CinematicStage() {
         }
       });
       if (lost || !renderer.ready) return;
-      renderer.draw(frame, stageEdges(stageTop, height));
+      renderer.draw(frame, stageEdges(stageTop, height, unit, trackTop - stageTop));
       if (track.dataset.cine === 'pending') track.dataset.cine = 'on';
     };
 
@@ -613,6 +624,7 @@ export default function CinematicStage() {
       kick();
     });
     resizeObserver.observe(stage);
+    if (hero) resizeObserver.observe(hero);
     nearObserver.observe(track);
     if (document.readyState === 'complete') onLoad();
     else window.addEventListener('load', onLoad, { once: true });

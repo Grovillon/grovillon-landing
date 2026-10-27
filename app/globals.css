@@ -540,3 +540,129 @@
     opacity: 1 !important;
   }
 }
+
+/* ── Mail chooser (MailLink.jsx) ─────────────────────────────────────────
+   Every email link stays a mailto: link; with script a plain click opens this
+   chooser instead (webmail, the mail app, or the address copied), anchored to
+   the link and kept inside the viewport. A control, not content: the ground with
+   its grain, one hairline round it, no fill, no shadow, square corners. It grows
+   out of the link's side over 180ms and leaves faster; with reduced motion it
+   simply appears and goes. */
+.mail-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  min-width: 13rem;
+  background: var(--ground) url("/images/grain.png") repeat;
+  background-size: 128px 128px;
+  border: 1px solid var(--line-strong);
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+}
+
+.mail-menu[data-state="enter"],
+.mail-menu[data-state="closed"] {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.97);
+}
+
+.mail-menu[data-side="above"][data-state="enter"],
+.mail-menu[data-side="above"][data-state="closed"] {
+  transform: translateY(4px) scale(0.97);
+}
+
+.mail-menu[data-state="enter"] {
+  transition: none;
+}
+
+.mail-menu[data-state="closed"] {
+  pointer-events: none;
+  transition-duration: 120ms;
+}
+
+/* While its chooser is open, the link it came from holds its hover state. */
+.lo-btn[aria-expanded="true"] {
+  background-color: var(--ink-lit);
+}
+
+.lo-link[aria-expanded="true"] {
+  color: var(--ink);
+}
+
+.lo-inline[aria-expanded="true"] {
+  text-decoration-color: var(--ink);
+}
+
+.role-row[aria-expanded="true"]:not(:active) {
+  color: var(--ink);
+  background-color: rgb(236 235 231 / 0.035);
+}
+
+.mail-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0 0.875rem 0 1rem;
+  border: 0;
+  background-color: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-stretch: 112%;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 200ms ease,
+    background-color 200ms ease;
+}
+
+.mail-item + .mail-item {
+  border-top: 1px solid var(--line);
+}
+
+.mail-item:focus-visible {
+  outline: 2px solid var(--lamp);
+  outline-offset: -2px;
+  color: var(--ink);
+  background-color: rgb(236 235 231 / 0.035);
+}
+
+.mail-item:active {
+  background-color: rgb(236 235 231 / 0.06);
+  transition-duration: 100ms;
+}
+
+.mail-item[data-copied] {
+  color: var(--ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mail-item {
+    min-height: 2.5rem;
+  }
+
+  .mail-item:hover {
+    color: var(--ink);
+    background-color: rgb(236 235 231 / 0.035);
+  }
+
+  .mail-item:hover .lo-arrow {
+    transform: translate(3px, -3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mail-menu,
+  .mail-item .lo-arrow {
+    transition: none;
+  }
+}
+/* ── end Mail chooser ── */

@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import Arrow from './Arrow';
 import CinematicStage from './CinematicStage';
 import KineticGrid from './KineticGrid';
+import MailLink from './MailLink';
 
 export const CONTACT_EMAIL = 'd@grovillon.com';
 
@@ -64,18 +65,18 @@ export default function MissionSection() {
             <ul className="border-b border-line">
               {ROLES.map((role) => (
                 <li key={role}>
-                  <a className="role-row" href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(role)}`}>
+                  <MailLink address={CONTACT_EMAIL} subject={role} align="end" className="role-row">
                     <span className="t-role">{role}</span>
                     <Arrow direction="out" className="lo-arrow" />
-                  </a>
+                  </MailLink>
                 </li>
               ))}
             </ul>
             <p className="t-lead mt-12 text-ink-2">
               We’d love to hear from you. Write to us at{' '}
-              <a className="lo-inline" href={`mailto:${CONTACT_EMAIL}`}>
+              <MailLink address={CONTACT_EMAIL} className="lo-inline">
                 {CONTACT_EMAIL}
-              </a>
+              </MailLink>
               .
             </p>
           </div>
