@@ -222,8 +222,9 @@ function camera(u, framings) {
 // Where the image sits for a given stage size. Landscape stages set the copy in
 // the page's left column with the image to its right; portrait stages set it
 // above the image. The copy's right edge mirrors globals.css. `entry` is the
-// stage's approach as a share of the pinned run (viewport height / pinned scroll).
-export function stageLayout(width, height, entry = 0.25) {
+// stage's approach as a share of the pinned run (viewport height / pinned scroll);
+// `statement` is where scene B's copy ends, px from the stage's top.
+export function stageLayout(width, height, entry = 0.25, statement = 0) {
   const landscape = width >= 720 && width / height >= 1.05;
   const gutter = Math.min(Math.max(0.05 * width, 20), 72);
   if (landscape) {
@@ -260,6 +261,10 @@ export function stageLayout(width, height, entry = 0.25) {
       },
     };
   }
+  // The largest zoom at which a stack this tall (render px), centred on the
+  // anchor, keeps 16px clear of the statement above it; never below half the
+  // width's own limit.
+  const below = (tall) => Math.max((2 * (0.64 * height - statement - 16)) / tall, (0.42 * width) / 861);
   return {
     landscape,
     entry,
@@ -275,8 +280,10 @@ export function stageLayout(width, height, entry = 0.25) {
       revealFill: 0.5,
     },
     stack: {
-      openZoom: Math.min((0.84 * width) / 861, (0.6 * height) / OPEN_HEIGHT),
-      closedZoom: Math.min((0.84 * width) / 861, (0.44 * height) / CLOSED_HEIGHT),
+      // Scene B's statement is lit before the stack is drawn below it, so on a
+      // short screen the stack is drawn smaller rather than into the words.
+      openZoom: Math.min((0.84 * width) / 861, (0.6 * height) / OPEN_HEIGHT, below(OPEN_HEIGHT)),
+      closedZoom: Math.min((0.84 * width) / 861, (0.44 * height) / CLOSED_HEIGHT, below(CLOSED_HEIGHT)),
       anchor: [0.5 * width, 0.64 * height],
     },
   };

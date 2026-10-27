@@ -434,19 +434,16 @@ export default function LightField({ className, variant = 'hero' }) {
       if (!raf && visible && !lost && !document.hidden) raf = requestAnimationFrame(step);
     };
 
-    const onPointerMove = (event) => {
-      if (event.pointerType !== 'mouse' || !finePointer.matches || reduceMotion.matches || !visible) return;
+    // The lamp goes where the pointer is over the host, and back to rest when
+    // it is not.
+    const follow = (clientX, clientY) => {
       const rect = host.getBoundingClientRect();
-      const inside =
-        event.clientX >= rect.left &&
-        event.clientX <= rect.right &&
-        event.clientY >= rect.top &&
-        event.clientY <= rect.bottom;
+      const inside = clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
       pointerActive = inside;
       if (inside) {
         if (entranceStart !== null) handOff();
-        target.x = (event.clientX - rect.left) / unitCss;
-        target.y = Math.max((event.clientY - rect.top) / unitCss, 0.02);
+        target.x = (clientX - rect.left) / unitCss;
+        target.y = Math.max((clientY - rect.top) / unitCss, 0.02);
       } else {
         target.x = layout.rest[0];
         target.y = layout.rest[1];
@@ -454,8 +451,20 @@ export default function LightField({ className, variant = 'hero' }) {
       kick();
     };
 
+    // An aligned variant shares its lamp with the grid on the same host, so it
+    // answers to what the grid answers to (a mouse or a pen) and, like the
+    // grid's lamp, stays under a still pointer while the page scrolls.
+    let still = null;
+    const onPointerMove = (event) => {
+      const answers = config.aligned ? event.pointerType !== 'touch' : event.pointerType === 'mouse' && finePointer.matches;
+      if (!answers || reduceMotion.matches || !visible) return;
+      still = [event.clientX, event.clientY];
+      follow(event.clientX, event.clientY);
+    };
+
     const onPointerLeave = () => {
       pointerActive = false;
+      still = null;
       target.x = layout.rest[0];
       target.y = layout.rest[1];
       kick();
@@ -463,6 +472,10 @@ export default function LightField({ className, variant = 'hero' }) {
 
     const onScroll = () => {
       if (!visible || reduceMotion.matches) return;
+      if (config.aligned) {
+        if (still) follow(still[0], still[1]);
+        return;
+      }
       scrollTarget();
       kick();
     };
@@ -493,6 +506,11 @@ export default function LightField({ className, variant = 'hero' }) {
 
     const resizeObserver = new ResizeObserver(() => resize());
     resizeObserver.observe(host);
+    // An aligned canvas keeps its place in the hero's pattern: what sits above
+    // it (the hero, the stage's run) can change height while it is in view.
+    if (config.aligned) {
+      for (const above of document.querySelectorAll('.hero, .cine')) resizeObserver.observe(above);
+    }
     const visibilityObserver = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
       if (!visible) return;
@@ -514,7 +532,7 @@ export default function LightField({ className, variant = 'hero' }) {
       window.addEventListener('pointermove', onPointerMove, { passive: true });
       document.documentElement.addEventListener('pointerleave', onPointerLeave);
     }
-    if (variant === 'scroll') window.addEventListener('scroll', onScroll, { passive: true });
+    if (variant === 'scroll' || config.aligned) window.addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('visibilitychange', onVisibility);
     canvas.addEventListener('webglcontextlost', onLost);
     canvas.addEventListener('webglcontextrestored', onRestored);

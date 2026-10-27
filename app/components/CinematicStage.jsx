@@ -101,7 +101,8 @@ async function decode(src) {
 
 // Scenes A and B share one pinned stage in front of the hero's relief, which
 // stays lit throughout: the garment waits unlit in its shade until light falls
-// on it, and goes dark again before it leaves; after a pause the stack falls in.
+// on it, and goes dark again before it leaves; after a pause the statement is
+// lit and a plane of light draws the stack out of the dark.
 // The relief needs no texture, so it is there as soon as the stage wakes; each
 // subject joins it when its texture arrives.
 // Without WebGL, without script or with reduced motion, the same markup stays
@@ -116,6 +117,7 @@ export default function CinematicStage() {
     if (!track || !stage || !canvas) return undefined;
     // The stage's background continues the hero's relief.
     const hero = document.querySelector('.hero');
+    const statementBlock = track.querySelector('.cine-stack .cine-block');
 
     // Moving between the static and pinned layouts changes the page's height.
     // Keep the reader where they are: below the stage, shift by the difference;
@@ -254,7 +256,11 @@ export default function CinematicStage() {
     const resize = () => {
       width = stage.clientWidth;
       height = stage.clientHeight;
-      layout = stageLayout(width, height, window.innerHeight / Math.max(track.offsetHeight - height, 1));
+      // Scene B's copy is lit before the stack is drawn, so the stack keeps below it.
+      const statement = statementBlock
+        ? statementBlock.getBoundingClientRect().bottom - stage.getBoundingClientRect().top
+        : 0;
+      layout = stageLayout(width, height, window.innerHeight / Math.max(track.offsetHeight - height, 1), statement);
       // The relief's unit is the hero's height, and its pattern starts at the
       // hero's top, so the stage's folds run on from the hero's.
       const heroRect = hero?.getBoundingClientRect();
@@ -700,6 +706,8 @@ export default function CinematicStage() {
     });
     resizeObserver.observe(stage);
     if (hero) resizeObserver.observe(hero);
+    // The web font can rewrap scene B's copy after the first measure.
+    if (statementBlock) resizeObserver.observe(statementBlock);
     nearObserver.observe(track);
     if (document.readyState === 'complete') onLoad();
     else window.addEventListener('load', onLoad, { once: true });
