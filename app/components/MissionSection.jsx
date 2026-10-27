@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
-import Arrow from './Arrow';
 import CinematicStage from './CinematicStage';
 import KineticGrid from './KineticGrid';
+import LightField from './LightField';
 import MailLink from './MailLink';
 
 export const CONTACT_EMAIL = 'd@grovillon.com';
@@ -28,6 +28,7 @@ export default function MissionSection() {
         aria-labelledby="conditions"
         className="grid-band pb-[clamp(7rem,15vw,13rem)] pt-[clamp(5rem,11vw,10rem)]"
       >
+        <LightField variant="band" className="band-field" />
         <KineticGrid className="grid-field" />
         <div className="wrap">
           <div className="grid grid-cols-1 gap-y-12 md:grid-cols-12 md:gap-x-6 md:gap-y-20">
@@ -64,11 +65,8 @@ export default function MissionSection() {
           <div className="md:col-span-7">
             <ul className="border-b border-line">
               {ROLES.map((role) => (
-                <li key={role}>
-                  <MailLink address={CONTACT_EMAIL} subject={role} align="end" className="role-row">
-                    <span className="t-role">{role}</span>
-                    <Arrow direction="out" className="lo-arrow" />
-                  </MailLink>
+                <li key={role} className="role-row">
+                  <span className="t-role">{role}</span>
                 </li>
               ))}
             </ul>

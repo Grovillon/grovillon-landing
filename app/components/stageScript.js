@@ -37,9 +37,6 @@ const WIDEST = 1; // fraction of the render's spacing when it is most open: the 
 const SPAN = STACK_BOTTOM - SHEETS[0].box[1];
 const CLOSED_HEIGHT = SPAN - (1 - CLOSEST) * SLACK_SUM;
 const OPEN_HEIGHT = SPAN - (1 - WIDEST) * SLACK_SUM;
-// How far each sheet sits below its place in the render while the stack is
-// closed: the sum of the closed-up spacing beneath it.
-const CLOSED_DROP = SHEETS.map((_, k) => SLACK.slice(k).reduce((a, b) => a + (1 - CLOSEST) * b, 0));
 
 // The relief behind both scenes is the hero's, lit by its own steady lamp, and
 // it stays as it is from the moment the stage arrives until it leaves: only
@@ -47,10 +44,11 @@ const CLOSED_DROP = SHEETS.map((_, k) => SLACK.slice(k).reduce((a, b) => a + (1 
 // start, unlit, hidden in its own shade on the relief; light falls on it,
 // slowly, and at the end of scene A the light goes out and it is dark again.
 // Only then, unseen, do it and its shade go; after a pause on the relief
-// alone, the closed stack falls into the frame and opens from the top down.
+// alone, scene B's statement is lit first and the stack is drawn out of the
+// dark where it stands.
 const CUT = 0.615;
 const SEAM = [1110, 300]; // where scene A's push-in ends, on the right shoulder seam
-const PUSH = 0.38; // the push-in's end, as a share of the hold distance
+const PUSH = 0.6; // the push-in's end, as a share of the hold distance
 const LAMP_HEIGHT = 1700; // scene A's lamp above the image, image px
 // The garment comes into the light from above its right shoulder, below where
 // the relief's lamp hangs: its front spreads from this image point, starting
@@ -81,13 +79,14 @@ const EXIT_FADE = 0.22;
 const LIFT = 1;
 const LIFTED = 0.7;
 const SETTLED = 0.3;
-// Scene B's fall: the closed stack starts this far above the frame's top edge
-// (render px), and each sheet eases to rest over this much of the fall on either
-// side of its place, so the sheets land one after another, never all at once.
-const FALL_CLEAR = 60;
-const LANDING = 130;
-// The stack has landed open by this point; from here it is framed as it closes.
-const OPENED = 0.81;
+// Scene B: once the statement is lit, a plane of light passes down through the
+// stack where it stands (SCAN), drawing its layers out of the dark: the rows it
+// has passed are there, the rows it has not yet reached are not, over SCAN_SOFT
+// render px, and where it crosses a layer the surface catches its light
+// (SCAN_GLINT).
+const SCAN = [0.715, 0.835];
+const SCAN_SOFT = 56;
+const SCAN_GLINT = 0.9;
 const FLOOR = 0.3; // the least fill a held lamp leaves on scene B's sheets
 // Depth of field in scene B: blur in mip levels per sheet away from the lamp,
 // when the stack is fully open; nothing is out of focus while it is closed.
@@ -229,7 +228,7 @@ export function stageLayout(width, height, entry = 0.25) {
   const gutter = Math.min(Math.max(0.05 * width, 20), 72);
   if (landscape) {
     const copyRight = Math.max(gutter, (width - 1344) / 2 + gutter) + Math.min(480, 0.31 * width);
-    const fit = Math.min((0.6 * width) / GARMENT.width, (0.8 * height) / GARMENT.height);
+    const fit = Math.min((0.38 * width) / GARMENT.width, (0.52 * height) / GARMENT.height);
     const room = (width - copyRight - 2 * gutter) / 861;
     const closedZoom = Math.min((0.55 * height) / CLOSED_HEIGHT, room);
     return {
@@ -238,17 +237,17 @@ export function stageLayout(width, height, entry = 0.25) {
       garment: {
         fit,
         // Camera distances: the garment on the left, the whole garment, the push-in.
-        closeD: 0.7,
+        closeD: 0.75,
         holdD: 1,
         pushD: PUSH,
         anchor: [Math.max(0.645 * width, copyRight + 24 + 0.45 * GARMENT.width * fit), 0.5 * height],
-        // The opening framing puts the chest (image px) under a third of the way
+        // The opening framing puts the chest (image px) a third of the way
         // across, inside the dark of the veil, which darkens the relief from the
         // left edge to `veil[0]` and is gone by `veil[1]` (px); the pull-back
         // carries the garment out of it, to the right.
         close: [745, 420],
-        closeAnchor: [0.29 * width, 0.5 * height],
-        veil: [0.62 * width, 0.9 * width],
+        closeAnchor: [0.33 * width, 0.5 * height],
+        veil: [0.55 * width, 0.85 * width],
         // The fill the front brings: low, so the light falls from the right
         // and the garment's left, under the copy, stays in shadow.
         revealFill: 0.35,
@@ -257,7 +256,6 @@ export function stageLayout(width, height, entry = 0.25) {
         // The camera keeps the stack framed: closer while it is closed, further back as it opens.
         openZoom: Math.min((0.78 * height) / OPEN_HEIGHT, room),
         closedZoom,
-        alone: [0.5 * width, 0.52 * height],
         anchor: [Math.max(0.6 * width, copyRight + 40 + 0.5 * 861 * closedZoom), 0.52 * height],
       },
     };
@@ -267,19 +265,18 @@ export function stageLayout(width, height, entry = 0.25) {
     entry,
     garment: {
       fit: width / GARMENT.width,
-      closeD: 0.4,
-      holdD: 0.62,
-      pushD: PUSH * 0.62,
-      anchor: [0.5 * width, 0.58 * height],
-      close: [1010, 330],
-      closeAnchor: [0.5 * width, 0.56 * height],
+      closeD: 0.72,
+      holdD: 0.95,
+      pushD: 0.62,
+      anchor: [0.5 * width, 0.6 * height],
+      close: [770, 430],
+      closeAnchor: [0.5 * width, 0.58 * height],
       veil: null,
       revealFill: 0.5,
     },
     stack: {
       openZoom: Math.min((0.84 * width) / 861, (0.6 * height) / OPEN_HEIGHT),
       closedZoom: Math.min((0.84 * width) / 861, (0.44 * height) / CLOSED_HEIGHT),
-      alone: [0.5 * width, 0.5 * height],
       anchor: [0.5 * width, 0.64 * height],
     },
   };
@@ -412,6 +409,10 @@ function garmentScene(t, layout, center) {
     // the camera draws back; with the garment's shade, it comes and goes with
     // `present`.
     veil: veil ? [veil[0], veil[1], 1 - glide(ramp(t, MOVE, 0.33))] : [0, 1, 0],
+    // The shade round the garment eases once it is lit and the camera moves it,
+    // where it only has to ground it in the key light, and deepens again as the
+    // light gathers onto the seam, so that the garment leaves unseen.
+    pool: 1 - 0.6 * glide(ramp(t, MOVE, 0.33)) * (1 - glide(ramp(t, 0.43, 0.49))),
     // A moving pointer leans the lamp a little once most of the garment is
     // lit, never while it is still dark; at the key light a pointer on the
     // garment takes it, and the held lamp narrows to model it.
@@ -425,51 +426,23 @@ function garmentScene(t, layout, center) {
   };
 }
 
-// Where each sheet sits below its place in the render while the closed stack
-// falls: `fall` is how far the stack still has to go. Each sheet eases to rest
-// on its place, the top sheet first, and each one below keeps falling until it
-// reaches the render's spacing under the sheet above. The easing is monotone
-// and never faster than the fall, so a sheet is never further from the one
-// below than in the render, nor closer than in the closed stack.
-function fallen(fall) {
-  return CLOSED_DROP.map((drop) => {
-    const x = drop - fall;
-    if (x <= -LANDING) return x;
-    if (x >= LANDING) return 0;
-    return -((LANDING - x) ** 2) / (4 * LANDING);
-  });
-}
-
-// Scene B: after a pause on the relief alone, the closed stack falls into the
-// frame from above, in front of the relief and already in its light, and opens
-// from the top down to the render's own spacing. A low lamp crosses the open
-// layers; they close again from the top, and the statement is lit.
+// Scene B: after a pause on the relief alone, the statement is lit first, line
+// by line. Then a plane of light passes down through the stack where it stands,
+// open at the render's own spacing, and draws its layers out of the dark: what
+// it has passed is there, what it has not yet reached is not, and where it
+// crosses a layer the surface catches its light. A low lamp then crosses the
+// open layers, and they close again from the top, into one quiet material.
 function stackScene(t, layout) {
-  const { openZoom, closedZoom, alone } = layout.stack;
-  const openCenter = [STACK_CENTER_X, (SHEETS[0].box[1] + STACK_BOTTOM) / 2];
-  // The fall starts with the stack's lowest edge just above the frame, from
-  // rest: it gathers speed as it comes into view, then slows to a stop with no
-  // bounce, so the stack drops in and its sheets settle one by one; the last
-  // one lands at 0.785.
-  const frameTop = openCenter[1] - alone[1] / openZoom;
-  const start = STACK_BOTTOM - frameTop + FALL_CLEAR;
-  const p = ramp(t, 0.615, 0.785);
-  const fall = -LANDING + (start + LANDING) * (1 - p) ** 3 * (1 + 3 * p);
-  // How far each pair has opened: 0 = closed to CLOSEST, 1 = open to WIDEST.
-  // They close again from the top for the statement.
-  const closing = SLACK.map((_, j) => 1 - glide(ramp(t, 0.845 + 0.017 * j, 0.895 + 0.017 * j)));
-  // Each sheet's downward shift from its place in the render. While falling,
-  // the sheets close up as `fallen` says; while closing, the base stays put and
-  // each sheet sits at least as low as the sheet below it moved, so no
+  const { openZoom, closedZoom, anchor } = layout.stack;
+  // How far each pair is open: 1 = the render's spacing, 0 = closed up. The
+  // pairs close from the top once the lamp has crossed them.
+  const closing = SLACK.map((_, j) => 1 - glide(ramp(t, 0.885 + 0.012 * j, 0.925 + 0.012 * j)));
+  // Each sheet's downward shift from its place in the render: the base stays
+  // put and each sheet sits at least as low as the sheet below it moved, so no
   // uncovered surface ever shows.
-  let shift;
-  if (t < OPENED) {
-    shift = fallen(fall);
-  } else {
-    shift = new Array(SHEETS.length).fill(0);
-    for (let k = SHEETS.length - 2; k >= 0; k--) {
-      shift[k] = shift[k + 1] + (1 - mix(CLOSEST, WIDEST, closing[k])) * SLACK[k];
-    }
+  const shift = new Array(SHEETS.length).fill(0);
+  for (let k = SHEETS.length - 2; k >= 0; k--) {
+    shift[k] = shift[k + 1] + (1 - mix(CLOSEST, WIDEST, closing[k])) * SLACK[k];
   }
   const open = SLACK.map((slack, j) => 1 - (shift[j] - shift[j + 1]) / ((1 - CLOSEST) * slack));
   const spread = clamp01(SLACK.reduce((sum, slack, j) => sum + slack * open[j], 0) / SLACK_SUM);
@@ -490,43 +463,48 @@ function stackScene(t, layout) {
     blur: 0,
   }));
 
-  // The lamp comes down with the stack, low over its upper layers, and crosses
-  // the open layers from left to right, so the light finds their edges one
-  // after another; it settles over the stack as it closes.
-  const lampY = top + 120 + 0.22 * (bottom - top);
+  // The plane of light, in render rows: from above the stack's top edge to
+  // below its base, gathering speed and slowing to rest. One plane for every
+  // sheet, so a sheet is never drawn where the one above it is not.
+  const scan = glide(ramp(t, SCAN[0], SCAN[1]));
+  const front = mix(SHEETS[0].box[1] - 2 * SCAN_SOFT, STACK_BOTTOM + 2 * SCAN_SOFT, scan);
+  // The lamp rides the plane down, close over the layers it is reaching, then
+  // rises over the open stack and crosses it from left to right, so the light
+  // finds their edges one after another; it settles over the stack as it closes.
+  const rise = glide(ramp(t, SCAN[1] - 0.01, SCAN[1] + 0.03));
+  const lampY = mix(front - 40, top + 120 + 0.22 * (bottom - top), rise);
   const lampX = track(t, [
-    [0.69, 430],
-    [OPENED, 720],
-    [0.86, 640],
-    [0.95, 520],
+    [SCAN[1], STACK_CENTER_X],
+    [0.86, 450],
+    [0.885, 690],
+    [0.95, 540],
   ]);
-  // The stack falls in already lit, with enough fill that it never shows as a
-  // dark cut-out against the relief. Once it has closed it is in its
-  // photographed light as the statement lands. On a portrait screen it then
-  // dissolves into the relief well before the stage leaves (the scrub trails
-  // a fast scroll a little), so the statement ends the film on its own rather
-  // than over the next section.
+  // Behind the plane the layers keep a low light, so the plane reads as light
+  // passing through them; then the fill rises, and once the stack has closed it
+  // is in its photographed light. On a portrait screen it then dissolves into
+  // the relief well before the stage leaves (the scrub trails a fast scroll a
+  // little), so the statement ends the film on its own rather than over the
+  // next section.
   const intensity = 1 - 0.25 * glide(ramp(t, 0.955, 0.995));
-  const show = layout.landscape ? 1 : 1 - glide(ramp(t, 0.93, 0.975));
+  const show = layout.landscape ? 1 : 1 - glide(ramp(t, 0.945, 0.985));
   const fill = track(t, [
-    [0.69, 0.4],
-    [0.85, 0.45],
-    [0.935, 0.85],
+    [SCAN[0], 0.22],
+    [SCAN[1], 0.3],
+    [0.87, 0.45],
+    [0.94, 0.85],
   ]);
   const radius = track(t, [
-    [0.65, 420],
-    [0.77, 540],
-    [OPENED, 600],
-    [0.85, 600],
-    [0.935, 640],
+    [SCAN[0], 420],
+    [SCAN[1], 520],
+    [0.865, 600],
+    [0.885, 600],
+    [0.94, 640],
   ]);
-  // The camera holds the open stack's framing while the stack falls into it
-  // and opens, so the fall reads as the sheets moving. As the stack closes the
-  // camera keeps it framed, closer, and makes room for the statement; it
+  // The camera holds the open stack's framing while the plane passes and the
+  // lamp crosses; as the stack closes it keeps it framed, closer, and it
   // recedes a little as the scene ends.
-  const framed = t < OPENED ? 1 : spread;
   const zoom =
-    Math.exp(mix(Math.log(closedZoom), Math.log(openZoom), framed)) *
+    Math.exp(mix(Math.log(closedZoom), Math.log(openZoom), spread)) *
     track(t, [
       [0.95, 1],
       [1, 0.96],
@@ -535,26 +513,28 @@ function stackScene(t, layout) {
     scene: 'stack',
     sheets,
     spread,
-    center: t < OPENED ? openCenter : [STACK_CENTER_X, (top + bottom) / 2],
-    anchor: track(t, [
-      [0.83, alone],
-      [0.895, layout.stack.anchor],
-    ]),
+    center: [STACK_CENTER_X, (top + bottom) / 2],
+    anchor,
     zoom,
     lamp: [lampX, lampY, 160],
     radius,
     intensity,
     fill,
-    // How much of the stack shows over the relief; it is drawn once it falls.
+    // How much of the stack shows over the relief; it is drawn once the plane
+    // of light reaches it.
     show,
-    shown: p > 0 && show > 0,
-    lean: 0.3 * ramp(t, 0.69, 0.725) * (1 - ramp(t, 0.95, 0.975)),
-    hold: ramp(t, 0.755, 0.785) * (1 - ramp(t, 0.845, 0.875)),
+    shown: scan > 0 && show > 0,
+    // The plane of light: its row, how soft it is, how strongly the layers
+    // catch it (gone as it leaves the base).
+    reveal: [front, SCAN_SOFT, SCAN_GLINT * (1 - ramp(t, SCAN[1] - 0.02, SCAN[1]))],
+    lean: 0.3 * ramp(t, SCAN[1], SCAN[1] + 0.02) * (1 - ramp(t, 0.95, 0.975)),
+    hold: ramp(t, 0.845, 0.865) * (1 - ramp(t, 0.885, 0.905)),
     heldRadius: 380,
     // A held lamp dims the sheets it leaves no further than this, so each of the
     // six keeps its outline and none reads as a hole in the one below it.
     floor: FLOOR,
-    copy: [0, ramp(t, 0.855, 0.875), ramp(t, 0.89, 0.91), ramp(t, 0.92, 0.94)],
+    // The statement first: the heading, then its two closing lines.
+    copy: [0, ramp(t, 0.635, 0.655), ramp(t, 0.665, 0.685), ramp(t, 0.69, 0.71)],
   };
 }
 

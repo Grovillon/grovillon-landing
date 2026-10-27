@@ -1,8 +1,9 @@
-import { Archivo } from "next/font/google";
+import { Hubot_Sans } from "next/font/google";
 import "./globals.css";
 
-const archivo = Archivo({
-  variable: "--font-archivo",
+// One family for every word: Hubot Sans, variable in weight and width.
+const hubot = Hubot_Sans({
+  variable: "--font-hubot",
   subsets: ["latin"],
   axes: ["wdth"],
   display: "swap",
@@ -45,7 +46,7 @@ const STAGE_EARLY = `try{var d=document.documentElement;if(!matchMedia('(prefers
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={archivo.variable} suppressHydrationWarning>
+    <html lang="en" className={hubot.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: STAGE_EARLY }} />
       </head>

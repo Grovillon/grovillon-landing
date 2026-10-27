@@ -10,7 +10,8 @@
 // it, and it comes out of the dark only where light falls on it. Scene B draws
 // the six sheets of the layered material over it as sprites under their own
 // lamp, each darkened where the sheet above it rests close and softened by the
-// camera's depth of field.
+// camera's depth of field; a plane of light passing down through them draws
+// them out of the dark.
 //
 // Every image keeps its own pixels: the lamp only scales how much of them shows,
 // focus only softens them, and unlit areas fall to the page's ground colour,
@@ -149,6 +150,7 @@ uniform float uLevel;
 uniform vec4 uShow;
 uniform vec4 uShowAt;
 uniform vec2 uPresent;
+uniform float uPool;
 uniform sampler2D uGarment;
 
 const vec2 TEXTURE = vec2(2048.0, 1024.0);
@@ -250,7 +252,7 @@ void main() {
     float wide = matte(pg, 8.0) * fade;
     float thrown = matte(q, 4.5) * poolCrop(q);
     float pool = 1.0 - (1.0 - NEAR * near) * (1.0 - WIDE * wide) * (1.0 - CAST * thrown);
-    pool *= shaded * (1.0 - SPILL * light);
+    pool *= shaded * uPool * (1.0 - SPILL * light);
     float under = smoothstep(0.1, 0.6, matte(pg, 4.0)) * underCrop(pg) * here;
 
     vec3 back = reliefMean(frag);
@@ -293,10 +295,12 @@ uniform float uShade;
 uniform float uBlur;
 uniform float uRim;
 uniform float uOpacity;
+uniform vec3 uReveal;
 varying vec2 vRender;
 varying vec2 vAtlas;
 
 const float ATLAS = 2048.0;
+const float GLINT = 18.0; // render px: the plane's line of light on the layers
 
 void main() {
   // Out of focus: the same pixels, sampled from a coarser mip level.
@@ -308,16 +312,24 @@ void main() {
   // A faint rim of light just inside the sheet's outline, so a dark sheet over
   // the relief's dark panel keeps its shape.
   float rim = clamp(2.0 * (tex.a - texture2D(uAtlas, vAtlas / ATLAS, uBlur + 3.0).a), 0.0, 1.0) * uRim;
-  if (tex.a < 0.004) discard;
+  // The plane of light passing down through the stack: the rows it has passed
+  // show, the rows it has not reached yet do not, across uReveal.y render px;
+  // where it crosses the sheet, the surface catches its light (uReveal.z).
+  float past = (vRender.y - uReveal.x) / uReveal.y;
+  float drawn = 1.0 - smoothstep(-1.0, 1.0, past);
+  float line = (vRender.y - uReveal.x) / GLINT;
+  float glint = exp(-line * line) * drawn * uReveal.z;
+  if (tex.a * drawn < 0.004) discard;
 
   // The page shows this render in monochrome: grayscale(1) brightness(0.96) contrast(1.06).
   vec3 c = tex.rgb / tex.a;
   float y = dot(c, vec3(0.2126, 0.7152, 0.0722)) * 0.96;
   y = clamp((y - 0.5) * 1.06 + 0.5, 0.0, 1.0);
   vec3 col = max(vec3(y) * exposure(vRender) * uShade * (1.0 - shade) * tint(), uGround) + rim * tint();
+  col += glint * (0.16 + 0.55 * y) * uLamp;
 
   vec2 frag = fragPos();
-  float a = tex.a * uOpacity;
+  float a = tex.a * uOpacity * drawn;
   gl_FragColor = vec4(finish(col, frag) * a, a);
 }
 `;
@@ -391,6 +403,7 @@ function createPrograms(gl) {
     'uShow',
     'uShowAt',
     'uPresent',
+    'uPool',
     'uGarment',
   ]);
   const sheets = link(gl, SHEET_VERTEX, SHEET_FRAGMENT, [
@@ -409,6 +422,7 @@ function createPrograms(gl) {
     'uBlur',
     'uRim',
     'uOpacity',
+    'uReveal',
   ]);
   if (!relief || !garment || !sheets) return null;
 
@@ -530,6 +544,7 @@ export function createStageRenderer(canvas) {
     gl.uniform4f(p.uShow, frame.show[0], frame.show[1], frame.show[2], frame.show[3]);
     gl.uniform4f(p.uShowAt, frame.showAt[0], frame.showAt[1], frame.showAt[2], frame.showAt[3]);
     gl.uniform2f(p.uPresent, frame.light, frame.present);
+    gl.uniform1f(p.uPool, frame.pool);
     gl.disable(gl.BLEND);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
@@ -545,6 +560,7 @@ export function createStageRenderer(canvas) {
     gl.uniform1f(p.uZoom, frame.zoom);
     gl.uniform2f(p.uView, size.width, size.height);
     gl.uniform1f(p.uOpacity, frame.show);
+    gl.uniform3f(p.uReveal, frame.reveal[0], frame.reveal[1], frame.reveal[2]);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     // Innermost sheet first, so each sheet covers the back of the one below.

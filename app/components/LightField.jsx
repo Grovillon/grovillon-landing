@@ -23,6 +23,7 @@ uniform vec2 uDepth;
 uniform vec3 uLook;
 uniform vec3 uGround;
 uniform vec3 uLamp;
+uniform vec2 uOrigin;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 
@@ -60,10 +61,11 @@ vec3 shade(vec2 p, float px) {
 void main() {
   vec2 frag = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
   float px = 1.0 / uUnit;
-  vec3 col = shade((frag + vec2(0.125, 0.375)) * px, px)
-           + shade((frag + vec2(0.375, -0.125)) * px, px)
-           + shade((frag + vec2(-0.125, -0.375)) * px, px)
-           + shade((frag + vec2(-0.375, 0.125)) * px, px);
+  // uOrigin places the canvas in the hero's pattern (0 for the hero itself).
+  vec3 col = shade((frag + vec2(0.125, 0.375)) * px + uOrigin, px)
+           + shade((frag + vec2(0.375, -0.125)) * px + uOrigin, px)
+           + shade((frag + vec2(-0.125, -0.375)) * px + uOrigin, px)
+           + shade((frag + vec2(-0.375, 0.125)) * px + uOrigin, px);
   col *= 0.25;
   // Same amplitude as the page's grain tile, so relief and ground read as one matte surface.
   col += (hash(frag) - 0.5) * (6.0 / 255.0);
@@ -141,6 +143,27 @@ const VARIANTS = {
       };
     },
   },
+  // The grid band's ground: the hero's relief run on below the stage, its folds
+  // aligned with the hero's (lengths in the hero's height, the canvas placed in
+  // the hero's pattern), under a lamp that rests and follows the pointer as the
+  // band's grid lamp does, so the relief and the grid on it share one light.
+  band: {
+    entrance: false,
+    pointer: true,
+    aligned: true,
+    spring: [170, 26],
+    layout(width, unit, height) {
+      const span = width / unit;
+      const narrow = span < 1;
+      return {
+        cell: narrow ? [0.27, 0.31] : [0.42, 0.5],
+        depth: [0.06, 0.42],
+        rest: [0.78 * span, Math.min(0.3 * height, 320) / unit],
+        z: narrow ? 0.3 : 0.36,
+        look: narrow ? [0.19, 0.12, 0.72] : [0.19, 0.12, 0.95],
+      };
+    },
+  },
 };
 
 // failIfMajorPerformanceCaveat does not stop every browser from handing out a
@@ -198,6 +221,7 @@ function createScene(gl) {
     uCell: u('uCell'),
     uDepth: u('uDepth'),
     uLook: u('uLook'),
+    uOrigin: u('uOrigin'),
   };
 }
 
@@ -235,8 +259,10 @@ export default function LightField({ className, variant = 'hero' }) {
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     const [springK, springC] = config.spring;
 
-    let layout = config.layout(1, 1);
+    let layout = config.layout(1, 1, 1);
     let unitCss = 1;
+    // Where the canvas sits in the hero's pattern, in units (aligned variants).
+    let origin = [0, 0];
     const light = { x: 0, y: 0, vx: 0, vy: 0 };
     const target = { x: 0, y: 0 };
     const entrance = config.entrance && !reduceMotion.matches;
@@ -254,7 +280,7 @@ export default function LightField({ className, variant = 'hero' }) {
 
     const draw = () => {
       if (lost || !scene) return;
-      gl.uniform3f(scene.uLight, light.x, light.y, layout.z);
+      gl.uniform3f(scene.uLight, light.x + origin[0], light.y + origin[1], layout.z);
       gl.uniform1f(scene.uIntensity, intensity);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       if (!shown) {
@@ -299,15 +325,27 @@ export default function LightField({ className, variant = 'hero' }) {
       const dpr = Math.min(window.devicePixelRatio || 1, 1);
       const width = Math.round(rect.width * dpr);
       const height = Math.round(rect.height * dpr);
-      const unit = variant === 'hero' ? rect.height : window.innerHeight;
-      if (!force && width === canvas.width && height === canvas.height && unit === unitCss) return;
+      const hero = config.aligned ? document.querySelector('.hero')?.getBoundingClientRect() : null;
+      const unit = variant === 'hero' ? rect.height : hero?.height || window.innerHeight;
+      const place = hero ? [0, (rect.top - hero.top) / unit] : [0, 0];
+      if (
+        !force &&
+        width === canvas.width &&
+        height === canvas.height &&
+        unit === unitCss &&
+        place[1] === origin[1]
+      ) {
+        return;
+      }
       canvas.width = width;
       canvas.height = height;
       unitCss = unit;
-      layout = config.layout(rect.width, unitCss);
+      origin = place;
+      layout = config.layout(rect.width, unitCss, rect.height);
       if (!scene) return;
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(scene.uRes, canvas.width, canvas.height);
+      gl.uniform2f(scene.uOrigin, origin[0], origin[1]);
       gl.uniform1f(scene.uUnit, unitCss * dpr);
       gl.uniform2f(scene.uCell, layout.cell[0], layout.cell[1]);
       gl.uniform2f(scene.uDepth, layout.depth[0], layout.depth[1]);
@@ -458,6 +496,9 @@ export default function LightField({ className, variant = 'hero' }) {
     const visibilityObserver = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
       if (!visible) return;
+      // An aligned canvas checks its place in the hero's pattern as it comes
+      // into view: what sits above it may have changed height since.
+      if (config.aligned) resize();
       if (variant === 'scroll') {
         scrollTarget();
         light.x = target.x;
