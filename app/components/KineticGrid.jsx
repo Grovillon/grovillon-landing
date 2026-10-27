@@ -36,7 +36,7 @@ const RIPPLE_WIDTH = 40; // px: the half-width of the ripple's lit band
 // Alpha of the lamp-coloured light along the ripple's front: mostly on the dots,
 // which trace its circle. Lines run tangent to it for a cell or more; lit as
 // strongly, they would square it off.
-const CREST = [0.3, 0.95]; // lines, dots
+const CREST = [0.22, 0.7]; // lines, dots
 // The ripple moves each crossing outward as its front arrives, then back and
 // forth a little as it rings on behind: a wave packet that rises over LEAD px
 // ahead of the front and dies away over TRAIL px behind it.
@@ -58,8 +58,8 @@ const QUIET = [
 ];
 const LAMP_REACH = 260; // px
 const SPRING = [170, 26];
-const LINE = 0.08; // alpha of the lines at rest
-const NODE = 0.14; // alpha of the dots at rest
+const LINE = 0.05; // alpha of the lines at rest
+const NODE = 0.09; // alpha of the dots at rest
 const INK = '236, 235, 231';
 const LAMP = '240, 230, 214';
 const TAU = 2 * Math.PI;
@@ -305,14 +305,14 @@ export default function KineticGrid({ className }) {
       // The lamp lights the lines and dots around it, warm at its centre.
       const reach = LAMP_REACH * (1 + 0.3 * load);
       const glow = ctx.createRadialGradient(lamp.x, lamp.y, 0, lamp.x, lamp.y, reach);
-      glow.addColorStop(0, `rgba(${LAMP}, ${0.28 + 0.36 * load})`);
-      glow.addColorStop(0.45, `rgba(${INK}, ${0.13 + 0.05 * load})`);
+      glow.addColorStop(0, `rgba(${LAMP}, ${0.2 + 0.28 * load})`);
+      glow.addColorStop(0.45, `rgba(${INK}, ${0.09 + 0.04 * load})`);
       glow.addColorStop(1, `rgba(${INK}, ${LINE})`);
       ctx.strokeStyle = glow;
       ctx.stroke(lattice);
       const shine = ctx.createRadialGradient(lamp.x, lamp.y, 0, lamp.x, lamp.y, reach);
-      shine.addColorStop(0, `rgba(${LAMP}, ${0.46 + 0.36 * load})`);
-      shine.addColorStop(0.45, `rgba(${INK}, ${0.2 + 0.07 * load})`);
+      shine.addColorStop(0, `rgba(${LAMP}, ${0.34 + 0.28 * load})`);
+      shine.addColorStop(0.45, `rgba(${INK}, ${0.14 + 0.05 * load})`);
       shine.addColorStop(1, `rgba(${INK}, ${NODE})`);
       ctx.fillStyle = shine;
       ctx.fill(dots);
