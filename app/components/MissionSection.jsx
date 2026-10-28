@@ -2,7 +2,6 @@ import { Fragment } from 'react';
 import CinematicStage from './CinematicStage';
 import KineticGrid from './KineticGrid';
 import LightField from './LightField';
-import MailLink from './MailLink';
 
 export const CONTACT_EMAIL = 'd@grovillon.com';
 
@@ -72,9 +71,9 @@ export default function MissionSection() {
             </ul>
             <p className="t-lead mt-12 text-ink-2">
               We’d love to hear from you. Write to us at{' '}
-              <MailLink address={CONTACT_EMAIL} className="lo-inline">
+              <a href={`mailto:${CONTACT_EMAIL}`} className="lo-inline">
                 {CONTACT_EMAIL}
-              </MailLink>
+              </a>
               .
             </p>
           </div>

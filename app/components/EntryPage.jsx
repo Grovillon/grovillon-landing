@@ -1,6 +1,5 @@
 import Arrow from "./Arrow";
 import LightField from "./LightField";
-import MailLink from "./MailLink";
 import Mark from "./Mark";
 import MissionSection, { CONTACT_EMAIL } from "./MissionSection";
 
@@ -14,9 +13,9 @@ export default function EntryPage() {
           <a href="#top" className="nav-link -ml-2 px-2 text-ink" aria-label="Grovillon Project, back to top">
             <Mark className="h-12 w-12" />
           </a>
-          <MailLink address={CONTACT_EMAIL} align="end" className="lo-link -mr-2 px-2">
+          <a href={`mailto:${CONTACT_EMAIL}`} className="lo-link -mr-2 px-2">
             {CONTACT_EMAIL}
-          </MailLink>
+          </a>
         </div>
       </header>
 
@@ -38,7 +37,6 @@ export default function EntryPage() {
               </p>
             </div>
             <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-2">
-              {/* Straight to the reader's own mail app; the other addresses offer the chooser. */}
               <a href={`mailto:${CONTACT_EMAIL}`} className="lo-btn">
                 Write to us
                 <Arrow direction="out" className="lo-arrow" />

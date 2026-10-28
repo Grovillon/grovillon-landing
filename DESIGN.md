@@ -112,20 +112,6 @@ components:
   mark:
     textColor: "{colors.ink}"
     size: "3rem"
-  mail-chooser:
-    backgroundColor: "{colors.ground}"
-    rounded: "{rounded.none}"
-  mail-chooser-note:
-    textColor: "{colors.ink-3}"
-    padding: "0.5rem 1rem"
-  mail-chooser-item:
-    textColor: "{colors.ink-2}"
-    typography: "{typography.control-quiet}"
-    padding: "0 0.875rem 0 1rem"
-    height: "3rem"
-  mail-chooser-item-hover:
-    textColor: "{colors.ink}"
-    backgroundColor: "rgb(236 235 231 / 0.035)"
 ---
 
 # Design System: Grovillon Project
@@ -161,16 +147,16 @@ A near-monochrome graphite palette: three tinted-neutral inks on a cool near-bla
 - **Chalk Ink** (#ecebe7): The title, statements, the tagline, the passage, list titles and all hovered text; the fill of the primary button; scene B's closing lines while they are lit in the stage. About 16.5:1 on the ground. At 5% it is also the grid's resting hairlines, and at 9% the dots at its crossings, on the canvas and in its still stand-in alike.
 - **Lit Ink** (#f8f5ef): Chalk Ink brightened toward the lamp; only the primary button's hover fill.
 - **Ash Ink** (#b3b4b0): Supporting sentences, secondary lead lines and quiet links at rest, including the header address. About 9.4:1.
-- **Smoke Ink** (#8e9092): Fine print, and the mail chooser's quiet first line. About 6.1:1, still above AA for small text.
+- **Smoke Ink** (#8e9092): Fine print. About 6.1:1, still above AA for small text.
 - **Hairline** (rgb(236 235 231 / 0.12)): 1px rules between the roles, under a list and above the footer; a barely-there seam in the ground.
-- **Strong Hairline** (rgb(236 235 231 / 0.26)): The resting underline of inline links, and the outline of the mail chooser.
+- **Strong Hairline** (rgb(236 235 231 / 0.26)): The resting underline of inline links.
 
 ### Named Rules
 **The One Lamp Rule.** Light has one source and one colour. In every scene the lamp is the only thing that emits light; ink, hairlines, the button and the images reflect it and never glow.
 
 **The Light-Not-Paint Rule.** The lamp colour appears only as light (the relief and its still stand-in, the stage's lamp and its plane of light, the grid's lamp and ripples), as the focus ring and as the text selection. It is never a fill, a text colour, a border or an accent.
 
-**The Three Inks Rule.** Text on the ground takes ink, ink-2 or ink-3 and nothing else: ink for what is read first, ink-2 for what supports it, ink-3 for fine print and the mail chooser's quiet line. The one inversion is the primary button, ground on ink. Interaction may raise ink-2 to ink; nothing changes hue.
+**The Three Inks Rule.** Text on the ground takes ink, ink-2 or ink-3 and nothing else: ink for what is read first, ink-2 for what supports it, ink-3 for fine print. The one inversion is the primary button, ground on ink. Interaction may raise ink-2 to ink; nothing changes hue.
 
 ## Typography
 
@@ -188,9 +174,9 @@ A near-monochrome graphite palette: three tinted-neutral inks on a cool near-bla
 - **Role** (400, clamp(1.125rem, 1.85vw, 1.5rem), 1.3): 106% width. The open roles, between hairlines.
 - **Body** (380, 1.0625rem, 1.65): Ash Ink. Supporting sentences, held to 28–42ch.
 - **Label** (500, 0.8125rem, 1.2, +0.13em, uppercase): 112% width. The footer wordmark only; never a tag above a heading.
-- **Control** (560, 0.9375rem, +0.01em) and **Quiet control** (500, 0.9375rem): 112% width. Button and quiet-link text, including the header address and the mail chooser's choices.
+- **Control** (560, 0.9375rem, +0.01em) and **Quiet control** (500, 0.9375rem): 112% width. Button and quiet-link text, including the header address.
 
-Headings balance their lines and paragraphs avoid orphans (`text-wrap: balance` and `pretty`); synthesized bold and italics are switched off. Two pieces of text are set outside these roles: the footer's copyright line (0.875rem in Smoke Ink) and the mail chooser's quiet first line (400, 0.9375rem, 112% width, in Smoke Ink, cut short with an ellipsis).
+Headings balance their lines and paragraphs avoid orphans (`text-wrap: balance` and `pretty`); synthesized bold and italics are switched off. One piece of text is set outside these roles: the footer's copyright line (0.875rem in Smoke Ink).
 
 ### Named Rules
 **The One Family Rule.** Hubot Sans alone, from one variable file. Expression comes from the width axis, not from a second typeface: 125% for the title, 112% for statements, labels and controls, 106% for list titles, 100% for reading.
@@ -211,7 +197,7 @@ Fields are full-bleed and sit under the content. The hero is at least max(36rem,
 
 Vertical rhythm is generous and fluid. Between plain sections the gap is the section token (7rem on a phone, 11rem on a desktop). A field brings its own padding, so the section after the hero or the band opens with only clamp(3rem, 5vw, 4rem) or clamp(3rem, 6vw, 5rem), and the band follows the content above it directly, its own top padding giving the gap. The footer sits clamp(6rem, 12vw, 10rem) below the last section. Inside a group the steps are small and fixed, mostly stack-xs from a tagline to its sentence, stack-sm from a heading to its supporting line, stack-md (2.5rem from 48rem) from the title to its copy block, and stack-lg before a closing line or an image. Supporting sentences hold to 28–42ch, and the hero's copy block to 38rem.
 
-Touch targets: controls, the header address, the mark and the mail chooser's choices 3rem tall (the choices 2.5rem for a fine pointer). The roles' rows are at least 4.5rem tall, though they are text, not targets. Hover effects, and any lamp that follows the pointer, exist only for a fine pointer; a swipe is always a scroll.
+Touch targets: controls, the header address and the mark 3rem tall. The roles' rows are at least 4.5rem tall, though they are text, not targets. Hover effects, and any lamp that follows the pointer, exist only for a fine pointer; a swipe is always a scroll.
 
 ### Named Rules
 **The Asymmetry Rule.** Content is left-set on asymmetric splits of the 12-column grid (5 and 7, or a 5-column heading over a passage stepped to columns 6 to 12); in the stage, copy holds the left column and the image the rest. No block of content is centred.
@@ -231,44 +217,35 @@ Behind the stage the hero's relief runs on, drawn as the hero draws it and lit b
 
 ## Shapes
 
-Square, hard-edged and sparse. Every surface and control has square corners: the button, image bounds and the focus ring. Interface lines are 1px hairlines, and on the page only horizontal: one above each role, one closing the list, one above the footer. The mail chooser alone is outlined on all four sides, a transient control rather than content. The only angled geometry is the crease: the relief's zigzags at ±30°, in the hero, behind the stage and under the grid band. Scene C's grid is square, hairlines running across and down the page with a small dot at each crossing; it is a field under the content, not an interface line. Images are unframed, cut-outs and renders that dissolve into the ground through masks. Apart from the grid's dots, the mark is the one round form, a circular monogram drawn in the current text colour; arrows are 18px line drawings with a 1.5px stroke and square caps, so even the icons have no rounded ends. A down arrow jumps within the page; an up-right arrow marks a link that leaves it ("Write to us", and the mail chooser's Gmail, Outlook and Email app).
+Square, hard-edged and sparse. Every surface and control has square corners: the button, image bounds and the focus ring. Interface lines are 1px hairlines, and on the page only horizontal: one above each role, one closing the list, one above the footer. The only angled geometry is the crease: the relief's zigzags at ±30°, in the hero, behind the stage and under the grid band. Scene C's grid is square, hairlines running across and down the page with a small dot at each crossing; it is a field under the content, not an interface line. Images are unframed, cut-outs and renders that dissolve into the ground through masks. Apart from the grid's dots, the mark is the one round form, a circular monogram drawn in the current text colour; arrows are 18px line drawings with a 1.5px stroke and square caps, so even the icons have no rounded ends. A down arrow jumps within the page; an up-right arrow marks a link that leaves it ("Write to us").
 
 ### Named Rules
 **The Crease Angle Rule.** Folds and creases run at the relief's 30° angle and no other: the hero relief and its continuations behind the stage and under the grid band. Scene C's grid draws no creases; its lines run square to the page. Don't introduce skews, diagonal wipes or angled section edges.
 
-**The No-Box Rule.** Content is never boxed: no cards, panels, outlined containers or framed images. Separation is a 1px hairline or dark space. The mail chooser's outline is not an exception: it is a transient control that opens on a click and closes again, never a container for content.
+**The No-Box Rule.** Content is never boxed: no cards, panels, outlined containers or framed images. Separation is a 1px hairline or dark space.
 
 ## Components
 
 ### Buttons
 A plain, solid, square block: the only solid fill on a screen.
 - **Shape:** square corners (0px), 3rem tall.
-- **Primary:** Chalk Ink fill with Graphite Ground text in the control type, padded 0 1.25rem 0 1.375rem, with an 18px up-right arrow 0.75rem after the label, since it writes to the address: a plain mailto: link, so a click goes straight to the reader's own mail app, with no chooser.
+- **Primary:** Chalk Ink fill with Graphite Ground text in the control type, padded 0 1.25rem 0 1.375rem, with an 18px up-right arrow 0.75rem after the label, since it writes to the address: a plain mailto: link, so a click goes straight to the reader's own mail app, as do both written-out addresses.
 - **Hover / Focus:** on fine pointers the fill brightens to Lit Ink (200ms), and the arrow leans 3px up and out (200ms, ease-out). Keyboard focus draws the lamp ring: a square 2px outline 4px outside the shape. Press scales to 0.97 over 160ms (ease-out).
 - **Quiet link (secondary action):** no fill and no border; Ash Ink text in the quiet control type, 3rem tall, 0.625rem before its arrow. Hover raises it to Chalk Ink and leans the arrow 4px along its direction (3px for a down arrow); press scales to 0.97.
 
 ### Inline Links
 - **Style:** Chalk Ink text with a 1px underline in Strong Hairline, offset 0.28em.
-- **Hover:** the underline rises to Chalk Ink (200ms), and stays there while the link's mail chooser is open (the closing line's address).
+- **Hover:** the underline rises to Chalk Ink (200ms).
 
 ### Lists (hairline rows)
 An open ledger, not a stack of cards.
 - **Row:** a plain list item at least 4.5rem tall, padded 1.25rem 0.25rem, with a Hairline above each row and one closing the list. The title is set in the role type in Chalk Ink. A row is text, not a link: it has no arrow, hover or press state.
-- **Writing:** the closing line under the list, "We'd love to hear from you. Write to us at d@grovillon.com." in the lead type and Ash Ink, is the way to write; its address is an inline link that opens the mail chooser.
+- **Writing:** the closing line under the list, "We'd love to hear from you. Write to us at d@grovillon.com." in the lead type and Ash Ink, is the way to write; its address is an inline mailto: link that goes straight to the reader's own mail app.
 
 ### Navigation
-- **Header:** the mark (3rem, Chalk Ink) top left links back to the top; the contact address sits top right as a quiet link (Ash Ink, 3rem tall) that opens the mail chooser, so the address is on screen from the first moment and a visitor without a mail app can still read it. The header floats over the hero with no bar, background or border and does not stick; there is no navigation menu. Hover raises the address to Chalk Ink.
+- **Header:** the mark (3rem, Chalk Ink) top left links back to the top; the contact address sits top right as a quiet mailto: link (Ash Ink, 3rem tall) that goes straight to the reader's own mail app, so the address is on screen from the first moment and a visitor without a mail app can still read it. The header floats over the hero with no bar, background or border and does not stick; there is no navigation menu. Hover raises the address to Chalk Ink.
 - **In-page jumps:** a link or a Tab keypress that would carry the reader across the stage jumps instead of scrolling smoothly, so the film never flashes past.
 - **Footer:** a Hairline above; the mark (2.25rem) beside the label-type wordmark, both in Ash Ink; the copyright in Smoke Ink.
-
-### Mail Chooser
-A small transient control that makes the written-out address work, with or without a mail app. It serves the header address and the closing line under the roles; "Write to us" is a plain mailto: link that goes straight to the reader's own mail app.
-- **Behaviour:** each address it serves stays a mailto: link, so without script, with a modifier key or with a middle click it behaves as one. A plain click (or Space) opens the chooser instead: a quiet first line showing the address, then Gmail, Outlook, Email app and Copy address. Gmail and Outlook open in a new tab, Email app follows the mailto: link, and Copy address copies the address and reads "Copied" for 1.5s (also announced to screen readers). Only one chooser is open at a time.
-- **Keyboard:** focus moves to the first choice on opening; the arrow keys move through the choices and wrap, Home and End go to the ends, Space chooses, Escape closes and returns focus to the link, and Tab closes it and carries on from the link.
-- **Closing:** a press or focus outside it closes it. It travels with its link as the page scrolls, and closes once the page has scrolled 48px from where it opened (measured from where a scroll still under way comes to rest, and not within 150ms of opening) or when its link leaves the screen.
-- **Placement:** 6px below its link (above it when there is no room below), kept 8px inside the viewport, aligned to the link's start, or to its end for the header address. At least 13rem wide and at most min(20rem, 100vw − 1rem).
-- **Look:** the ground with its grain, a 1px Strong Hairline outline, no fill, no shadow, square corners. Choices are 3rem tall (2.5rem for a fine pointer), in Ash Ink in the quiet control type, separated by Hairlines, each that leaves the page with an up-right arrow. Hover or focus raises a choice to Chalk Ink over a 3.5% ink tint (the arrow leans 3px up and out), press deepens it to 6%; keyboard focus draws the lamp ring 2px inside the choice. While it is open, its link keeps its hover state.
-- **Motion:** it grows out of its link's side, from 97% scale and 4px toward the link, over 180ms in and 120ms out on the page's ease-out; with reduced motion it simply appears and goes.
 
 ### Relief Field (signature)
 The ground itself, drawn in WebGL behind the hero.
@@ -339,7 +316,7 @@ Used where the stage stands down, as plain sections.
 - **Don't** use frosted glass, cards, panels or framed images.
 - **Don't** use gradients as decoration (gradient text, gradient buttons, tinted gradient backdrops); a gradient is only ever the lamp's falloff or a mask into the ground.
 - **Don't** introduce an accent colour, or use the lamp colour as paint.
-- **Don't** add box or drop shadows to the interface, the mail chooser included; the only shadows are the lamp's light occluded inside the stage.
+- **Don't** add box or drop shadows to the interface; the only shadows are the lamp's light occluded inside the stage.
 - **Don't** set a centred, glowing headline over an orb or particle field.
 - **Don't** move text into view, type it out or split it, or give every section the same entrance; in the stage text is lit in place, nowhere else does it animate.
 - **Don't** cut from one lit subject to another, ease a move to a stop at every keyframe, or drive a scene from a timer.
