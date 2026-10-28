@@ -43,6 +43,15 @@ const LIGHT_OUT = 0.06;
 // leaving over the grid band, it is lit by the band's lamp.
 const HANDOVER = 0.2;
 
+// On a portrait screen the pinned run is shorter (globals.css) and scene A, the
+// garment, takes only PORTRAIT_A of it, so it flows on with little scroll while
+// scene B keeps its length: scroll progress p maps to the timeline t piecewise,
+// each piece carrying its pace on past the run's ends.
+const CUT_T = 0.615;
+const PORTRAIT_A = 0.48;
+const warp = (p) =>
+  p < PORTRAIT_A ? (p * CUT_T) / PORTRAIT_A : CUT_T + ((p - PORTRAIT_A) * (1 - CUT_T)) / (1 - PORTRAIT_A);
+
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
 const ease = (x) => x * x * (3 - 2 * x);
 const mixLamp = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
@@ -255,7 +264,8 @@ export default function CinematicStage() {
       const view = window.innerHeight;
       // One unit throughout: the pinned run is 0..1, and the approach before it
       // counts in the same unit, so the motion keeps its pace through the pin.
-      target = -rect.top / Math.max(rect.height - height, 1);
+      const p = -rect.top / Math.max(rect.height - height, 1);
+      target = layout.landscape ? p : warp(p);
       stageTop = rect.top > 0 ? rect.top : Math.min(0, rect.bottom - height);
       trackTop = rect.top;
       visible = rect.bottom > 0 && rect.top < view;
@@ -268,7 +278,9 @@ export default function CinematicStage() {
       const statement = statementBlock
         ? statementBlock.getBoundingClientRect().bottom - stage.getBoundingClientRect().top
         : 0;
-      layout = stageLayout(width, height, window.innerHeight / Math.max(track.offsetHeight - height, 1), statement);
+      const entry = window.innerHeight / Math.max(track.offsetHeight - height, 1);
+      layout = stageLayout(width, height, entry, statement);
+      if (!layout.landscape) layout.entry = (entry * CUT_T) / PORTRAIT_A;
       // The relief's unit is the hero's height, and its pattern starts at the
       // hero's top, so the stage's folds run on from the hero's.
       const heroRect = hero?.getBoundingClientRect();
