@@ -242,7 +242,7 @@
       },
       {
         "name": "cut-on-the-relief",
-        "value": "light gathers onto the seam t 0.43-0.555 and what is left goes out t 0.49-0.56 (glide); the garment and its shade leave together, unseen, t 0.56-0.615 (glide); scene B's statement is lit on the relief alone (heading 0.635-0.655, \"By design.\" 0.665-0.685, \"Silently present.\" 0.69-0.71); then a plane of light passes down through the stack where it stands over t 0.715-0.835 (glide), its edge 56 render px soft, with an 18 render px glint of lamp light where it crosses a layer",
+        "value": "light gathers onto the seam t 0.43-0.555 and what is left goes out t 0.49-0.56 (glide); the garment and its shade dissolve together as the light goes out, t 0.5-0.555 (glide); scene B's statement is lit on the relief alone (heading 0.635-0.655, \"By design.\" 0.665-0.685, \"Silently present.\" 0.69-0.71); then a plane of light passes down through the stack where it stands over t 0.715-0.835 (glide), its edge 56 render px soft, with an 18 render px glint of lamp light where it crosses a layer",
         "purpose": "The change of scene over a relief that stays lit: the garment goes dark before it leaves unseen, a pause on the relief alone, the statement is lit, then light draws the stack out of the dark where it stands; nothing falls, slides or scales into view."
       },
       {

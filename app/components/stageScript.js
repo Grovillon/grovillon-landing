@@ -362,9 +362,9 @@ function garmentScene(t, layout, center) {
   const goneSoft = (GONE_SOFT * Math.hypot(center[0], center[1])) / view.zoom;
   const gone = t < 0.43 ? FAR : mix(reach / view.zoom + goneSoft, 0.5 * goneSoft, ramp(t, 0.43, 0.555));
   const light = 1 - glide(ramp(t, 0.49, 0.56));
-  // Then the garment, dark, and its shade leave together: the dark lifts off the
-  // relief as one, and no shade is left behind on its own.
-  const leave = 1 - glide(ramp(t, 0.56, 0.615));
+  // The garment and its shade dissolve together while the light goes out, so
+  // neither is ever left on the relief as a dark shape: gone as it goes dark.
+  const leave = 1 - glide(ramp(t, 0.5, 0.555));
   // Light falls on the garment from above the frame, over the right shoulder.
   // It carries on across the garment on the page's 30-degree angle, curves up
   // to a key light over the left shoulder and drifts there, then crosses back
