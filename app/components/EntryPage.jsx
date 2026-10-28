@@ -25,7 +25,7 @@ export default function EntryPage() {
           <LightField className="hero-field" />
           <div className="wrap flex flex-1 flex-col pb-[clamp(4.5rem,13svh,8.5rem)] pt-32">
             {/* The name alone, on one line, at the centre of the open relief above the copy. */}
-            <div className="flex flex-1 items-center justify-center py-12">
+            <div className="flex flex-1 items-center justify-center pb-24 pt-6 md:py-12">
               <h1 id="hero-title" className="t-display text-center">
                 Grovillon Project
               </h1>

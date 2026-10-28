@@ -250,6 +250,13 @@
     min-height: max(36rem, 82svh);
   }
 
+  /* On a phone the hero takes the screen, so the name has open relief around it. */
+  @media (max-width: 47.99rem) {
+    .hero {
+      min-height: max(36rem, 96svh);
+    }
+  }
+
   .hero-field {
     position: absolute;
     inset: 0;
