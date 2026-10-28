@@ -85,13 +85,16 @@
 
   /* Type roles: one family, Hubot Sans, a mechanical grotesque whose squared
      curves echo the garment's panels; width does the expressive work. */
+  /* The name: one line, small and widely spaced, held at the centre of the hero. */
   .t-display {
     font-stretch: 125%;
-    font-weight: 260;
-    font-size: clamp(2.375rem, 8.1vw, 6rem);
-    line-height: 0.95;
-    letter-spacing: 0.018em;
+    font-weight: 300;
+    font-size: clamp(0.9375rem, 2.6vw, 2.25rem);
+    line-height: 1;
+    letter-spacing: 0.28em;
+    margin-right: -0.28em;
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .t-statement {

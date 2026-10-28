@@ -13,10 +13,10 @@ colors:
 typography:
   display:
     fontFamily: "Hubot Sans, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(2.375rem, 8.1vw, 6rem)"
-    fontWeight: 260
-    lineHeight: 0.95
-    letterSpacing: "0.018em"
+    fontSize: "clamp(0.9375rem, 2.6vw, 2.25rem)"
+    fontWeight: 300
+    lineHeight: 1
+    letterSpacing: "0.28em"
     fontVariation: "'wdth' 125"
   statement:
     fontFamily: "Hubot Sans, ui-sans-serif, system-ui, sans-serif"
@@ -181,7 +181,7 @@ A near-monochrome graphite palette: three tinted-neutral inks on a cool near-bla
 **Character:** One mechanical grotesque, its squared curves echoing the garment's panels, used at four widths. Expanded light capitals make the title wide, low and engineered; slightly widened light statements carry the voice; normal-width text reads plainly and gets out of the way.
 
 ### Hierarchy
-- **Display** (260, clamp(2.375rem, 8.1vw, 6rem), 0.95): 125% width, uppercase, +0.018em. The page title only, one per page, left-set; 38px on a phone, 96px on a desktop.
+- **Display** (300, clamp(0.9375rem, 2.6vw, 2.25rem), 1): 125% width, uppercase, +0.28em, on one line. The page title only, one per page, centred in the open relief above the hero's copy as its one protagonist; 15px on a phone, 36px on a desktop.
 - **Statement** (300, clamp(1.875rem, 3.9vw, 3.5rem), 1.06): 112% width, −0.006em, sentence case. Section headings; in the stage held to 13ch (12ch on landscape).
 - **Passage** (330, clamp(1.375rem, 2.35vw, 2.125rem), 1.32): Normal width, −0.004em, Chalk Ink. A long passage set one phrase per line and grouped by sentence: lines inside a sentence sit on the line height, sentences 0.9em apart; on a phone it scales down, to no less than 1.125rem, until its longest phrase holds one line of the column, so from 360px wide every phrase keeps its line; on a narrower screen a phrase balances its own lines.
 - **Lead** (400, clamp(1.1875rem, 1.55vw, 1.4375rem), 1.42): The tagline, short answer lines under a statement, a closing contact line; Chalk Ink or Ash Ink.
@@ -195,7 +195,7 @@ Headings balance their lines and paragraphs avoid orphans (`text-wrap: balance` 
 ### Named Rules
 **The One Family Rule.** Hubot Sans alone, from one variable file. Expression comes from the width axis, not from a second typeface: 125% for the title, 112% for statements, labels and controls, 106% for list titles, 100% for reading.
 
-**The Light Type Rule.** Large type is light: 260 for the title, 300 for statements, 330 for the passage. Nothing is bold or italic; the heaviest weight in the system is the button's 560.
+**The Light Type Rule.** Large type is light: 300 for the title and the statements, 330 for the passage. Nothing is bold or italic; the heaviest weight in the system is the button's 560.
 
 **The Still Type Rule.** Type never moves. Outside the stage every word is simply visible. In the stage each text block is lit or unlit as a state: it switches on at a point in the scroll and fades there in place (about 300ms in, 200ms out), never scrubbed and never resting half-lit. There is no translation, typing effect or split letters, every word is in the server HTML, and unlit text takes no pointer, so a selection never catches it.
 
@@ -207,7 +207,7 @@ The page runs: hero, the pinned stage (scenes A and B), the grid band (scene C),
 
 The stage is one screen tall (100lvh) and pinned through a run of 4 screens of scroll on portrait and 4.4 on landscape. On landscape its copy sits in the page's left column, vertically centred and min(30rem, 31vw) wide, with the image to its right; on portrait the copy sits at the top, max(7svh, 3rem) down, above the image. Behind the stage the hero's relief runs on, its folds continuing across the join; scene A's heading is lit from first paint and the garment is unseen in its shade, so on a phone the heading shows on the lit relief below the hero at the fold.
 
-Fields are full-bleed and sit under the content. The hero is at least max(36rem, 82svh) tall, with its content pushed to the lower left (8rem above it, clamp(4.5rem, 13svh, 8.5rem) below). The grid band carries clamp(5rem, 11vw, 10rem) of padding above its content and clamp(7rem, 15vw, 13rem) below.
+Fields are full-bleed and sit under the content. The hero is at least max(36rem, 82svh) tall, with the title centred in the open relief and the rest of its content pushed to the lower left (8rem above it, clamp(4.5rem, 13svh, 8.5rem) below). The grid band carries clamp(5rem, 11vw, 10rem) of padding above its content and clamp(7rem, 15vw, 13rem) below.
 
 Vertical rhythm is generous and fluid. Between plain sections the gap is the section token (7rem on a phone, 11rem on a desktop). A field brings its own padding, so the section after the hero or the band opens with only clamp(3rem, 5vw, 4rem) or clamp(3rem, 6vw, 5rem), and the band follows the content above it directly, its own top padding giving the gap. The footer sits clamp(6rem, 12vw, 10rem) below the last section. Inside a group the steps are small and fixed, mostly stack-xs from a tagline to its sentence, stack-sm from a heading to its supporting line, stack-md (2.5rem from 48rem) from the title to its copy block, and stack-lg before a closing line or an image. Supporting sentences hold to 28–42ch, and the hero's copy block to 38rem.
 
@@ -325,7 +325,7 @@ Used where the stage stands down, as plain sections.
 
 ### Do:
 - **Do** keep every surface on the graphite ground with its grain tile, and let the lamp (on the relief, in the stage, on the grid, or as the still light) be the only thing that brightens it.
-- **Do** rest the lamp away from the type: in the hero it settles upper right while the title sits lower left; in the stage the copy holds the left column and the light works on the image to its right.
+- **Do** rest the lamp away from the type: in the hero it settles upper right, away from the copy at lower left; in the stage the copy holds the left column and the light works on the image to its right.
 - **Do** separate content with 1px hairlines (line, 12% ink) and dark space, and keep surfaces and controls square-cornered.
 - **Do** set every word in Hubot Sans and change width before weight: 125% title; 112% statements, labels and controls; 106% list titles; 100% reading.
 - **Do** run any new fold or crease at the 30° crease angle, and align any new run of the relief with the hero's folds.

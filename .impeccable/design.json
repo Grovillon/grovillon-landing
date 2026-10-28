@@ -128,7 +128,7 @@
     "typographyMeta": {
       "display": {
         "displayName": "Display",
-        "purpose": "The page title only, one per page, left-set; expanded 125% width, weight 260, uppercase."
+        "purpose": "The page title only, one per page, on one line, centred in the hero; expanded 125% width, weight 300, uppercase, widely spaced (+0.28em)."
       },
       "statement": {
         "displayName": "Statement",
@@ -371,7 +371,7 @@
       "kind": "custom",
       "description": "The hero field as every non-GPU visitor sees it: graphite ground and grain under a still pool of lamp light at upper right, the display title set lower left. On a hardware GPU the WebGL relief draws here instead.",
       "html": "<section class=\"ds-field\"><h1 class=\"ds-field-title\"><span>Grovillon</span> <span>Project</span></h1></section>",
-      "css": ".ds-field { display: flex; flex-direction: column; justify-content: flex-end; min-height: 22rem; padding: 2rem 1.5rem; background: radial-gradient(70rem 42rem at 72% 8%, rgb(240 230 214 / 0.07), transparent 70%), url(\"/images/grain.png\") 0 0 / 128px 128px repeat var(--ground, #0a0b0c); color: var(--ink, #ecebe7); font-family: var(--font-hubot, \"Hubot Sans\"), ui-sans-serif, system-ui, sans-serif; } .ds-field-title { margin: 0; font-stretch: 125%; font-weight: 260; font-size: clamp(2.375rem, 8.1vw, 6rem); line-height: 0.95; letter-spacing: 0.018em; text-transform: uppercase; text-wrap: balance; } .ds-field-title span { display: block; }"
+      "css": ".ds-field { display: flex; flex-direction: column; justify-content: flex-end; min-height: 22rem; padding: 2rem 1.5rem; background: radial-gradient(70rem 42rem at 72% 8%, rgb(240 230 214 / 0.07), transparent 70%), url(\"/images/grain.png\") 0 0 / 128px 128px repeat var(--ground, #0a0b0c); color: var(--ink, #ecebe7); font-family: var(--font-hubot, \"Hubot Sans\"), ui-sans-serif, system-ui, sans-serif; } .ds-field-title { margin: 0; font-stretch: 125%; font-weight: 260; font-size: clamp(0.9375rem, 2.6vw, 2.25rem); line-height: 0.95; letter-spacing: 0.018em; text-transform: uppercase; text-wrap: balance; } .ds-field-title span { display: block; }"
     },
     {
       "name": "Grid Band (still)",
@@ -416,7 +416,7 @@
       },
       {
         "name": "The Light Type Rule",
-        "body": "Large type is light: 260 for the title, 300 for statements, 330 for the passage. Nothing is bold or italic; the heaviest weight in the system is the button's 560.",
+        "body": "Large type is light: 300 for the title and the statements, 330 for the passage. Nothing is bold or italic; the heaviest weight in the system is the button's 560.",
         "section": "typography"
       },
       {
@@ -482,7 +482,7 @@
     ],
     "dos": [
       "Do keep every surface on the graphite ground with its grain tile, and let the lamp (on the relief, in the stage, on the grid, or as the still light) be the only thing that brightens it.",
-      "Do rest the lamp away from the type: in the hero it settles upper right while the title sits lower left; in the stage the copy holds the left column and the light works on the image to its right.",
+      "Do rest the lamp away from the type: in the hero it settles upper right, away from the copy at lower left; in the stage the copy holds the left column and the light works on the image to its right.",
       "Do separate content with 1px hairlines (line, 12% ink) and dark space, and keep surfaces and controls square-cornered.",
       "Do set every word in Hubot Sans and change width before weight: 125% title; 112% statements, labels and controls; 106% list titles; 100% reading.",
       "Do run any new fold or crease at the 30° crease angle, and align any new run of the relief with the hero's folds.",

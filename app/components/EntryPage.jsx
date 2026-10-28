@@ -23,11 +23,14 @@ export default function EntryPage() {
       <main id="top">
         <section className="hero" aria-labelledby="hero-title">
           <LightField className="hero-field" />
-          <div className="wrap mt-auto pb-[clamp(4.5rem,13svh,8.5rem)] pt-32">
-            <h1 id="hero-title" className="t-display">
-              <span className="block">Grovillon</span> <span className="block">Project</span>
-            </h1>
-            <div className="mt-8 max-w-[38rem] md:mt-10">
+          <div className="wrap flex flex-1 flex-col pb-[clamp(4.5rem,13svh,8.5rem)] pt-32">
+            {/* The name alone, on one line, at the centre of the open relief above the copy. */}
+            <div className="flex flex-1 items-center justify-center py-12">
+              <h1 id="hero-title" className="t-display text-center">
+                Grovillon Project
+              </h1>
+            </div>
+            <div className="max-w-[38rem]">
               <p className="t-lead">Stealth tech, quietly present.</p>
               <p className="t-body mt-3 max-w-[42ch]">
                 A system designed to support physiological stability in critical and{' '}
