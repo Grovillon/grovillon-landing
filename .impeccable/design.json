@@ -247,7 +247,7 @@
       },
       {
         "name": "stack-close",
-        "value": "lamp rises over the open stack 0.825-0.865 and crosses it (450 render px at 0.86, 690 at 0.885, 540 by 0.95); pointer hold full 0.865-0.885; pairs close top-first from t 0.885 (+0.012 per pair, 0.04 each, glide); fill 0.45 to 0.85 over 0.87-0.94; lamp strength -25% over 0.955-0.995; camera recedes 4% over 0.95-1; on portrait the stack dissolves over 0.945-0.985",
+        "value": "lamp rises over the open stack 0.825-0.865 and crosses it (450 render px at 0.86, 690 at 0.885, 540 by 0.95); pointer hold full 0.865-0.885; pairs close top-first from t 0.885 (+0.012 per pair, 0.04 each, glide); fill 0.45 to 0.85 over 0.87-0.94; lamp strength -25% over 0.955-0.995; camera draws back 20% as the layers close (0.885-0.96), then to 77% by 1; on portrait the stack dissolves over 0.945-0.985",
         "purpose": "Scene B's ending, under the statement already lit: the stack closes into one quiet material, back in its photographed light."
       },
       {

@@ -443,7 +443,7 @@ function garmentScene(t, layout, center) {
 // crosses a layer the surface catches its light. A low lamp then crosses the
 // open layers, and they close again from the top, into one quiet material.
 function stackScene(t, layout) {
-  const { openZoom, closedZoom, anchor } = layout.stack;
+  const { openZoom, anchor } = layout.stack;
   // How far each pair is open: 1 = the render's spacing, 0 = closed up. The
   // pairs close from the top once the lamp has crossed them.
   const closing = SLACK.map((_, j) => 1 - glide(ramp(t, 0.885 + 0.012 * j, 0.925 + 0.012 * j)));
@@ -511,13 +511,14 @@ function stackScene(t, layout) {
     [0.94, 640],
   ]);
   // The camera holds the open stack's framing while the plane passes and the
-  // lamp crosses; as the stack closes it keeps it framed, closer, and it
-  // recedes a little as the scene ends.
+  // lamp crosses; as the layers come together it draws back with them, 20%
+  // over the closing, and recedes a little further as the scene ends.
   const zoom =
-    Math.exp(mix(Math.log(closedZoom), Math.log(openZoom), spread)) *
+    openZoom *
     track(t, [
-      [0.95, 1],
-      [1, 0.96],
+      [0.885, 1],
+      [0.96, 0.8],
+      [1, 0.77],
     ]);
   return {
     scene: 'stack',
