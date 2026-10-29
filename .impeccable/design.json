@@ -221,9 +221,9 @@
         "purpose": "Light changes in the stage (fill, the garment's light going out, the stack's closing and its lamp's last dimming); the page's strong ease-in-out would compress a change into a few frames under a scrub. Keyframed moves run through a monotone cubic instead."
       },
       {
-        "name": "scrub-spring",
-        "value": "critically damped, solved exactly per frame; stiffness 40 for a mouse wheel, 120 for a trackpad, a finger or the keyboard, easing between them over about 200ms",
-        "purpose": "The stage's timeline follows scroll position through it, so a wheel's separate steps blend into one move and the film plays backwards exactly as forwards; a jump (first frame, off screen, a resize, a Tab or in-page link jump) lands directly."
+        "name": "scrub-direct",
+        "value": "direct: the timeline is the scroll position each frame; a discrete mouse-wheel notch (line delta, or >= 50px after a 40ms pause) is bridged over a first-order filter, time constant 50ms, for changes within 150ms of the notch; rest within 0.25px",
+        "purpose": "The picture never trails the hand on a trackpad, a finger, the keyboard or a scrollbar, and the film plays backwards exactly as forwards; a wheel notch lands within a pixel in about 250ms instead of jumping a whole step where the browser does not animate it. A jump (first frame, off screen, a resize, a Tab or in-page link jump) lands directly."
       },
       {
         "name": "keyframe-track",
@@ -298,7 +298,7 @@
       {
         "name": "reduced-motion",
         "value": "prefers-reduced-motion: reduce",
-        "purpose": "No lamp sweep, no pointer following, no smooth scroll; the hero lamp sits at rest at full strength, the stage is plain sections, the grid canvas draws still, at rest (also when switched on mid-visit), the relief under the grid keeps its lamp at rest."
+        "purpose": "No lamp sweep, no pointer following; the hero lamp sits at rest at full strength, the stage is plain sections, the grid canvas draws still, at rest (also when switched on mid-visit), the relief under the grid keeps its lamp at rest."
       }
     ],
     "breakpoints": [
@@ -370,7 +370,7 @@
   ],
   "narrative": {
     "northStar": "The Low-Observable Surface",
-    "overview": "The page is a matte graphite surface that absorbs light and shows only what one lamp chooses to reveal. On a hardware GPU the ground under the hero becomes a folded-plate relief, flat facets meeting at zigzag creases that run at ±30°, raked by a single neutral-warm lamp; below it the same relief runs on behind one pinned stage, where the lamp finds the approved images in their own shade, and then under a band where a square grid of hairlines lies on it like a second skin. Without a GPU, a still pool of the same light and plain sections stand in; without script, a still grid. Either way the visitor meets a dark material first and an interface second.\n\nThe system is sparse and exact rather than dramatic. One family, Hubot Sans, carries every word, and its width axis does the expressive work: expanded light capitals for the title, slightly widened light statements, normal width for reading. Ink is a tinted neutral in three steps. Content is separated by 1px hairlines and dark space, never by boxes, and the only solid fill on a screen is the primary button. Density is low: wide, fluid gaps of ground between subjects, short measures, nothing competing with the light.\n\nMotion belongs to the light and to the reader's hand. The hero lamp sweeps in once and settles, then follows a mouse on a spring. In the stage, every move is a pure function of scroll position, scrubbed through a soft spring so it plays backwards exactly as forwards; the relief behind the stage stays lit and still, a subject's light goes out before it leaves and the next is drawn out of the dark by light where it stands, and a hand moving on the subject may lean or hold the light. Type never moves: it is lit or unlit. Nothing depends on motion, script or WebGL to be read. The system rejects the dark-tech default outright: a centred glowing headline over an orb or particle field, rows of glass cards, a neon accent, and the same fade-up on every section. Discretion is the brand's posture, so the visuals earn credibility through craft and never through claims.",
+    "overview": "The page is a matte graphite surface that absorbs light and shows only what one lamp chooses to reveal. On a hardware GPU the ground under the hero becomes a folded-plate relief, flat facets meeting at zigzag creases that run at ±30°, raked by a single neutral-warm lamp; below it the same relief runs on behind one pinned stage, where the lamp finds the approved images in their own shade, and then under a band where a square grid of hairlines lies on it like a second skin. Without a GPU, a still pool of the same light and plain sections stand in; without script, a still grid. Either way the visitor meets a dark material first and an interface second.\n\nThe system is sparse and exact rather than dramatic. One family, Hubot Sans, carries every word, and its width axis does the expressive work: expanded light capitals for the title, slightly widened light statements, normal width for reading. Ink is a tinted neutral in three steps. Content is separated by 1px hairlines and dark space, never by boxes, and the only solid fill on a screen is the primary button. Density is low: wide, fluid gaps of ground between subjects, short measures, nothing competing with the light.\n\nMotion belongs to the light and to the reader's hand. The hero lamp sweeps in once and settles, then follows a mouse on a spring. In the stage, every move is a pure function of scroll position, followed directly so the picture never trails the hand and plays backwards exactly as forwards; the relief behind the stage stays lit and still, a subject's light goes out before it leaves and the next is drawn out of the dark by light where it stands, and a hand moving on the subject may lean or hold the light. Type never moves: it is lit or unlit. Nothing depends on motion, script or WebGL to be read. The system rejects the dark-tech default outright: a centred glowing headline over an orb or particle field, rows of glass cards, a neon accent, and the same fade-up on every section. Discretion is the brand's posture, so the visuals earn credibility through craft and never through claims.",
     "keyCharacteristics": [
       "A matte graphite ground under a static 128px grain tile; never flat black.",
       "One neutral-warm lamp, the only light; nothing else glows, and unlit areas fall to the ground, never below it.",
@@ -453,7 +453,7 @@
       },
       {
         "name": "The Scrub Rule",
-        "body": "Scenes are pure functions of scroll position, never of timers, and play backwards exactly as forwards. Only the text's on/off fade, the visitor's held lamp and a late subject's arrival have time of their own.",
+        "body": "Scenes are pure functions of scroll position, never of timers, and play backwards exactly as forwards. Only the text's on/off fade, the visitor's held lamp, a late subject's arrival and the 50ms bridge over a mouse-wheel notch have time of their own.",
         "section": "components"
       },
       {
@@ -474,7 +474,7 @@
       "Do set every word in Hubot Sans and change width before weight: 125% title; 112% statements, labels and controls; 106% list titles; 100% reading.",
       "Do run any new fold or crease at the 30° crease angle, and align any new run of the relief with the hero's folds.",
       "Do ease arrivals and responses with cubic-bezier(0.23, 1, 0.32, 1), press controls to scale(0.97), and keep hover effects behind `(hover: hover) and (pointer: fine)`; ease scroll-scrubbed moves with cubic-bezier(0.45, 0, 0.55, 1).",
-      "Do drive scenes from scroll position through a soft spring, so they play backwards exactly as forwards, and change scene behind a lit relief: the light goes out on one subject before it leaves unseen, and light draws the next out of the dark where it stands.",
+      "Do drive scenes from scroll position directly, so the picture never trails the hand and they play backwards exactly as forwards, and change scene behind a lit relief: the light goes out on one subject before it leaves unseen, and light draws the next out of the dark where it stands.",
       "Do make every view complete without motion, script or WebGL: content visible by default, the still light in place of the relief, plain sections in place of the stage, the still CSS grid in place of the grid's canvas.",
       "Do use only approved images or abstract material, lit by the same lamp and falling off into the ground; draw only their own pixels, ship any derived raster with its provenance, and treat client originals in CSS only."
     ],

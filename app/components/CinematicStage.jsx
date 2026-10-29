@@ -6,19 +6,19 @@ import { createStageRenderer } from './stageRenderer';
 import { lamps, onLamp } from './pageLamp';
 import { reliefLayout, reliefLift, stageEdges, stageFocus, stageFrame, stageLayout } from './stageScript';
 
-// Scrubbing follows the scroll through a critically damped spring, so a change
-// of direction carries its momentum. A mouse wheel scrolls in separate steps, so
-// it gets a soft spring (stiffness 40) that blends them into one move; a
-// trackpad, a finger or the keyboard already scroll smoothly, so they get a
-// firmer one (stiffness 120) that follows without lag. The spring eases from
-// one to the other over about 200 ms, and it is solved exactly each frame, so it
-// moves the same at any frame rate.
-const SCRUB_WHEEL = Math.sqrt(40);
-const SCRUB_GLIDE = Math.sqrt(120);
-const SCRUB_EASE = 0.2;
-// Close enough to the scroll to stop drawing (in shares of the pinned run, and
-// per second): what is left to move is well under a pixel on screen.
-const SCRUB_REST = [2e-5, 2e-4];
+// The timeline follows the scroll position directly: each frame shows the
+// position the page is at, so the picture never trails the hand, and forwards
+// and backwards are the same frames. The one exception is a discrete mouse-wheel
+// notch (a line-based delta, or a large one after a pause): a browser that does
+// not animate its wheel would jump the film by a whole step, so scroll changes
+// arriving within NOTCH_WINDOW ms of a notch are bridged through a first-order
+// filter with a NOTCH_TAU time constant (within a pixel in about five of them).
+// Every other input (trackpad, touch, keyboard, scrollbar, scroll restoration)
+// is direct.
+const NOTCH_TAU = 0.05;
+const NOTCH_WINDOW = 150;
+// Close enough to the scroll to stop drawing: a quarter of a CSS pixel.
+const REST_PX = 0.25;
 // The pointer-held lamp uses the hero's spring.
 const LAMP = [170, 26];
 const DPR_STEPS = [2, 1.5, 1, 0.75];
@@ -147,8 +147,11 @@ export default function CinematicStage() {
       root.style.scrollBehavior = behavior;
     };
     const setLayoutMode = (mode) => {
+      // The reader's position is read before the page changes height: once it
+      // has, the browser may already have clamped the scroll to the new page.
       const before = track.getBoundingClientRect();
-      const top = before.top + window.scrollY;
+      const y = window.scrollY;
+      const top = before.top + y;
       if (mode) {
         track.dataset.cine = mode;
       } else {
@@ -156,11 +159,11 @@ export default function CinematicStage() {
         delete document.documentElement.dataset.stage;
       }
       const after = track.getBoundingClientRect();
-      const y = window.scrollY;
+      const most = document.documentElement.scrollHeight - window.innerHeight;
       if (y >= top + before.height) {
-        jumpTo(y + after.height - before.height);
+        jumpTo(Math.min(y + after.height - before.height, most));
       } else if (y > top) {
-        jumpTo(top + ((y - top) / Math.max(before.height, 1)) * after.height);
+        jumpTo(Math.min(top + ((y - top) / Math.max(before.height, 1)) * after.height, most));
       }
     };
 
@@ -205,11 +208,12 @@ export default function CinematicStage() {
     let slow = 0;
     let fast = 0;
     let t = 0;
-    let tv = 0;
     let target = 0;
-    let scrub = SCRUB_WHEEL;
-    let scrubGoal = SCRUB_WHEEL;
+    let runPx = 1;
     let lastWheel = -Infinity;
+    let lastNotch = -Infinity;
+    // Whether the timeline is still bridging a wheel notch (see NOTCH_TAU).
+    let bridging = false;
     let stageTop = 0;
     let trackTop = 0;
     let visible = false;
@@ -264,8 +268,13 @@ export default function CinematicStage() {
       const view = window.innerHeight;
       // One unit throughout: the pinned run is 0..1, and the approach before it
       // counts in the same unit, so the motion keeps its pace through the pin.
-      const p = -rect.top / Math.max(rect.height - height, 1);
-      target = layout.landscape ? p : warp(p);
+      runPx = Math.max(rect.height - height, 1);
+      const p = -rect.top / runPx;
+      const next = layout.landscape ? p : warp(p);
+      // A change of position within the notch window is bridged; any other
+      // change is followed directly, and ends a bridge under way.
+      if (next !== target) bridging = performance.now() - lastNotch < NOTCH_WINDOW;
+      target = next;
       stageTop = rect.top > 0 ? rect.top : Math.min(0, rect.bottom - height);
       trackTop = rect.top;
       visible = rect.bottom > 0 && rect.top < view;
@@ -343,10 +352,10 @@ export default function CinematicStage() {
     const step = (now) => {
       raf = 0;
       const gap = last ? now - last : 0;
-      // The explicit springs below need a short step; the scrub is exact, so it
-      // only guards against a long pause.
+      // The explicit springs below need a short step; the notch bridge is
+      // exact, so it only guards against a long pause.
       const dt = last ? Math.min(gap / 1000, 1 / 30) : 1 / 60;
-      const scrubDt = last ? Math.min(gap / 1000, 0.25) : 1 / 60;
+      const bridgeDt = last ? Math.min(gap / 1000, 0.25) : 1 / 60;
       // A stage that cannot keep up with the display drops resolution; one that
       // has run fast for a while takes it back.
       if (last) {
@@ -379,18 +388,15 @@ export default function CinematicStage() {
       const jump = snap || !visible;
       if (jump) {
         t = target;
-        tv = 0;
+        bridging = false;
         snap = !visible;
+      } else if (!bridging) {
+        t = target;
       } else {
-        scrub += (scrubGoal - scrub) * (1 - Math.exp(-scrubDt / SCRUB_EASE));
-        const x = t - target;
-        const c = tv + scrub * x;
-        const decay = Math.exp(-scrub * scrubDt);
-        t = target + (x + c * scrubDt) * decay;
-        tv = (tv - scrub * c * scrubDt) * decay;
-        if (Math.abs(t - target) < SCRUB_REST[0] && Math.abs(tv) < SCRUB_REST[1]) {
+        t = target + (t - target) * Math.exp(-bridgeDt / NOTCH_TAU);
+        if (Math.abs(t - target) * runPx < REST_PX) {
           t = target;
-          tv = 0;
+          bridging = false;
         } else {
           moving = true;
         }
@@ -604,20 +610,14 @@ export default function CinematicStage() {
     };
     const onKeyDown = (event) => {
       if (event.key === 'Tab') jumpOnce();
-      else scrubGoal = SCRUB_GLIDE;
     };
 
     // A wheel step is a line-based delta, or a large one after a pause; a
-    // trackpad sends a stream of small ones.
+    // trackpad sends a stream of small ones, which are followed directly.
     const onWheel = (event) => {
       const now = event.timeStamp;
-      const notch = event.deltaMode === 1 || (Math.abs(event.deltaY) >= 50 && now - lastWheel > 40);
+      if (event.deltaMode === 1 || (Math.abs(event.deltaY) >= 50 && now - lastWheel > 40)) lastNotch = now;
       lastWheel = now;
-      scrubGoal = notch ? SCRUB_WHEEL : SCRUB_GLIDE;
-    };
-
-    const onTouchScroll = () => {
-      scrubGoal = SCRUB_GLIDE;
     };
 
     const onVisibility = () => {
@@ -766,7 +766,6 @@ export default function CinematicStage() {
     else window.addEventListener('load', onLoad, { once: true });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('wheel', onWheel, { passive: true });
-    window.addEventListener('touchstart', onTouchScroll, { passive: true });
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     document.documentElement.addEventListener('pointerleave', onPointerLeave);
     stage.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -798,7 +797,6 @@ export default function CinematicStage() {
       window.removeEventListener('load', onLoad);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('wheel', onWheel);
-      window.removeEventListener('touchstart', onTouchScroll);
       window.removeEventListener('pointermove', onPointerMove);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       stage.removeEventListener('touchstart', onTouchStart);
