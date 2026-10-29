@@ -42,8 +42,10 @@ export const viewport = {
 // WebGL present), so the page keeps its shape when script arrives. CinematicStage
 // confirms the choice or reverts it; if it has not started shortly after the page
 // has loaded, script failed and the flag lapses, keeping the reader's place on
-// the page as CinematicStage.setLayoutMode does.
-const STAGE_EARLY = `try{var d=document.documentElement;if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&'WebGLRenderingContext' in window){d.dataset.stage='early';addEventListener('load',function(){setTimeout(function(){var c=document.querySelector('.cine');if(c&&c.dataset.cine)return;var r=c&&c.getBoundingClientRect(),y=scrollY,top=r?r.top+y:0,h=r?r.height:0;delete d.dataset.stage;if(!r)return;var a=c.getBoundingClientRect().height,to=y>=top+h?y+a-h:y>top?top+(y-top)/Math.max(h,1)*a:y;if(to!==y)scrollTo(0,Math.min(to,d.scrollHeight-innerHeight))},1500)})}}catch(e){}`;
+// the page as CinematicStage.setLayoutMode does: mapped if they have scrolled by
+// hand (noted in __stageScrolled), left alone if the browser set it (a restored
+// position, or a link's target, which is found again).
+const STAGE_EARLY = `try{var d=document.documentElement;if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&'WebGLRenderingContext' in window){d.dataset.stage='early';var s=function(){window.__stageScrolled=true};addEventListener('wheel',s,{passive:true,once:true});addEventListener('touchmove',s,{passive:true,once:true});addEventListener('keydown',s,{once:true});addEventListener('load',function(){setTimeout(function(){var c=document.querySelector('.cine');if(c&&c.dataset.cine)return;var r=c&&c.getBoundingClientRect(),y=scrollY,top=r?r.top+y:0,h=r?r.height:0;delete d.dataset.stage;if(!r)return;if(!window.__stageScrolled){var t=location.hash&&document.getElementById(location.hash.slice(1));if(t)t.scrollIntoView();return}var a=c.getBoundingClientRect().height,to=y>=top+h?y+a-h:y>top?top+(y-top)/Math.max(h,1)*a:y;if(to!==y)scrollTo(0,Math.min(to,d.scrollHeight-innerHeight))},1500)})}}catch(e){}`;
 
 export default function RootLayout({ children }) {
   return (

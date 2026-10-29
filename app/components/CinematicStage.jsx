@@ -146,7 +146,10 @@ export default function CinematicStage() {
       window.scrollTo(0, top);
       root.style.scrollBehavior = behavior;
     };
-    const setLayoutMode = (mode) => {
+    // `keep` leaves the scroll position alone: a position the browser set on
+    // its own (a restored one, or a link's target) is not a place in the pinned
+    // stage, so it is not mapped; a link's target is simply found again.
+    const setLayoutMode = (mode, keep = false) => {
       // The reader's position is read before the page changes height: once it
       // has, the browser may already have clamped the scroll to the new page.
       const before = track.getBoundingClientRect();
@@ -159,6 +162,16 @@ export default function CinematicStage() {
         delete document.documentElement.dataset.stage;
       }
       const after = track.getBoundingClientRect();
+      if (keep) {
+        const target = window.location.hash && document.getElementById(window.location.hash.slice(1));
+        if (target) {
+          const behavior = document.documentElement.style.scrollBehavior;
+          document.documentElement.style.scrollBehavior = 'auto';
+          target.scrollIntoView();
+          document.documentElement.style.scrollBehavior = behavior;
+        }
+        return;
+      }
       const most = document.documentElement.scrollHeight - window.innerHeight;
       if (y >= top + before.height) {
         jumpTo(Math.min(y + after.height - before.height, most));
@@ -168,11 +181,13 @@ export default function CinematicStage() {
     };
 
     // The head script may already have pinned the stage; without motion or a
-    // hardware-rendered WebGL context, it goes back to plain sections.
+    // hardware-rendered WebGL context, it goes back to plain sections. Unless
+    // the reader has scrolled by hand since (the head script notes it), the
+    // scroll position is the browser's own and is left where it is.
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const renderer = reduceMotion.matches ? null : createStageRenderer(canvas);
     if (!renderer) {
-      if (track.dataset.cine || document.documentElement.dataset.stage) setLayoutMode(null);
+      if (track.dataset.cine || document.documentElement.dataset.stage) setLayoutMode(null, !window.__stageScrolled);
       return undefined;
     }
 
