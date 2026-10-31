@@ -1,5 +1,5 @@
 import LegalDocument from '../LegalDocument';
-import { COMPANY } from '../site';
+import { COMPANY, VERSIONS } from '../site';
 
 const title = 'Cookies & Similar Technologies';
 const description = 'What the pages of grovillon.com store on or read from your device, and how we checked.';
@@ -158,5 +158,5 @@ const lead = (
 );
 
 export default function CookiesPage() {
-  return <LegalDocument page="cookies" title={title} lead={lead} sections={sections} />;
+  return <LegalDocument page="cookies" title={title} lead={lead} sections={sections} version={VERSIONS.cookies} />;
 }

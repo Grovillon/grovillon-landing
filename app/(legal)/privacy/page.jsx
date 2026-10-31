@@ -1,5 +1,5 @@
 import LegalDocument from '../LegalDocument';
-import { COMPANY } from '../site';
+import { COMPANY, VERSIONS } from '../site';
 
 const title = 'Privacy Policy';
 const description =
@@ -13,6 +13,7 @@ export const metadata = {
 };
 
 const mail = <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>;
+const STUDY = 'What do you notice before heat makes you feel worse?';
 
 const sections = [
   {
@@ -21,11 +22,15 @@ const sections = [
     body: (
       <>
         <p>
-          {COMPANY.name}, a UK company with company number {COMPANY.number}, is responsible for the personal
-          information described in this policy. We are its controller, which means we decide why and how it is
-          used.
+          {COMPANY.name} is responsible for the personal information described in this policy. We are its
+          controller, which means we decide why and how it is used.
         </p>
-        <p>For anything about this policy or your information, write to us at {mail}.</p>
+        <p>
+          {COMPANY.name} is registered in {COMPANY.jurisdiction} under company number {COMPANY.number}. Our
+          registered office is {COMPANY.office.join(', ')}, and all our details are on our{' '}
+          <a href="/company">Company details</a> page. For anything about this policy or your information, write to
+          us at {mail}.
+        </p>
       </>
     ),
   },
@@ -35,13 +40,10 @@ const sections = [
     body: (
       <>
         <p>
-          This policy covers grovillon.com and the emails you send to the address published on it. It does not
-          cover the services you use to reach us, such as your browser or your email provider, which handle your
+          This policy covers grovillon.com and the emails you send to the address published on it. Research
+          questionnaires come with their own information, as explained below. This policy does not cover the
+          services you use to reach us, such as your browser or your own email provider, which handle your
           information under their own terms.
-        </p>
-        <p>
-          If we invite you to take part in research, we will give you separate information about it before you
-          decide whether to take part.
         </p>
       </>
     ),
@@ -88,24 +90,68 @@ const sections = [
     body: (
       <>
         <p>
-          If you write to {mail}, for example with a question or about one of the roles we list, we receive:
+          If you write to {mail}, we receive your email address, your name as it appears in your email, what you
+          write and anything you attach, and the technical details that come with any email, such as when it was
+          sent. Our mailbox is provided by Zoho Mail.
+        </p>
+        <h3>Questions and other enquiries</h3>
+        <p>
+          We use your email to read and reply to it. <strong>Lawful basis:</strong> our legitimate interests in
+          replying to the people who write to us (Article 6(1)(f)).
+        </p>
+        <h3>Roles and CVs</h3>
+        <p>
+          If you write about one of the roles we list, or send us a CV, we use what you send to consider your
+          interest in working with us and to reply. <strong>Lawful basis:</strong> taking steps you have asked
+          for before a possible contract (Article 6(1)(b)), and our legitimate interests in finding people to
+          work with (Article 6(1)(f)).
+        </p>
+        <h3>Sensitive information</h3>
+        <p>
+          Please don’t send us sensitive personal information, such as details of your health, ethnicity, religion
+          or beliefs, sexual orientation or any criminal record, unless we have asked for it. If you think we need
+          to know something sensitive, write to us first without the details. We will tell you whether we need it
+          and, if we do, how you can share it and the basis on which we would use it. The lawful bases above cover
+          ordinary correspondence; on their own, they do not allow us to keep or use sensitive information of this
+          kind.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'research',
+    title: 'Research questionnaires',
+    body: (
+      <>
+        <p>
+          We may invite people to take part in research questionnaires. These can run on a separate platform,
+          such as Google Forms, rather than on this website. Each questionnaire has its own privacy and
+          participation information, which you will see before you are asked to consent and before you submit any
+          answers. That information, not this policy, explains how the study uses your answers.
+        </p>
+        <p>
+          We are preparing one questionnaire, called “{STUDY}”, which is not open for responses. For this
+          questionnaire only:
         </p>
         <ul>
-          <li>your email address and your name as it appears in your email;</li>
-          <li>what you write, and anything you attach, such as a CV;</li>
-          <li>the technical details that come with any email, such as when it was sent.</li>
+          <li>collection will close on 31 December 2026;</li>
+          <li>
+            by 4 January 2027 we will delete the original responses, and every individual-level copy we control,
+            from Google Forms, its linked spreadsheet and any exports;
+          </li>
+          <li>
+            after that, all that will remain of the responses is aggregated findings that do not identify anyone
+            who took part; and
+          </li>
+          <li>
+            we will not submit individual health responses, written answers, screenshots or response rows to AI
+            tools; only those aggregated findings may be analysed with AI.
+          </li>
         </ul>
         <p>
-          We use this to read and reply to your message and, if you wrote about a role, to consider your interest
-          in it.
-        </p>
-        <p>
-          <strong>Lawful basis:</strong> our legitimate interests in replying to the people who write to us and
-          in finding people to work with (Article 6(1)(f)). If you write to us about a role, we also rely on
-          taking steps you have asked for before a possible contract (Article 6(1)(b)).
-        </p>
-        <p>
-          Please don’t send us health information or other sensitive details unless your message needs them.
+          The questionnaire will not ask for names or email addresses. That does not make it anonymous: written
+          answers can include details that identify someone. Before we describe any finding as anonymous, we will
+          check that small groups or distinctive answers cannot identify anyone.
         </p>
       </>
     ),
@@ -130,7 +176,8 @@ const sections = [
       <>
         <p>
           The website does not use artificial intelligence (AI), automated decision-making or profiling to analyse
-          visitors or their information.
+          visitors or their information. For how AI may be used in research, see{' '}
+          <a href="#research">Research questionnaires</a>.
         </p>
       </>
     ),
@@ -143,7 +190,11 @@ const sections = [
         <p>We do not sell personal information or share it with advertisers. It is handled by:</p>
         <ul>
           <li>Vercel, which hosts the website, for the information described above; and</li>
-          <li>the provider that hosts our mailbox, which receives and stores the emails you send us.</li>
+          <li>
+            Zoho, which provides our mailbox through Zoho Mail, for the emails you send us. Zoho’s{' '}
+            <a href="https://www.zoho.com/privacy.html">privacy policy</a> explains how Zoho handles personal
+            information, including the cases in which it acts on its own account, such as spam filtering.
+          </li>
         </ul>
         <p>We may also have to disclose information where the law requires it.</p>
       </>
@@ -155,13 +206,15 @@ const sections = [
     body: (
       <>
         <p>
-          Vercel may process the information described above outside the UK, including in the United States.
-          Vercel states in its privacy notice that it complies with the UK Extension to the EU–U.S. Data Privacy
-          Framework (the “UK–US data bridge”).
+          Vercel may process the information described above outside the UK, including in the United States. For
+          transfers to Vercel Inc. in the United States, we rely on the UK Extension to the EU–U.S. Data Privacy
+          Framework (the “UK–US data bridge”): Vercel Inc. is listed as an active participant in the UK Extension
+          on the official Data Privacy Framework list.
         </p>
         <p>
-          The provider that hosts our mailbox may also store or process emails outside the UK. If you would like
-          to know where, or about the safeguards that apply to any transfer, write to us at {mail}.
+          Zoho keeps mailboxes in regional data centres, and Zoho staff or sub-processors in other countries, such
+          as India, may access emails to provide support. If you would like to know where our mailbox is held,
+          write to us at {mail}.
         </p>
       </>
     ),
@@ -171,10 +224,35 @@ const sections = [
     title: 'How long information is kept',
     body: (
       <>
-        <p>Vercel keeps the records it makes when it delivers pages for limited periods set by its service plans.</p>
+        <h3>Website records</h3>
         <p>
-          We keep emails for as long as we need them for the purposes above: to deal with your message and any
-          follow-up and, if you wrote about a role, while we consider it.
+          Vercel lets us see logs and traffic records of requests to the website for between 1 hour and 3 days,
+          depending on our Vercel plan, or for up to 30 days where Vercel’s extended retention is in use. That is
+          how long they are available to us. Separately, Vercel keeps information it uses for its own purposes,
+          such as protecting its network from attacks, for as long as it has a legitimate business need, with no
+          fixed period; its privacy notice explains this.
+        </p>
+        <h3>Questions and other enquiries</h3>
+        <p>
+          We keep an enquiry, and our replies, while we are dealing with it and anything we have agreed to follow
+          up. We keep it longer only if we need it to deal with a complaint or a legal claim, or if the law
+          requires it. When none of these applies, we delete it.
+        </p>
+        <h3>Roles and CVs</h3>
+        <p>
+          We keep your email and CV while we consider your interest in the role you wrote about, or in the roles
+          we were looking to fill when you wrote. If we do not take things further, we keep them until the time
+          limit for bringing a claim about how we handled your application has passed, and then delete them.
+        </p>
+        <h3>When we delete an email</h3>
+        <p>
+          A deleted email, including a CV, stays in our mailbox’s Trash for between 5 and 180 days, depending on
+          our Zoho Mail settings. Zoho then keeps it on its servers for up to 30 more days, and in its backups for
+          a limited period after that, before it is gone.
+        </p>
+        <p>
+          Research questionnaires follow the dates given in their own information; the dates above for the
+          planned questionnaire apply to that questionnaire only.
         </p>
       </>
     ),
@@ -219,9 +297,13 @@ const sections = [
     body: (
       <>
         <p>
-          If you are unhappy with how we have handled your information, please tell us first at {mail}, so we can
-          try to put it right. You also have the right to complain to the Information Commissioner’s Office
-          (ICO), the UK’s data protection regulator, at <a href="https://ico.org.uk/">ico.org.uk</a>.
+          If you are unhappy with how we have handled your information, you can complain to us by email at {mail}.
+          We will acknowledge your complaint within 30 days of receiving it, look into it, and tell you the outcome
+          without undue delay.
+        </p>
+        <p>
+          You also have the right to complain to the UK’s data protection regulator, the Information Commission
+          (ICO), at <a href="https://ico.org.uk/make-a-complaint/">ico.org.uk/make-a-complaint</a>.
         </p>
       </>
     ),
@@ -255,5 +337,5 @@ const lead = (
 );
 
 export default function PrivacyPage() {
-  return <LegalDocument page="privacy" title={title} lead={lead} sections={sections} />;
+  return <LegalDocument page="privacy" title={title} lead={lead} sections={sections} version={VERSIONS.privacy} />;
 }

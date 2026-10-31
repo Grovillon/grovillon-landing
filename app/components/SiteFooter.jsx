@@ -6,6 +6,7 @@ const LEGAL_LINKS = [
   { key: 'privacy', href: '/privacy', label: 'Privacy' },
   { key: 'cookies', href: '/cookies', label: 'Cookies' },
   { key: 'terms', href: '/terms', label: 'Terms' },
+  { key: 'company', href: '/company', label: 'Company details' },
 ];
 
 export default function SiteFooter({ current, className = '' }) {

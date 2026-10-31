@@ -1,5 +1,5 @@
 import LegalDocument from '../LegalDocument';
-import { COMPANY } from '../site';
+import { COMPANY, VERSIONS } from '../site';
 
 const title = 'Terms of Use';
 const description = 'The terms that apply to using grovillon.com, the website of Grovillon Ltd.';
@@ -20,8 +20,9 @@ const sections = [
     body: (
       <>
         <p>
-          grovillon.com is run by {COMPANY.name}, a UK company with company number {COMPANY.number}. You can
-          contact us at {mail}.
+          grovillon.com is run by {COMPANY.name}, a company registered in {COMPANY.jurisdiction} under company
+          number {COMPANY.number}. Our registered office is {COMPANY.office.join(', ')}. You can contact us at{' '}
+          {mail}, and our <a href="/company">company details</a> are set out on their own page.
         </p>
       </>
     ),
@@ -206,5 +207,5 @@ const lead = (
 );
 
 export default function TermsPage() {
-  return <LegalDocument page="terms" title={title} lead={lead} sections={sections} />;
+  return <LegalDocument page="terms" title={title} lead={lead} sections={sections} version={VERSIONS.terms} />;
 }

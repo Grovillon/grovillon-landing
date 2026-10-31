@@ -199,6 +199,57 @@
     font-style: normal;
   }
 
+  /* Particulars: a label in Smoke Ink above or beside its value, one hairline
+     between rows, as the roles list is ruled. */
+  .legal-dl {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .legal-dl > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.25rem;
+    padding-block: 0.875rem;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 40rem) {
+    .legal-dl > div {
+      grid-template-columns: 11rem minmax(0, 1fr);
+      column-gap: 1.5rem;
+    }
+  }
+
+  .legal-dl dt {
+    font-stretch: 112%;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: var(--ink-3);
+  }
+
+  .legal-dl dd {
+    font-size: 1.0625rem;
+    font-weight: 380;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+
+  .legal-dl address {
+    font-style: normal;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  .legal-dl a {
+    color: var(--ink);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.28em;
+    text-decoration-color: var(--line-strong);
+    overflow-wrap: anywhere;
+  }
+
   /* Emphasis is ink, never weight. */
   .legal-section strong {
     font-weight: inherit;
