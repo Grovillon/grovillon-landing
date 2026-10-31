@@ -2,10 +2,9 @@ import Arrow from "./Arrow";
 import LightField from "./LightField";
 import Mark from "./Mark";
 import MissionSection, { CONTACT_EMAIL } from "./MissionSection";
+import SiteFooter from "./SiteFooter";
 
 export default function EntryPage() {
-  const year = new Date().getFullYear();
-
   return (
     <>
       <header className="absolute inset-x-0 top-0 z-10">
@@ -52,15 +51,7 @@ export default function EntryPage() {
         <MissionSection />
       </main>
 
-      <footer className="wrap mt-[clamp(6rem,12vw,10rem)]">
-        <div className="flex flex-col gap-6 border-t border-line py-10 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4 text-ink-2">
-            <Mark className="h-9 w-9" />
-            <span className="t-label">Grovillon Project</span>
-          </div>
-          <p className="text-sm text-ink-3">© {year} Grovillon</p>
-        </div>
-      </footer>
+      <SiteFooter className="mt-[clamp(6rem,12vw,10rem)]" />
     </>
   );
 }

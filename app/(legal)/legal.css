@@ -1,0 +1,266 @@
+/* The policies: long-form reading on the page's own material. Three inks,
+   hairlines instead of boxes, square corners, nothing bold; the still light
+   rests where the hero's lamp would, and type never moves. */
+@layer components {
+  .legal-page {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* The Still Light Rule: a pool of the lamp's warmth (7%) near its rest. */
+  .legal-page::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: -1;
+    height: 52rem;
+    pointer-events: none;
+    background: radial-gradient(70rem 42rem at 72% 8%, rgb(240 230 214 / 0.07), transparent 70%);
+  }
+
+  /* Hidden until a keyboard reaches it; then it sits over the header. */
+  .skip-link {
+    position: absolute;
+    top: 0.75rem;
+    left: var(--gutter);
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    min-height: 3rem;
+    padding: 0 1rem;
+    background-color: var(--ground);
+    color: var(--ink);
+    font-stretch: 112%;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transform: translateY(-200%);
+  }
+
+  .skip-link:focus {
+    transform: none;
+  }
+
+  /* The skip link lands here; the container itself needs no ring. */
+  .legal-main:focus {
+    outline: none;
+  }
+
+  /* Phone: one column. From 48rem: a 5-column aside (title, version, contents)
+     beside the text in columns 6 to 12, left-set like the rest of the site. */
+  .legal-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 3rem;
+    padding-top: clamp(3.5rem, 9vw, 7rem);
+  }
+
+  @media (min-width: 48rem) {
+    .legal-grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 1.5rem;
+    }
+
+    .legal-aside {
+      grid-column: 1 / span 5;
+    }
+
+    .legal-body {
+      grid-column: 6 / span 7;
+    }
+  }
+
+  .legal-title {
+    max-width: 14ch;
+    font-stretch: 112%;
+    font-weight: 300;
+    font-size: clamp(1.875rem, 3.4vw, 3rem);
+    line-height: 1.06;
+    letter-spacing: -0.006em;
+    color: var(--ink);
+  }
+
+  /* Fine print: Smoke Ink, as the footer's copyright line. */
+  .legal-meta {
+    margin-top: 1.25rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--ink-3);
+  }
+
+  .legal-toc {
+    margin-top: 2.5rem;
+  }
+
+  .legal-toc-label {
+    font-stretch: 112%;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--ink-3);
+  }
+
+  .legal-toc ol {
+    margin-top: 0.5rem;
+  }
+
+  .legal-toc a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding-block: 0.25rem;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    line-height: 1.35;
+    text-decoration: none;
+    transition: color 200ms ease;
+  }
+
+  .legal-body {
+    max-width: 42rem;
+  }
+
+  .legal-lead {
+    font-size: clamp(1.1875rem, 1.55vw, 1.4375rem);
+    font-weight: 400;
+    line-height: 1.42;
+    color: var(--ink);
+  }
+
+  .legal-lead p + p {
+    margin-top: 1rem;
+  }
+
+  .legal-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+    scroll-margin-top: 1.5rem;
+  }
+
+  .legal-body > .legal-section:first-child {
+    margin-top: 0;
+  }
+
+  .legal-section h2 {
+    font-stretch: 106%;
+    font-weight: 400;
+    font-size: clamp(1.25rem, 1.85vw, 1.5rem);
+    line-height: 1.3;
+    color: var(--ink);
+  }
+
+  .legal-section h3 {
+    margin-top: 2rem;
+    font-stretch: 106%;
+    font-weight: 500;
+    font-size: 1.0625rem;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+
+  .legal-section p,
+  .legal-section li,
+  .legal-section address {
+    font-size: 1.0625rem;
+    font-weight: 380;
+    line-height: 1.65;
+    letter-spacing: 0.004em;
+    color: var(--ink-2);
+  }
+
+  .legal-section h2 + *,
+  .legal-section h3 + * {
+    margin-top: 0.875rem;
+  }
+
+  .legal-section p + p,
+  .legal-section p + ul,
+  .legal-section ul + p,
+  .legal-section p + address,
+  .legal-section address + p {
+    margin-top: 1rem;
+  }
+
+  .legal-section ul {
+    padding-left: 1.25rem;
+    list-style: square;
+  }
+
+  .legal-section li + li {
+    margin-top: 0.5rem;
+  }
+
+  .legal-section li::marker {
+    color: var(--ink-3);
+  }
+
+  .legal-section address {
+    font-style: normal;
+  }
+
+  /* Emphasis is ink, never weight. */
+  .legal-section strong {
+    font-weight: inherit;
+    color: var(--ink);
+  }
+
+  /* Inline links, as on the home page: Chalk Ink over a Strong Hairline. */
+  .legal-section a,
+  .legal-lead a {
+    color: var(--ink);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.28em;
+    text-decoration-color: var(--line-strong);
+    overflow-wrap: anywhere;
+    transition: text-decoration-color 200ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .legal-toc a:hover {
+      color: var(--ink);
+    }
+
+    .legal-section a:hover,
+    .legal-lead a:hover {
+      text-decoration-color: var(--ink);
+    }
+  }
+}
+
+/* On paper: dark text on the page colour, no light, no contents list. The
+   light scheme makes Canvas and CanvasText paper and ink, not the screen's
+   dark pair. */
+@media print {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    background: Canvas;
+  }
+
+  .legal-page::before,
+  .skip-link,
+  .legal-toc,
+  .legal-page header,
+  .legal-page footer nav {
+    display: none;
+  }
+
+  .legal-page,
+  .legal-page * {
+    color: CanvasText !important;
+  }
+
+  .legal-grid {
+    display: block;
+    padding-top: 0;
+  }
+
+  .legal-body {
+    max-width: none;
+    margin-top: 2rem;
+  }
+}
