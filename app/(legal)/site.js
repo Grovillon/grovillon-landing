@@ -13,7 +13,7 @@ export const COMPANY = {
 // The version of each page; a page that changes gets a new number and the
 // date it was published.
 export const VERSIONS = {
-  privacy: { number: '1.1', iso: '2026-10-31', label: '31 October 2026' },
+  privacy: { number: '1.2', iso: '2026-10-31', label: '31 October 2026' },
   terms: { number: '1.1', iso: '2026-10-31', label: '31 October 2026' },
   cookies: { number: '1.0', iso: '2026-10-31', label: '31 October 2026' },
   company: { number: '1.0', iso: '2026-10-31', label: '31 October 2026' },

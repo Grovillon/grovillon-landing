@@ -13,7 +13,6 @@ export const metadata = {
 };
 
 const mail = <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>;
-const STUDY = 'What do you notice before heat makes you feel worse?';
 
 const sections = [
   {
@@ -129,10 +128,7 @@ const sections = [
           participation information, which you will see before you are asked to consent and before you submit any
           answers. That information, not this policy, explains how the study uses your answers.
         </p>
-        <p>
-          We are preparing one questionnaire, called “{STUDY}”, which is not open for responses. For this
-          questionnaire only:
-        </p>
+        <p>For our current research questionnaire:</p>
         <ul>
           <li>collection will close on 31 December 2026;</li>
           <li>
