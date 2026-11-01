@@ -307,7 +307,7 @@ export default function LightField({ className, variant = 'hero' }) {
     let following = false;
 
     // ---- the band: Scene 04's script, Scene 05's rest and pointer ----
-    // The closing's first line, word by word (measureBand).
+    // Scene 04's sentence, word by word (measureBand).
     let words = [];
     // Geometry for leadPath (css px, page positions relative to the unpin).
     let geo = null;
@@ -433,10 +433,15 @@ export default function LightField({ className, variant = 'hero' }) {
       const lamp = reliefLayout(width, unitCss, 0).lamp;
       const heading = host.querySelector('[data-lead="line"]');
       const rest = host.querySelector('[data-lead="rest"]');
+      // Scene 04's sentence, held at the centre of the screen while the light
+      // reads it (a sticky box in a taller section); not held with reduced
+      // motion or without the relief (the stylesheet lets it scroll).
+      const moment = host.querySelector('[data-lead="moment"]');
+      const held = moment ? moment.querySelector('.moment') : null;
+      const sticky = held && getComputedStyle(held).position === 'sticky';
       let enterD = hostTop - unpin + 0.55 * view;
       let lineD = enterD + 0.05 * view;
       let stop = 0.6 * width;
-      let start = 0.4 * width;
       if (heading) {
         const box = heading.getBoundingClientRect();
         enterD = box.top + y - unpin;
@@ -445,36 +450,42 @@ export default function LightField({ className, variant = 'hero' }) {
         const lines = Array.from(range.getClientRects()).filter((r) => r.width > 1);
         const lastLine = lines[lines.length - 1] || box;
         lineD = lastLine.top + lastLine.height / 2 + y - unpin;
-        // Where the headline's text ends: the end of its longest line, so the
-        // light waits past every line that rises by it, not only past the
-        // full stop (on a phone the first line is the longer one; R6).
         stop = Math.max(lastLine.right, ...lines.map((line) => line.right)) - rect.left;
-        start = Math.min(...lines.map((line) => line.left), lastLine.left) - rect.left;
       }
-      // The closing's first line, swept word by word: its words' centres.
-      words = heading
-        ? Array.from(heading.querySelectorAll('[data-word]'), (el) => {
-            const box = el.getBoundingClientRect();
-            return { el, x: box.left + box.width / 2 - rect.left, lit: -1, near: -1 };
-          })
-        : [];
-      const closing = host.querySelector('[data-lead="closing"]');
+      let momentGeo = null;
+      words = [];
+      if (heading && sticky) {
+        // While held, the box sits at the top of the screen: each word's place
+        // on screen then is its place in the box. The light's way runs from
+        // just before the first word through every word to just past the last.
+        const section = moment.getBoundingClientRect();
+        const boxTop = held.getBoundingClientRect().top;
+        const pinFrom = section.top + y - unpin;
+        const pinTo = pinFrom + section.height - held.offsetHeight;
+        const spans = Array.from(heading.querySelectorAll('[data-word]'), (el) => ({ el, box: el.getBoundingClientRect() }));
+        if (spans.length) {
+          const centre = (b) => [b.left + b.width / 2 - rect.left, b.top + b.height / 2 - boxTop];
+          const first = spans[0].box;
+          const last = spans[spans.length - 1].box;
+          const points = [
+            [Math.max(first.left - rect.left - 0.04 * width, 0.03 * width), centre(first)[1]],
+            ...spans.map(({ box }) => centre(box)),
+            [Math.min(last.right - rect.left + 0.04 * width, 0.97 * width), centre(last)[1]],
+          ];
+          momentGeo = { pin: [pinFrom, pinTo], points };
+          words = spans.map(({ el }) => ({ el, lit: -1, near: -1 }));
+          // The sentence rises into its place from below: its top meets the
+          // screen's foot a screen before it is held.
+          enterD = pinFrom + (first.top - boxTop);
+          lineD = pinFrom + centre(first)[1];
+        }
+      }
       let restD = lineD + 0.6 * view;
       if (rest) {
         const box = rest.getBoundingClientRect();
         restD = box.top + box.height / 2 + y - unpin;
       }
       const lampX = waitX(width, stop);
-      // With words to sweep, the light waits at the line's start, crosses it to
-      // its end, and comes to rest at the centre of the closing.
-      const sweep = words.length
-        ? [Math.max(start - 0.05 * width, 0.04 * width), Math.min(stop + 0.05 * width, 0.96 * width)]
-        : null;
-      let centerD = restD;
-      if (closing) {
-        const box = closing.getBoundingClientRect();
-        centerD = box.top + box.height / 2 + y - unpin;
-      }
       geo = {
         vh: view,
         hang: [lamp[0] * unitCss, lamp[1] * unitCss],
@@ -482,9 +493,9 @@ export default function LightField({ className, variant = 'hero' }) {
         enterD,
         lineD,
         restD,
-        restX: sweep ? 0.5 * width : lampX,
-        sweep,
-        centerD,
+        // The light comes to rest behind the closing's statement, at the centre.
+        restX: 0.5 * width,
+        moment: momentGeo,
       };
       timeline = leadTimeline(geo);
       zone = host.querySelector('[data-lead="zone"]');
@@ -504,7 +515,7 @@ export default function LightField({ className, variant = 'hero' }) {
         return { x: pose.x / unitCss, y: (pose.d - (hostTop - unpin)) / unitCss, z: 1, look: 1, phase: 'rest' };
       }
       const p = leadPath(scrollY - unpin, geo, timeline);
-      return { x: p.x / unitCss, y: (p.y - top) / unitCss, z: p.z, look: p.look, phase: p.phase };
+      return { x: p.x / unitCss, y: (p.y - top) / unitCss, z: p.z, look: p.look, phase: p.phase, progress: p.progress };
     };
 
     const resize = (force = false) => {
@@ -615,36 +626,29 @@ export default function LightField({ className, variant = 'hero' }) {
       return moving;
     }
 
-    // The closing's first line: each word lights as the swept light reaches
-    // it and stays lit; it glints while the light is on it. Before the sweep
-    // the line waits dim; after it, and whenever the light does not move
-    // (reduced motion), every word is lit.
+    // Scene 04's sentence: each word lights as the light reading it reaches it
+    // and stays lit, sharpening out of a blur, and glints while the light is
+    // on it. Before the light reaches the sentence every word waits dim; with
+    // no light to read it (reduced motion, no relief) every word is lit.
     function lightWords(p) {
-      if (!words.length) return;
-      const still = stillAtLoad || reduceMotion.matches;
-      const line = host.querySelector('[data-lead="line"]');
-      if (line && line.dataset.sweep !== (still ? '' : 'on')) {
-        if (still) delete line.dataset.sweep;
-        else line.dataset.sweep = 'on';
-      }
-      const soft = Math.max(0.035 * host.clientWidth, 18);
+      if (!words.length || !timeline?.path) return;
+      const marks = timeline.path.marks.slice(1, -1);
+      const gaps = marks.slice(1).map((m, i) => m - marks[i]);
+      const soft = Math.min(Math.max(0.55 * (gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : 60), 24), 140);
       const before = p.phase === 'release' || p.phase === 'goes-first' || p.phase === 'waits';
-      for (const word of words) {
+      words.forEach((word, i) => {
         let lit = 1;
         let near = 0;
-        if (!still && before) {
-          lit = 0;
-        } else if (!still && p.phase === 'sweep') {
-          ({ lit, near } = wordLight(p.x * unitCss, word.x, soft));
-        }
+        if (before) lit = 0;
+        else if (p.phase === 'sweep' && Number.isFinite(p.progress)) ({ lit, near } = wordLight(p.progress, marks[i], soft));
         lit = Math.round(lit * 100) / 100;
         near = Math.round(near * 100) / 100;
-        if (lit === word.lit && near === word.near) continue;
+        if (lit === word.lit && near === word.near) return;
         word.lit = lit;
         word.near = near;
         word.el.style.setProperty('--lit', String(lit));
         word.el.style.setProperty('--near', String(near));
-      }
+      });
     }
 
     function pointerInZone() {
@@ -805,7 +809,7 @@ export default function LightField({ className, variant = 'hero' }) {
       host.dataset.field = 'off';
       shown = false;
       clearLamp(variant);
-      // No light to read the closing's first line: every word lit.
+      // No light to read Scene 04's sentence: every word lit.
       for (const word of words) {
         word.lit = word.near = -1;
         word.el.style.removeProperty('--lit');

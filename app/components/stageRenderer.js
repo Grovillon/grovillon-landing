@@ -3,11 +3,12 @@
 //
 // The background is the hero's folded-plate relief, drawn as the hero draws it
 // (the same folds at the same size, the same lamp model and grain) under a
-// steady lamp of its own. Scene A opens in the dark: one light falls on the
-// stage, a pool that opens over the garment and spreads until the whole relief
-// is lit, and the garment and the relief around it come out of the dark
-// together, because the same light reaches both (no layer of shade is laid
-// over the relief). Scene B draws
+// steady lamp of its own. Where the garment stands, the relief's light falls
+// away through a soft gradient into the dark: part of how the relief is lit,
+// not a layer laid over it, and the unlit garment is as dark as it, so it is
+// unseen. Scene A's light falls into that dark: it finds the garment and lifts
+// the dark around it by lighting it; when it leaves, the garment is dark and
+// unseen again, never faded. Scene B draws
 // the six sheets of the layered material over it as sprites under their own
 // lamp, each darkened where the sheet above it rests close and softened by the
 // camera's depth of field; a plane of light passing down through them draws
@@ -84,7 +85,7 @@ uniform float uSupersample;
 // and takes the stage's lamp over across uNearBand.x device px below it; with
 // no band, the stage's lamp lights it all. The light is the same on either
 // side of the join, so the two reliefs read as one surface; below it the
-// stage is as dark as scene A's light leaves it (dawn()).
+// stage is lit as scene A's light and dark leave it (dawn()).
 uniform vec4 uNearLamp;
 uniform vec2 uNearBand;
 
@@ -141,18 +142,32 @@ vec3 relief(vec2 frag) {
                + shade(p + vec2(-0.375, 0.125) * s, px, lamp));
 }
 
-// The light that falls on the stage in scene A (uDawn): a soft pool centred at
-// uDawn.xy (css px) reaching about uDawn.z, and uDawn.w of the full light
-// everywhere. It scales the light on the relief, never the ground, so the
-// dark is the relief unlit and the light reveals it. Just below the join with
-// the hero the hero's own light runs on, unchanged.
+// The stage's dark (uShade): around the garment's place the relief's light
+// falls away into the ground, through a gradient uShadeSoft.x css px wide,
+// at strength uShadeSoft.y. uShade.xy is its centre and uShade.zw the half
+// size of the part that is fully dark (a rounded rectangle, so the garment's
+// shoulders are in it too).
+uniform vec4 uShade;
+uniform vec2 uShadeSoft;
+float shadeLight(vec2 frag) {
+  vec2 r = max(uShade.zw, vec2(1.0));
+  vec2 n = abs(frag / uScale - uShade.xy) / r;
+  float e = pow(pow(n.x, 4.0) + pow(n.y, 4.0), 0.25);
+  float lit = smoothstep(1.0, 1.0 + uShadeSoft.x / min(r.x, r.y), e);
+  return mix(1.0, lit, uShadeSoft.y);
+}
+// The light that falls into the dark in scene A (uDawn): a soft pool centred
+// at uDawn.xy (css px) reaching about uDawn.z, filling uDawn.w of the dark
+// everywhere. Both scale the relief's light, never the ground. Just below the
+// join with the hero the hero's own light runs on, unchanged.
 uniform vec4 uDawn;
 float dawnLight(vec2 frag) {
   vec2 d = (frag / uScale - uDawn.xy) / max(uDawn.z, 1.0);
   return mix(exp(-dot(d, d)), 1.0, uDawn.w);
 }
 float dawn(vec2 frag) {
-  return mix(1.0, dawnLight(frag), handed(frag, uNearBand.x));
+  float dark = shadeLight(frag);
+  return mix(1.0, dark + (1.0 - dark) * dawnLight(frag), handed(frag, uNearBand.x));
 }
 vec3 dawned(vec3 col, vec2 frag) {
   return uGround + (col - uGround) * dawn(frag);
@@ -174,7 +189,6 @@ uniform vec2 uCam;
 uniform float uZoom;
 uniform float uLevel;
 uniform vec2 uPresent;
-uniform float uLeave;
 uniform sampler2D uGarment;
 
 const vec2 TEXTURE = vec2(2048.0, 1024.0);
@@ -230,9 +244,9 @@ void main() {
   vec2 css = frag / uScale;
   vec2 pg = toImage(css);
   // uPresent.y: the garment is there at all (1 throughout, except while its
-  // texture arrives); uLeave: it dissolves into the lit relief at the end of
-  // scene A. uPresent.x: its light, as the texture arrives.
-  float here = clamp((uPresent.y - 0.65) / 0.35, 0.0, 1.0) * uLeave;
+  // texture arrives); uPresent.x: its light, as the texture arrives. It never
+  // fades: it is seen only where light falls on it.
+  float here = clamp((uPresent.y - 0.65) / 0.35, 0.0, 1.0);
   // The garment takes only the stage's light, never the hero's spilling over
   // the join: it stays unseen until that light falls.
   float lit = dawnLight(frag) * uPresent.x;
@@ -366,8 +380,10 @@ function link(gl, vertex, fragment, names) {
 }
 
 const SHARED = ['uRes', 'uScale', 'uGround', 'uLamp', 'uLight', 'uRadius', 'uIntensity', 'uFill', 'uEdges'];
-// The stage fully lit: a scene other than the garment's (stageScript's frame.dawn).
+// The stage fully lit and no dark: a frame without its own (stageScript's
+// frame.dawn and frame.shade).
 const FULL_LIGHT = [0, 0, 1, 1];
+const NO_SHADE = [0, 0, 1, 1, 1, 0];
 const RELIEF_UNIFORMS = [
   'uUnit',
   'uOrigin',
@@ -380,6 +396,8 @@ const RELIEF_UNIFORMS = [
   'uReliefGain',
   'uSupersample',
   'uDawn',
+  'uShade',
+  'uShadeSoft',
   'uNearLamp',
   'uNearBand',
 ];
@@ -394,7 +412,6 @@ function createPrograms(gl) {
     'uZoom',
     'uLevel',
     'uPresent',
-    'uLeave',
     'uGarment',
   ]);
   const sheets = link(gl, SHEET_VERTEX, SHEET_FRAGMENT, [
@@ -499,7 +516,7 @@ export function createStageRenderer(canvas) {
     gl.uniform1f(p.uFill, frame.fill);
   };
 
-  const setRelief = (p, light, dawn) => {
+  const setRelief = (p, light, dawn, shade) => {
     const { unit, origin, cell, depth, lamp, look } = surface;
     gl.uniform1f(p.uUnit, unit);
     gl.uniform2f(p.uOrigin, 0, origin);
@@ -520,6 +537,8 @@ export function createStageRenderer(canvas) {
     // Facets have hard edges: supersampled on a low-density screen.
     gl.uniform1f(p.uSupersample, size.supersample ? 1 : 0);
     gl.uniform4f(p.uDawn, dawn[0], dawn[1], dawn[2], dawn[3]);
+    gl.uniform4f(p.uShade, shade[0], shade[1], shade[2], shade[3]);
+    gl.uniform2f(p.uShadeSoft, shade[4], shade[5]);
   };
 
   const fullscreen = (p) => {
@@ -528,11 +547,11 @@ export function createStageRenderer(canvas) {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
   };
 
-  const drawRelief = (edges, light, dawn) => {
+  const drawRelief = (edges, light, dawn, shade) => {
     const p = programs.relief;
     fullscreen(p);
     setShared(p, null, edges);
-    setRelief(p, light, dawn);
+    setRelief(p, light, dawn, shade);
     gl.disable(gl.BLEND);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
@@ -541,13 +560,12 @@ export function createStageRenderer(canvas) {
     const p = programs.garment;
     fullscreen(p);
     setShared(p, frame, edges);
-    setRelief(p, light, frame.dawn);
+    setRelief(p, light, frame.dawn, frame.shade || NO_SHADE);
     gl.uniform2f(p.uAnchor, frame.anchor[0], frame.anchor[1]);
     gl.uniform2f(p.uCam, frame.cam[0], frame.cam[1]);
     gl.uniform1f(p.uZoom, frame.zoomGarment);
     gl.uniform1f(p.uLevel, Math.log2(frame.zoomGarment * size.scale));
     gl.uniform2f(p.uPresent, frame.light, frame.present);
-    gl.uniform1f(p.uLeave, frame.leave);
     gl.disable(gl.BLEND);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
@@ -633,7 +651,7 @@ export function createStageRenderer(canvas) {
       if (frame.scene === 'garment' && frame.shown && textures.garment) {
         drawGarment(frame, edges, light);
       } else {
-        drawRelief(edges, light, frame.dawn || FULL_LIGHT);
+        drawRelief(edges, light, frame.dawn || FULL_LIGHT, frame.shade || NO_SHADE);
         if (frame.scene === 'stack' && frame.shown && textures.atlas) drawSheets(frame, edges);
       }
       return true;

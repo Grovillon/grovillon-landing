@@ -117,16 +117,15 @@
     letter-spacing: -0.006em;
   }
 
-  /* The closing's first line, in the name's voice: wide, spaced capitals, on
-     one line down to a 320 px screen. */
-  .t-kicker {
-    font-stretch: 125%;
-    font-weight: 400;
-    font-size: clamp(0.66rem, 3.2vw, 1.75rem);
-    line-height: 1.3;
-    letter-spacing: 0.24em;
-    margin-right: -0.24em;
-    text-transform: uppercase;
+  /* Scene 04's sentence, the hero of its moment: one line on a wide screen,
+     two balanced lines on a phone. */
+  .t-moment {
+    font-stretch: 112%;
+    font-weight: 300;
+    font-size: clamp(2.25rem, 5.2vw, 4.875rem);
+    line-height: 1.06;
+    letter-spacing: -0.008em;
+    text-wrap: balance;
   }
 
   .t-lead {
@@ -397,40 +396,76 @@
     flex-direction: column;
   }
 
-  /* The closing: one screen, its words at its centre, the grid all around. A
-     sixth of a screen of relief above it is where the light goes ahead of
-     the reader; with no light to travel (reduced motion, no relief, no script)
-     the closing keeps only a margin. Below it the grid and the relief fade
-     out, and Scene 06 starts below the screen. */
+  /* Scene 04: the sentence alone, held at the centre of the screen for most of
+     a screen's scroll while the light reads it (the box is sticky in a taller
+     section). With no light to read it (reduced motion, no relief, no script,
+     print) it simply scrolls by, every word lit. */
+  .scene-ahead {
+    position: relative;
+    height: calc(100vh + 70vh);
+    height: calc(100lvh + 70lvh);
+  }
+
+  .moment {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100vh;
+    height: 100lvh;
+    text-align: center;
+  }
+
+  [data-motion="reduce"] .scene-ahead,
+  .band[data-relief="none"] > .scene-ahead {
+    height: auto;
+  }
+
+  [data-motion="reduce"] .moment,
+  .band[data-relief="none"] .moment {
+    position: static;
+    height: auto;
+    padding-block: clamp(6rem, 18vh, 12rem);
+  }
+
+  @media (scripting: none) {
+    .scene-ahead {
+      height: auto;
+    }
+
+    .moment {
+      position: static;
+      height: auto;
+      padding-block: clamp(6rem, 18vh, 12rem);
+    }
+  }
+
+  /* Each word waits dim and out of focus, a little low, and comes into place
+     as the light reaches it, glinting while the light is on it (LightField
+     sets --lit and --near per word). */
+  .moment [data-word] {
+    display: inline-block;
+    opacity: calc(0.22 + 0.78 * var(--lit, 1));
+    filter: blur(calc((1 - var(--lit, 1)) * 0.05em));
+    transform: translateY(calc((1 - var(--lit, 1)) * 0.08em));
+    text-shadow: 0 0 calc(0.4em * var(--near, 0)) rgb(255 244 228 / calc(0.7 * var(--near, 0)));
+    transition:
+      opacity 160ms ease-out,
+      filter 160ms ease-out,
+      transform 160ms ease-out;
+  }
+
+  /* Scene 05, the closing: one screen, its statement at the centre, the grid
+     all around it; below it the grid and the relief fade out, and Scene 06
+     starts below the screen. */
   .finale {
     display: flex;
     flex-direction: column;
     justify-content: center;
     min-height: 100vh;
     min-height: 100lvh;
-    margin-top: 15vh;
-    margin-top: 15lvh;
     text-align: center;
-  }
-
-  [data-motion="reduce"] .finale,
-  .band[data-relief="none"] .finale {
-    margin-top: clamp(3rem, 8vw, 6rem);
-  }
-
-  @media (scripting: none) {
-    .finale {
-      margin-top: clamp(3rem, 8vw, 6rem);
-    }
-  }
-
-  /* The first line waits dim while the light goes ahead, and each word lights
-     as the light reads it (LightField sets --lit and --near per word); without
-     the light every word is lit. */
-  .finale [data-word] {
-    opacity: calc(0.16 + 0.84 * var(--lit, 1));
-    text-shadow: 0 0 calc(0.9em * var(--near, 0)) rgb(255 244 228 / calc(0.55 * var(--near, 0)));
-    transition: opacity 160ms ease-out;
   }
 
   .grid-field,
@@ -702,14 +737,23 @@
     translate: none !important;
   }
 
-  /* The closing on paper: its words, closed up, on plain ground. */
+  /* Scenes 04 and 05 on paper: their words, closed up, on plain ground. */
+  .scene-ahead,
+  .moment,
   .finale {
+    position: static;
+    height: auto;
     min-height: 0;
-    margin-top: 2rem;
   }
 
-  .finale [data-word] {
+  .moment {
+    padding-block: 2rem;
+  }
+
+  .moment [data-word] {
     opacity: 1;
+    filter: none;
+    transform: none;
     text-shadow: none;
   }
 

@@ -6,7 +6,7 @@ import LightField from './LightField';
 
 export const CONTACT_EMAIL = 'd@grovillon.com';
 
-// The closing's first line, a word at a time, so the light can read it.
+// Scene 04's sentence, a word at a time, so the light can read it.
 const AHEAD = 'One step ahead of the body.'.split(' ');
 
 const ROLES = [
@@ -21,18 +21,19 @@ export default function MissionSection() {
       {/* Scenes 02 and 03, pinned. */}
       <CinematicStage />
 
-      {/* The closing stands on one relief, which runs on from the stage's under
-          the same lamp. The lamp goes ahead of the reader (leadPath.js), waits at
-          the start of the closing's first line, reads it word by word and comes
-          to rest at the centre of the grid, where a mouse can take it. The
-          canvas is decoration: aria-hidden, undescribed. */}
+      {/* Scenes 04 and 05 stand on one relief, which runs on from the stage's
+          under the same lamp. Scene 04: the lamp goes ahead of the reader
+          (leadPath.js) and waits; "One step ahead of the body." rises into it
+          and is held at the centre of the screen while the light reads it,
+          word by word. Then the light goes on down into Scene 05, the closing,
+          and comes to rest behind its statement, where a mouse can take it.
+          The canvas is decoration: aria-hidden, undescribed. */}
       <div className="band">
         <LightField variant="band" className="band-field" />
 
-        <section aria-labelledby="ahead conditions" className="scene-adapt" data-lead="zone">
-          <KineticGrid className="grid-field" />
-          <div className="finale wrap" data-lead="closing">
-            <h2 id="ahead" className="t-kicker" data-lead="line">
+        <section aria-labelledby="ahead" className="scene-ahead" data-lead="moment">
+          <div className="moment wrap">
+            <h2 id="ahead" className="t-moment" data-lead="line">
               {AHEAD.map((word, i) => (
                 <Fragment key={i}>
                   {i > 0 && ' '}
@@ -40,7 +41,13 @@ export default function MissionSection() {
                 </Fragment>
               ))}
             </h2>
-            <h2 id="conditions" className="t-signature mt-[clamp(1.25rem,2.6vw,2rem)]" data-lead="rest">
+          </div>
+        </section>
+
+        <section aria-labelledby="conditions" className="scene-adapt" data-lead="zone">
+          <KineticGrid className="grid-field" />
+          <div className="finale wrap">
+            <h2 id="conditions" className="t-signature" data-lead="rest">
               Designed to adapt.
             </h2>
             {/* In ink, as the hero's line is (D4): the lamp rests behind the
