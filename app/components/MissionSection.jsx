@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import Arrow from './Arrow';
 import CinematicStage from './CinematicStage';
 import KineticGrid from './KineticGrid';
 import LightField from './LightField';
@@ -11,48 +11,54 @@ const ROLES = [
   'Freelance / B2B Contractor for Mobile App Development',
 ];
 
-// One phrase per line, grouped by sentence.
-const PASSAGE = [
-  ['Built for situations where the body is asked to carry more than usual.'],
-  ['From recovery to thermal stress,', 'to demanding operational environments,', 'the focus remains the same:', 'quiet support.'],
-  ['Close to the body.', 'When stability matters most.'],
-];
-
 export default function MissionSection() {
   return (
     <>
       <CinematicStage />
 
-      <section
-        aria-labelledby="conditions"
-        className="grid-band pb-[clamp(7rem,15vw,13rem)] pt-[clamp(5rem,11vw,10rem)]"
-      >
+      {/* Scenes 04 and 05 share the band's relief and grid, which run on from the stage. */}
+      <div className="grid-band pb-[clamp(7rem,15vw,13rem)] pt-[clamp(5rem,11vw,10rem)]">
         <LightField variant="band" className="band-field" />
         <KineticGrid className="grid-field" />
-        <div className="wrap">
+        {/* Scene 04, temporary: the line alone, still, with no light of its own. */}
+        <section aria-labelledby="ahead" className="wrap pb-[clamp(5rem,11vw,10rem)]">
+          <h2 id="ahead" className="t-signature">
+            One step ahead of the body.
+          </h2>
+        </section>
+        <section aria-labelledby="conditions" className="wrap">
           <div className="grid grid-cols-1 gap-y-12 md:grid-cols-12 md:gap-x-6 md:gap-y-20">
             <div className="md:col-span-5">
               <h2 id="conditions" className="t-statement">
-                Built for <span className="whitespace-nowrap">high-demand</span> conditions.
+                Designed to adapt.
               </h2>
-              <p className="t-body mt-5 max-w-[32ch]">Supporting physiological stability when it matters most.</p>
+              <p className="t-body mt-5 max-w-[32ch]">
+                Exploring how wearable systems can respond to the body’s changing needs and its environment.
+              </p>
             </div>
-            <p className="t-passage md:col-span-7 md:col-start-6 md:row-start-2">
-              {PASSAGE.map((sentence, index) => (
-                <Fragment key={sentence[0]}>
-                  {index > 0 && ' '}
-                  <span className="passage-sentence">
-                    {sentence.map((line, i) => (
-                      <Fragment key={line}>
-                        {i > 0 && ' '}
-                        <span className="passage-line">{line}</span>
-                      </Fragment>
-                    ))}
-                  </span>
-                </Fragment>
-              ))}
-            </p>
           </div>
+        </section>
+      </div>
+
+      <section aria-labelledby="next-layer" className="wrap pb-[clamp(3rem,6vw,5rem)]">
+        <div className="max-w-[38rem]">
+          <h2 id="next-layer" className="t-statement">
+            The next layer of human technology.
+          </h2>
+          <p className="t-body mt-5 max-w-[42ch]">
+            Grovillon is developing a new approach to wearable systems, designed around the human body and the
+            conditions it faces.
+          </p>
+        </div>
+        <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-2">
+          <a href={`mailto:${CONTACT_EMAIL}`} className="lo-btn">
+            Get in touch
+            <Arrow direction="out" className="lo-arrow" />
+          </a>
+          <a href="#roles" className="lo-link">
+            Join the team
+            <Arrow direction="down" className="lo-arrow" />
+          </a>
         </div>
       </section>
 

@@ -9,10 +9,10 @@ export default function EntryPage() {
     <>
       <header className="absolute inset-x-0 top-0 z-10">
         <div className="wrap flex items-center justify-between pt-5 md:pt-7">
-          <a href="#top" className="nav-link -ml-2 px-2 text-ink" aria-label="Grovillon Project, back to top">
+          <a href="#top" className="nav-link -ml-2 px-2 text-ink" aria-label="Grovillon, back to top">
             <Mark className="h-12 w-12" />
           </a>
-          <a href={`mailto:${CONTACT_EMAIL}`} className="lo-link -mr-2 px-2">
+          <a href={`mailto:${CONTACT_EMAIL}`} className="lo-link head-mail -mr-2 px-2">
             {CONTACT_EMAIL}
           </a>
         </div>
@@ -25,23 +25,23 @@ export default function EntryPage() {
             {/* The name alone, on one line, at the centre of the open relief above the copy. */}
             <div className="flex flex-1 items-center justify-center pb-24 pt-6 md:py-12">
               <h1 id="hero-title" className="t-display text-center">
-                Grovillon Project
+                Grovillon
               </h1>
             </div>
             <div className="max-w-[38rem]">
               <p className="t-lead">Stealth tech, quietly present.</p>
-              <p className="t-body mt-3 max-w-[42ch]">
-                A system designed to support physiological stability in critical and{' '}
-                <span className="whitespace-nowrap">high-demand</span> conditions.
+              {/* In ink: in ink-2 the lit relief behind it could bring it under 5.9:1. */}
+              <p className="t-body mt-3 max-w-[42ch] text-ink">
+                Developing adaptive wearable technology for the changing demands of the human body.
               </p>
             </div>
             <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-2">
               <a href={`mailto:${CONTACT_EMAIL}`} className="lo-btn">
-                Write to us
+                Get in touch
                 <Arrow direction="out" className="lo-arrow" />
               </a>
               <a href="#roles" className="lo-link">
-                Open roles
+                Join the team
                 <Arrow direction="down" className="lo-arrow" />
               </a>
             </div>
@@ -51,7 +51,7 @@ export default function EntryPage() {
         <MissionSection />
       </main>
 
-      <SiteFooter className="mt-[clamp(6rem,12vw,10rem)]" />
+      <SiteFooter name="Grovillon" className="mt-[clamp(6rem,12vw,10rem)]" />
     </>
   );
 }

@@ -9,7 +9,9 @@ const LEGAL_LINKS = [
   { key: 'company', href: '/company', label: 'Company details' },
 ];
 
-export default function SiteFooter({ current, className = '' }) {
+// `name` is the wordmark label beside the mark. The home page passes the approved
+// public name (D1); the policy pages keep the label they were published with.
+export default function SiteFooter({ current, className = '', name = 'Grovillon Project' }) {
   const year = new Date().getFullYear();
 
   return (
@@ -17,7 +19,7 @@ export default function SiteFooter({ current, className = '' }) {
       <div className="flex flex-col gap-6 border-t border-line py-10 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4 text-ink-2">
           <Mark className="h-9 w-9" />
-          <span className="t-label">Grovillon Project</span>
+          <span className="t-label">{name}</span>
         </div>
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-8">
           <nav aria-label="Policies">

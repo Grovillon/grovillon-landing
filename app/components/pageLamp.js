@@ -26,3 +26,13 @@ export function onLamp(listener) {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
+
+// Whether the hero's entrance is over (played to its end, or never played): the
+// stage waits for it before it starts drawing, so the entrance has the GPU to itself.
+export const entrance = { done: false };
+
+export function endEntrance() {
+  if (entrance.done) return;
+  entrance.done = true;
+  listeners.forEach((listener) => listener('entrance'));
+}

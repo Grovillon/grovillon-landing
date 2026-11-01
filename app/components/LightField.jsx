@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { clearLamp, setLamp } from './pageLamp';
+import { clearLamp, endEntrance, setLamp } from './pageLamp';
 import { reliefLayout } from './stageScript';
 
 const VERTEX = `
@@ -248,12 +248,14 @@ export default function LightField({ className, variant = 'hero' }) {
     });
     if (!gl || isSoftwareRenderer(gl)) {
       host.dataset.field = 'off';
+      if (variant === 'hero') endEntrance();
       return undefined;
     }
 
     let scene = createScene(gl);
     if (!scene) {
       host.dataset.field = 'off';
+      if (variant === 'hero') endEntrance();
       return undefined;
     }
 
@@ -269,6 +271,11 @@ export default function LightField({ className, variant = 'hero' }) {
     const target = { x: 0, y: 0 };
     const entrance = config.entrance && !reduceMotion.matches;
     let entranceStart = entrance ? -1 : null;
+    // The hero's entrance ends ENTRANCE_MS after its first frame, whether it
+    // plays to its rest or the pointer takes the lamp on the way; with no
+    // entrance it is over at once.
+    if (variant === 'hero' && !entrance) endEntrance();
+    let entranceTimer = 0;
     let entranceT = 0;
     let handOffAt = null;
     let warmStart = entrance ? -1 : null;
@@ -279,16 +286,25 @@ export default function LightField({ className, variant = 'hero' }) {
     let visible = true;
     let lost = false;
     let shown = false;
+    // The lamp the canvas was last drawn with. The canvas keeps that picture,
+    // so a frame with the same lamp is not drawn again; resize() always draws.
+    let drawn = null;
 
-    const draw = () => {
+    // `at` is where the lamp is drawn: the lamp itself, or its target once it is
+    // all but there (step()).
+    const draw = (force = false, at = light) => {
       if (lost || !scene) return;
-      gl.uniform3f(scene.uLight, light.x + origin[0], light.y + origin[1], layout.z);
+      const x = at.x + origin[0];
+      const y = at.y + origin[1];
+      if (!force && drawn && drawn[0] === x && drawn[1] === y && drawn[2] === layout.z && drawn[3] === intensity) return;
+      drawn = [x, y, layout.z, intensity];
+      gl.uniform3f(scene.uLight, x, y, layout.z);
       gl.uniform1f(scene.uIntensity, intensity);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       // The hero's lamp and the band's light the stage's relief where it meets
       // theirs (pageLamp.js).
       if (variant === 'hero' || variant === 'band') {
-        setLamp(variant, light.x + origin[0], light.y + origin[1], layout.z, intensity);
+        setLamp(variant, x, y, layout.z, intensity);
       }
       if (!shown) {
         shown = true;
@@ -387,7 +403,7 @@ export default function LightField({ className, variant = 'hero' }) {
         light.x = layout.start[0];
         light.y = layout.start[1];
       }
-      draw();
+      draw(true);
     };
 
     const step = (now) => {
@@ -395,6 +411,7 @@ export default function LightField({ className, variant = 'hero' }) {
       const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
       last = now;
       let moving = false;
+      let there = false;
 
       if (warmStart !== null) {
         if (warmStart < 0) warmStart = now;
@@ -405,12 +422,18 @@ export default function LightField({ className, variant = 'hero' }) {
       }
 
       if (entranceStart !== null) {
-        if (entranceStart < 0) entranceStart = now;
+        if (entranceStart < 0) {
+          entranceStart = now;
+          if (variant === 'hero') entranceTimer = window.setTimeout(endEntrance, ENTRANCE_MS);
+        }
         entranceT = Math.min((now - entranceStart) / ENTRANCE_MS, 1);
         const e = easeInOut(entranceT);
         light.x = layout.start[0] + (layout.rest[0] - layout.start[0]) * e;
         light.y = layout.start[1] + (layout.rest[1] - layout.start[1]) * e;
-        if (entranceT >= 1) entranceStart = null;
+        if (entranceT >= 1) {
+          entranceStart = null;
+          if (variant === 'hero') endEntrance();
+        }
         moving = true;
       } else {
         let k = springK;
@@ -445,9 +468,16 @@ export default function LightField({ className, variant = 'hero' }) {
         } else {
           moving = true;
         }
+        // Within a quarter of a pixel of its target and all but still, the lamp
+        // is drawn there: the frames it takes to close the gap would change the
+        // picture by a grey level at most, so they repeat it and are not drawn
+        // (F29). The spring itself steps on to rest as before.
+        const near = 0.25 / unitCss;
+        there =
+          Math.hypot(light.x - target.x, light.y - target.y) < near && Math.hypot(light.vx, light.vy) < 10 * near;
       }
 
-      draw();
+      draw(false, there ? target : light);
       if (moving && visible && !document.hidden) raf = requestAnimationFrame(step);
       else last = 0;
     };
@@ -561,6 +591,7 @@ export default function LightField({ className, variant = 'hero' }) {
 
     return () => {
       if (raf) cancelAnimationFrame(raf);
+      window.clearTimeout(entranceTimer);
       resizeObserver.disconnect();
       visibilityObserver.disconnect();
       window.removeEventListener('pointermove', onPointerMove);

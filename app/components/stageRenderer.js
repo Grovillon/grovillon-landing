@@ -79,13 +79,29 @@ uniform vec3 uLook;
 uniform vec3 uReliefLamp;
 uniform float uReliefGain;
 uniform float uSupersample;
+// While the stage scrolls in under the hero, the relief just below the join
+// (uEdges.x) is lit by the hero's own lamp (uNearLamp: its position and gain),
+// and takes the stage's lamp over across uNearBand.x device px below it; with
+// no band, the stage's lamp lights it all. The light is the same on either
+// side of the join, so the two reliefs read as one surface. The veil comes in
+// across uNearBand.y.
+uniform vec4 uNearLamp;
+uniform vec2 uNearBand;
+
+float handed(vec2 frag, float band) {
+  return band > 0.0 ? smoothstep(uEdges.x, uEdges.x + band, frag.y) : 1.0;
+}
+
+vec4 lampAt(vec2 frag) {
+  return mix(uNearLamp, vec4(uReliefLamp, uReliefGain), handed(frag, uNearBand.x));
+}
 
 float distTo(float x, float period) {
   float m = mod(x, period);
   return min(m, period - m);
 }
 
-vec3 shade(vec2 p, float px) {
+vec3 shade(vec2 p, float px, vec4 lamp) {
   float w = uCell.x;
   float h = uCell.y;
   float zx = mod(p.x, 2.0 * w);
@@ -96,18 +112,18 @@ vec3 shade(vec2 p, float px) {
   float dzdx = s1 * (uDepth.x - uDepth.y * s2 * uSlope);
   float dzdy = uDepth.y * s2;
   vec3 n = normalize(vec3(-dzdx, -dzdy, 1.0));
-  vec3 lv = vec3(uReliefLamp.xy - p, uReliefLamp.z);
+  vec3 lv = vec3(lamp.xy - p, lamp.z);
   float dist = length(lv);
   vec3 l = lv / dist;
   float diff = max(dot(n, l), 0.0);
   float att = 1.0 / (1.0 + (dist * dist) / (uLook.z * uLook.z));
   vec3 hv = normalize(l + vec3(0.0, 0.0, 1.0));
   float spec = pow(max(dot(n, hv), 0.0), 40.0) * 0.08;
-  float light = (diff + spec) * att * uReliefGain;
+  float light = (diff + spec) * att * lamp.w;
   float crease = distTo(yy, h) * uCos;
   float line = 1.0 - smoothstep(0.0, px * 1.1, crease);
   vec3 col = uGround + uLamp * light * uLook.x;
-  col += uLamp * line * att * uReliefGain * uLook.y * (0.35 + diff);
+  col += uLamp * line * att * lamp.w * uLook.y * (0.35 + diff);
   return col;
 }
 
@@ -116,21 +132,24 @@ vec3 shade(vec2 p, float px) {
 vec3 relief(vec2 frag) {
   float px = 1.0 / (uUnit * min(uScale, 1.0));
   vec2 p = frag / (uScale * uUnit) + uOrigin;
-  if (uSupersample < 0.5) return shade(p, px);
+  vec4 lamp = lampAt(frag);
+  if (uSupersample < 0.5) return shade(p, px, lamp);
   float s = 1.0 / (uScale * uUnit);
-  return 0.25 * (shade(p + vec2(0.125, 0.375) * s, px)
-               + shade(p + vec2(0.375, -0.125) * s, px)
-               + shade(p + vec2(-0.125, -0.375) * s, px)
-               + shade(p + vec2(-0.375, 0.125) * s, px));
+  return 0.25 * (shade(p + vec2(0.125, 0.375) * s, px, lamp)
+               + shade(p + vec2(0.375, -0.125) * s, px, lamp)
+               + shade(p + vec2(-0.125, -0.375) * s, px, lamp)
+               + shade(p + vec2(-0.375, 0.125) * s, px, lamp));
 }
 
 // The veil over the left of the relief, where the garment first stands. It is
 // the relief's, so it is there before the garment arrives and no light on the
 // garment lifts it: as dark as the shade against the garment up to uVeil.x,
-// gone by uVeil.y (css px), at strength uVeil.z.
+// gone by uVeil.y (css px), at strength uVeil.z. Below the join with the hero
+// it comes in with the stage's own light, so the hero's light never ends in a
+// hard edge.
 uniform vec3 uVeil;
 vec3 veiled(vec3 col, vec2 frag) {
-  float veil = 0.97 * uVeil.z * (1.0 - smoothstep(uVeil.x, uVeil.y, frag.x / uScale));
+  float veil = 0.97 * uVeil.z * handed(frag, uNearBand.y) * (1.0 - smoothstep(uVeil.x, uVeil.y, frag.x / uScale));
   return uGround + (col - uGround) * (1.0 - veil);
 }
 `;
@@ -205,7 +224,8 @@ float lightAt(vec2 p) {
 // facets under the lamp, as a heavy blur would leave it.
 vec3 reliefMean(vec2 frag) {
   vec2 p = frag / (uScale * uUnit) + uOrigin;
-  vec3 lv = vec3(uReliefLamp.xy - p, uReliefLamp.z);
+  vec4 lamp = lampAt(frag);
+  vec3 lv = vec3(lamp.xy - p, lamp.z);
   float dist = length(lv);
   vec3 l = lv / dist;
   float att = 1.0 / (1.0 + (dist * dist) / (uLook.z * uLook.z));
@@ -216,7 +236,7 @@ vec3 reliefMean(vec2 frag) {
     vec3 n = normalize(vec3(-s1 * (uDepth.x - uDepth.y * s2 * uSlope), -uDepth.y * s2, 1.0));
     diff += max(dot(n, l), 0.0);
   }
-  return uGround + uLamp * (0.25 * diff * att * uReliefGain * uLook.x);
+  return uGround + uLamp * (0.25 * diff * att * lamp.w * uLook.x);
 }
 
 // Above the waist the relief behind the garment is its mean wherever the
@@ -395,6 +415,8 @@ const RELIEF_UNIFORMS = [
   'uReliefGain',
   'uSupersample',
   'uVeil',
+  'uNearLamp',
+  'uNearBand',
 ];
 
 function createPrograms(gl) {
@@ -497,6 +519,10 @@ export function createStageRenderer(canvas) {
   let size = { width: 1, height: 1, scale: 1, supersample: false };
   // The relief as the stage shows it (stageScript's reliefLayout).
   let surface = { unit: 1, origin: 0, cell: [0.42, 0.5], depth: [0.06, 0.42], lamp: [0, 0, 1], look: [0, 0, 1] };
+  // What the canvas shows, as the inputs it was drawn from. The canvas keeps
+  // its last picture, so a frame drawn from the same inputs is not drawn
+  // again; a new size, relief or context clears it.
+  let drawn = '';
 
   const setShared = (p, frame, edges) => {
     gl.uniform2f(p.uRes, canvas.width, canvas.height);
@@ -522,6 +548,11 @@ export function createStageRenderer(canvas) {
     const at = light?.lamp || [lamp[0], origin + lamp[1], lamp[2]];
     gl.uniform3f(p.uReliefLamp, at[0], at[1], at[2]);
     gl.uniform1f(p.uReliefGain, light ? light.gain : 1);
+    // Just below the join with the hero, the hero's lamp (CinematicStage's `near`:
+    // x, y, z, gain, and the lamp's and the veil's bands in css px).
+    const near = light?.near;
+    gl.uniform4f(p.uNearLamp, near ? near[0] : 0, near ? near[1] : 0, near ? near[2] : 1, near ? near[3] : 1);
+    gl.uniform2f(p.uNearBand, near ? near[4] * size.scale : 0, near ? near[5] * size.scale : 0);
     // Facets have hard edges: supersampled on a low-density screen.
     gl.uniform1f(p.uSupersample, size.supersample ? 1 : 0);
     gl.uniform3f(p.uVeil, veil[0], veil[1], veil[2]);
@@ -606,17 +637,22 @@ export function createStageRenderer(canvas) {
     // One texture per call, so each upload is its own short task.
     setImage(name, image) {
       images[name] = image;
-      if (textures[name]) gl.deleteTexture(textures[name]);
+      if (textures[name]) {
+        gl.deleteTexture(textures[name]);
+        drawn = '';
+      }
       textures[name] = upload(gl, UNITS[name], image);
     },
     // The relief's placement and look, from stageScript's reliefLayout.
     setRelief(relief) {
       surface = relief;
+      drawn = '';
     },
     resize(width, height, dpr, supersample = false) {
       const w = Math.max(1, Math.round(width * dpr));
       const h = Math.max(1, Math.round(height * dpr));
       size = { width, height, scale: w / width, supersample };
+      drawn = '';
       if (canvas.width !== w || canvas.height !== h) {
         canvas.width = w;
         canvas.height = h;
@@ -624,9 +660,15 @@ export function createStageRenderer(canvas) {
       gl.viewport(0, 0, w, h);
     },
     // The relief is always drawn; a subject only while some of it shows and
-    // once its texture is in.
+    // once its texture is in. Returns 'same' when the canvas already shows the
+    // frame and nothing was drawn.
     draw(frame, edges, light = null) {
       if (!this.live) return false;
+      // The subject's texture counts only for the scene that draws it.
+      const subject = Boolean(frame.scene === 'garment' ? textures.garment : textures.atlas);
+      const inputs = JSON.stringify([frame, edges, light, subject]);
+      if (inputs === drawn) return 'same';
+      drawn = inputs;
       if (frame.scene === 'garment' && frame.shown && textures.garment) {
         drawGarment(frame, edges, light);
       } else {
@@ -638,6 +680,7 @@ export function createStageRenderer(canvas) {
     // After a lost context: rebuild the programs and re-upload the cached images.
     restore() {
       programs = createPrograms(gl);
+      drawn = '';
       delete textures.garment;
       delete textures.atlas;
       if (!programs) return false;

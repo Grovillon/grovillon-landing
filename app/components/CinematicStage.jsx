@@ -3,28 +3,30 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { createStageRenderer } from './stageRenderer';
-import { lamps, onLamp } from './pageLamp';
+import { entrance, lamps, onLamp } from './pageLamp';
 import { reliefLayout, reliefLift, stageEdges, stageFocus, stageFrame, stageLayout } from './stageScript';
 
-// Scrubbing follows the scroll through a critically damped spring, so a change
-// of direction carries its momentum. A mouse wheel scrolls in separate steps, so
-// it gets a soft spring (stiffness 40) that blends them into one move; a
-// trackpad, a finger or the keyboard already scroll smoothly, so they get a
-// firmer one (stiffness 120) that follows without lag. The spring eases from
-// one to the other over about 200 ms, and it is solved exactly each frame, so it
-// moves the same at any frame rate.
-const SCRUB_WHEEL = Math.sqrt(40);
-const SCRUB_GLIDE = Math.sqrt(120);
-const SCRUB_EASE = 0.2;
-// Close enough to the scroll to stop drawing (in shares of the pinned run, and
-// per second): what is left to move is well under a pixel on screen.
-const SCRUB_REST = [2e-5, 2e-4];
+// The timeline follows the scroll position directly: each frame shows the
+// position the page is at, so the picture never trails the hand, and forwards
+// and backwards are the same frames. The one exception is a discrete mouse-wheel
+// notch (a line-based delta, or a large one after a pause): a browser that does
+// not animate its wheel would jump the film by a whole step, so scroll changes
+// arriving within NOTCH_WINDOW ms of a notch are bridged through a first-order
+// filter with a NOTCH_TAU time constant (within a pixel in about five of them).
+// Every other input (trackpad, touch, keyboard, scrollbar, scroll restoration)
+// is direct.
+const NOTCH_TAU = 0.05;
+const NOTCH_WINDOW = 150;
+// Close enough to the scroll to stop drawing: a quarter of a CSS pixel.
+const REST_PX = 0.25;
 // The pointer-held lamp uses the hero's spring.
 const LAMP = [170, 26];
 const DPR_STEPS = [2, 1.5, 1, 0.75];
-// The stage wakes once the hero's entrance has played: its relief draws at
-// once and its textures start loading. If they take longer than the patience
-// to arrive, the page goes back to plain sections once the stage is off screen.
+// The stage's relief is drawn from the moment the hero's entrance is over, so
+// the entrance has the GPU to itself; from then it runs on from the hero's. Its
+// textures start loading once the entrance has played. If they take longer
+// than the patience to arrive, the page goes back to plain sections once the
+// stage is off screen.
 // A subject whose texture lands while the stage is on screen joins it over
 // ARRIVAL seconds: the garment as it stands unlit, in its shade, then its light.
 const QUIET_START = 2000;
@@ -38,20 +40,6 @@ const PRESS_SLOP = 10;
 // Text is lit and dimmed as states, never scrubbed: about 300 ms in, 200 ms out.
 const LIGHT_IN = 0.09;
 const LIGHT_OUT = 0.06;
-// Where the stage's relief meets the hero's it is lit by the hero's lamp, and
-// it takes its own back over the last HANDOVER of the screen before it pins;
-// leaving over the grid band, it is lit by the band's lamp.
-const HANDOVER = 0.2;
-
-// On a portrait screen the pinned run is shorter (globals.css) and scene A, the
-// garment, takes only PORTRAIT_A of it, so it flows on with little scroll while
-// scene B keeps its length: scroll progress p maps to the timeline t piecewise,
-// each piece carrying its pace on past the run's ends.
-const CUT_T = 0.615;
-const PORTRAIT_A = 0.48;
-const warp = (p) =>
-  p < PORTRAIT_A ? (p * CUT_T) / PORTRAIT_A : CUT_T + ((p - PORTRAIT_A) * (1 - CUT_T)) / (1 - PORTRAIT_A);
-
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
 const ease = (x) => x * x * (3 - 2 * x);
 const mixLamp = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
@@ -146,9 +134,15 @@ export default function CinematicStage() {
       window.scrollTo(0, top);
       root.style.scrollBehavior = behavior;
     };
-    const setLayoutMode = (mode) => {
+    // `keep` leaves the scroll position alone: a position the browser set on
+    // its own (a restored one, or a link's target) is not a place in the pinned
+    // stage, so it is not mapped; a link's target is simply found again.
+    const setLayoutMode = (mode, keep = false) => {
+      // The reader's position is read before the page changes height: once it
+      // has, the browser may already have clamped the scroll to the new page.
       const before = track.getBoundingClientRect();
-      const top = before.top + window.scrollY;
+      const y = window.scrollY;
+      const top = before.top + y;
       if (mode) {
         track.dataset.cine = mode;
       } else {
@@ -156,20 +150,32 @@ export default function CinematicStage() {
         delete document.documentElement.dataset.stage;
       }
       const after = track.getBoundingClientRect();
-      const y = window.scrollY;
+      if (keep) {
+        const target = window.location.hash && document.getElementById(window.location.hash.slice(1));
+        if (target) {
+          const behavior = document.documentElement.style.scrollBehavior;
+          document.documentElement.style.scrollBehavior = 'auto';
+          target.scrollIntoView();
+          document.documentElement.style.scrollBehavior = behavior;
+        }
+        return;
+      }
+      const most = document.documentElement.scrollHeight - window.innerHeight;
       if (y >= top + before.height) {
-        jumpTo(y + after.height - before.height);
+        jumpTo(Math.min(y + after.height - before.height, most));
       } else if (y > top) {
-        jumpTo(top + ((y - top) / Math.max(before.height, 1)) * after.height);
+        jumpTo(Math.min(top + ((y - top) / Math.max(before.height, 1)) * after.height, most));
       }
     };
 
     // The head script may already have pinned the stage; without motion or a
-    // hardware-rendered WebGL context, it goes back to plain sections.
+    // hardware-rendered WebGL context, it goes back to plain sections. Unless
+    // the reader has scrolled by hand since (the head script notes it), the
+    // scroll position is the browser's own and is left where it is.
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const renderer = reduceMotion.matches ? null : createStageRenderer(canvas);
     if (!renderer) {
-      if (track.dataset.cine || document.documentElement.dataset.stage) setLayoutMode(null);
+      if (track.dataset.cine || document.documentElement.dataset.stage) setLayoutMode(null, !window.__stageScrolled);
       return undefined;
     }
 
@@ -202,14 +208,18 @@ export default function CinematicStage() {
     let raisedTo = -1;
     let raisedAt = -Infinity;
     let cadence = 1000 / 60;
+    // The resolution ladder judges the stage only once that interval is known,
+    // never against the frames of the hero's entrance.
+    let judged = false;
     let slow = 0;
     let fast = 0;
     let t = 0;
-    let tv = 0;
     let target = 0;
-    let scrub = SCRUB_WHEEL;
-    let scrubGoal = SCRUB_WHEEL;
+    let runPx = 1;
     let lastWheel = -Infinity;
+    let lastNotch = -Infinity;
+    // Whether the timeline is still bridging a wheel notch (see NOTCH_TAU).
+    let bridging = false;
     let stageTop = 0;
     let trackTop = 0;
     let visible = false;
@@ -223,10 +233,22 @@ export default function CinematicStage() {
     let matte = null;
     let raf = 0;
     let last = 0;
+    // Whether the last step's frame was already on screen and so not drawn:
+    // the time it took says nothing about what the stage costs to draw.
+    let repeated = false;
     let lost = false;
     let disposed = false;
     let fresh = false;
-    let awake = false;
+    // The stage draws nothing until the hero's entrance is over (pageLamp's
+    // entrance), so the entrance has the GPU to itself; a reader already
+    // scrolling away from the hero, or a page opening below it, wakes it at once.
+    let awake = entrance.done;
+    const wake = () => {
+      if (awake || disposed) return;
+      awake = true;
+      fresh = true;
+      kick();
+    };
     // How far each subject has faded in since its texture arrived, 0..1.
     const arrival = { garment: 0, atlas: 0 };
     const timers = new Set();
@@ -255,6 +277,7 @@ export default function CinematicStage() {
         }
         const gaps = stamps.slice(1).map((s, i) => s - stamps[i]).sort((a, b) => a - b);
         if (gaps.length) cadence = Math.min(Math.max(gaps[Math.floor(gaps.length / 4)], 1000 / 120), 50);
+        judged = true;
       };
       requestAnimationFrame(sample);
     }, QUIET_START);
@@ -264,8 +287,12 @@ export default function CinematicStage() {
       const view = window.innerHeight;
       // One unit throughout: the pinned run is 0..1, and the approach before it
       // counts in the same unit, so the motion keeps its pace through the pin.
-      const p = -rect.top / Math.max(rect.height - height, 1);
-      target = layout.landscape ? p : warp(p);
+      runPx = Math.max(rect.height - height, 1);
+      const next = -rect.top / runPx;
+      // A change of position within the notch window is bridged; any other
+      // change is followed directly, and ends a bridge under way.
+      if (next !== target) bridging = performance.now() - lastNotch < NOTCH_WINDOW;
+      target = next;
       stageTop = rect.top > 0 ? rect.top : Math.min(0, rect.bottom - height);
       trackTop = rect.top;
       visible = rect.bottom > 0 && rect.top < view;
@@ -280,7 +307,6 @@ export default function CinematicStage() {
         : 0;
       const entry = window.innerHeight / Math.max(track.offsetHeight - height, 1);
       layout = stageLayout(width, height, entry, statement);
-      if (!layout.landscape) layout.entry = (entry * CUT_T) / PORTRAIT_A;
       // The relief's unit is the hero's height, and its pattern starts at the
       // hero's top, so the stage's folds run on from the hero's.
       const heroRect = hero?.getBoundingClientRect();
@@ -309,7 +335,9 @@ export default function CinematicStage() {
       });
       if (lost || !awake || !renderer.live) return;
       const light = reliefLight();
-      renderer.draw(frame, stageEdges(stageTop, height, unit, trackTop - stageTop, light.joined, light.continued), light);
+      repeated =
+        renderer.draw(frame, stageEdges(stageTop, height, unit, trackTop - stageTop, light.joined, light.continued), light) ===
+        'same';
       if (track.dataset.cine === 'pending') track.dataset.cine = 'on';
       // The hero's relief no longer needs to fade out above the join: the
       // stage's runs on from it under the same lamp (globals.css).
@@ -317,20 +345,30 @@ export default function CinematicStage() {
     };
 
     // The relief's lamp, in the hero's pattern. While the join with the hero is
-    // on screen the stage's relief is lit by the hero's own lamp, wherever the
-    // pointer has taken it, so the two read as one surface with no seam; the
-    // stage takes its own steady lamp back over the last HANDOVER of the screen
-    // before it pins. Leaving over the grid band, whose relief runs on from the
-    // stage's and rests its lamp where the stage's hangs, it is lit by the band's
-    // lamp, which the pointer moves there. With no hero lamp to share, the
-    // stage's own lamp hangs higher while the stage approaches.
+    // on screen the stage takes its own steady lamp back from the hero's over
+    // the whole approach, at the scroll's own pace, so that lamp stays where it
+    // is on screen while the page moves and comes to rest as the stage pins.
+    // Just below the join the hero's own lamp, wherever the pointer has taken
+    // it, lights the relief (`near`: the renderer hands over from it within as
+    // many px of the join as the hero still shows above it), so the two read as
+    // one surface with no seam; the veil comes in below the join over at most a
+    // quarter of the hero's height, so the garment waiting in its shade stays
+    // hidden. Leaving over the grid band, whose relief runs
+    // on from the stage's and rests its lamp where the stage's hangs, it is lit
+    // by the band's lamp, which the pointer moves there. With no hero lamp to
+    // share, the stage's own lamp hangs higher while the stage approaches.
     const reliefLight = () => {
       const own = [relief.lamp[0], relief.origin + relief.lamp[1], relief.lamp[2]];
       const hero = lamps.hero;
       const band = lamps.band;
       if (stageTop > 0 && hero) {
-        const k = ease(clamp01(stageTop / (HANDOVER * height)));
-        return { lamp: mixLamp(own, [hero.x, hero.y, hero.z], k), gain: 1 + (hero.gain - 1) * k, joined: true };
+        const k = clamp01(stageTop / unit);
+        return {
+          lamp: mixLamp(own, [hero.x, hero.y, hero.z], k),
+          gain: 1 + (hero.gain - 1) * k,
+          joined: true,
+          near: [hero.x, hero.y, hero.z, hero.gain, stageTop, Math.min(stageTop, 0.25 * unit)],
+        };
       }
       if (stageTop < 0 && band) {
         const k = ease(clamp01(-stageTop / (0.05 * height)));
@@ -343,13 +381,13 @@ export default function CinematicStage() {
     const step = (now) => {
       raf = 0;
       const gap = last ? now - last : 0;
-      // The explicit springs below need a short step; the scrub is exact, so it
-      // only guards against a long pause.
+      // The explicit springs below need a short step; the notch bridge is
+      // exact, so it only guards against a long pause.
       const dt = last ? Math.min(gap / 1000, 1 / 30) : 1 / 60;
-      const scrubDt = last ? Math.min(gap / 1000, 0.25) : 1 / 60;
+      const bridgeDt = last ? Math.min(gap / 1000, 0.25) : 1 / 60;
       // A stage that cannot keep up with the display drops resolution; one that
       // has run fast for a while takes it back.
-      if (last) {
+      if (last && !repeated && judged) {
         slow = gap > 1.6 * cadence ? slow + 1 : Math.max(slow - 1, 0);
         fast = gap < 1.2 * cadence ? fast + 1 : 0;
         if (slow > 24 && dprStep < DPR_STEPS.length - 1) {
@@ -366,6 +404,7 @@ export default function CinematicStage() {
           resize();
         }
       }
+      repeated = false;
       last = now;
       measure();
       // Textures that never came: the stage stands down once the reader is
@@ -379,18 +418,15 @@ export default function CinematicStage() {
       const jump = snap || !visible;
       if (jump) {
         t = target;
-        tv = 0;
+        bridging = false;
         snap = !visible;
+      } else if (!bridging) {
+        t = target;
       } else {
-        scrub += (scrubGoal - scrub) * (1 - Math.exp(-scrubDt / SCRUB_EASE));
-        const x = t - target;
-        const c = tv + scrub * x;
-        const decay = Math.exp(-scrub * scrubDt);
-        t = target + (x + c * scrubDt) * decay;
-        tv = (tv - scrub * c * scrubDt) * decay;
-        if (Math.abs(t - target) < SCRUB_REST[0] && Math.abs(tv) < SCRUB_REST[1]) {
+        t = target + (t - target) * Math.exp(-bridgeDt / NOTCH_TAU);
+        if (Math.abs(t - target) * runPx < REST_PX) {
           t = target;
-          tv = 0;
+          bridging = false;
         } else {
           moving = true;
         }
@@ -492,7 +528,7 @@ export default function CinematicStage() {
         }
       });
 
-      // A first frame is drawn as soon as the stage wakes, and again as each
+      // A first frame is drawn as soon as the stage mounts, and again as each
       // texture arrives, even off screen, so the canvas is already showing
       // when the reader reaches it.
       if (visible || fresh) render(frame);
@@ -571,7 +607,10 @@ export default function CinematicStage() {
     const onScroll = () => {
       if (press) letGo();
       if (pointer && !pointer.touch) pointer.moved = false;
-      if (!loading && window.scrollY > 0.25 * window.innerHeight) load(true);
+      if (window.scrollY > 0.25 * window.innerHeight) {
+        wake();
+        if (!loading) load(true);
+      }
       kick();
     };
 
@@ -604,20 +643,14 @@ export default function CinematicStage() {
     };
     const onKeyDown = (event) => {
       if (event.key === 'Tab') jumpOnce();
-      else scrubGoal = SCRUB_GLIDE;
     };
 
     // A wheel step is a line-based delta, or a large one after a pause; a
-    // trackpad sends a stream of small ones.
+    // trackpad sends a stream of small ones, which are followed directly.
     const onWheel = (event) => {
       const now = event.timeStamp;
-      const notch = event.deltaMode === 1 || (Math.abs(event.deltaY) >= 50 && now - lastWheel > 40);
+      if (event.deltaMode === 1 || (Math.abs(event.deltaY) >= 50 && now - lastWheel > 40)) lastNotch = now;
       lastWheel = now;
-      scrubGoal = notch ? SCRUB_WHEEL : SCRUB_GLIDE;
-    };
-
-    const onTouchScroll = () => {
-      scrubGoal = SCRUB_GLIDE;
     };
 
     const onVisibility = () => {
@@ -654,12 +687,11 @@ export default function CinematicStage() {
       }
     };
 
-    // The stage wakes after the page itself has loaded, or as soon as the
+    // The textures load after the page itself has loaded, or as soon as the
     // reader nears the stage, but never during the hero's entrance; a reader
-    // already scrolling away from the hero wakes it at once. Awake, it draws
-    // the relief and loads the textures, each uploaded in its own frame as it
-    // arrives. On a connection too slow to bring them in time, the stage
-    // stands down.
+    // already scrolling away from the hero loads them at once. Each is uploaded
+    // in its own frame as it arrives. On a connection too slow to bring them in
+    // time, the stage stands down.
     let loading = false;
     let patience = 0;
     let tired = false;
@@ -700,9 +732,6 @@ export default function CinematicStage() {
         return;
       }
       loading = true;
-      awake = true;
-      fresh = true;
-      kick();
       patience = later(giveUp, TEXTURE_PATIENCE);
       let pending = 2;
       for (const [name, src] of [
@@ -743,10 +772,18 @@ export default function CinematicStage() {
     setLayoutMode('pending');
     resize();
     measure();
+    // The relief's first frame comes as the hero's entrance ends, even below the
+    // fold, so the hero's foot opens onto it (data-relief) then. A page that
+    // opens below the hero (a reload, a link to a section) wakes the stage and
+    // loads the textures at once; a hero that never reports its entrance does
+    // not hold the stage back for long.
+    fresh = true;
     kick();
-    // A page that opens below the hero (a reload, a link to a section) wakes
-    // the stage at once.
-    if (window.scrollY > 0.25 * window.innerHeight) load(true);
+    if (window.scrollY > 0.25 * window.innerHeight) {
+      wake();
+      load(true);
+    }
+    later(wake, QUIET_START + 2000);
 
     const resizeObserver = new ResizeObserver(() => {
       resize();
@@ -754,8 +791,19 @@ export default function CinematicStage() {
       kick();
     });
     // A shared lamp that moves while its join is on screen lights the stage too.
+    // Below the fold the stage catches up once the hero's lamp has settled, so
+    // it is already showing the right light when the reader scrolls to it.
+    let settling = 0;
     const offLamp = onLamp((name) => {
-      if (visible && ((name === 'hero' && stageTop > 0) || (name === 'band' && stageTop < 0))) kick();
+      if (name === 'entrance') wake();
+      else if (visible && ((name === 'hero' && stageTop > 0) || (name === 'band' && stageTop < 0))) kick();
+      else if (!visible && name === 'hero' && stageTop > 0) {
+        cancel(settling);
+        settling = later(() => {
+          fresh = true;
+          kick();
+        }, 250);
+      }
     });
     resizeObserver.observe(stage);
     if (hero) resizeObserver.observe(hero);
@@ -766,7 +814,6 @@ export default function CinematicStage() {
     else window.addEventListener('load', onLoad, { once: true });
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('wheel', onWheel, { passive: true });
-    window.addEventListener('touchstart', onTouchScroll, { passive: true });
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     document.documentElement.addEventListener('pointerleave', onPointerLeave);
     stage.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -798,7 +845,6 @@ export default function CinematicStage() {
       window.removeEventListener('load', onLoad);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('wheel', onWheel);
-      window.removeEventListener('touchstart', onTouchScroll);
       window.removeEventListener('pointermove', onPointerMove);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       stage.removeEventListener('touchstart', onTouchStart);
@@ -837,9 +883,9 @@ export default function CinematicStage() {
           <div className="grid grid-cols-1 items-start gap-y-8 md:grid-cols-12 md:gap-x-6">
             <div className="cine-copy md:col-span-5" data-copy="0">
               <h2 id="worn" className="t-statement">
-                Worn, not carried.
+                The unseen guardian.
               </h2>
-              <p className="t-body mt-5 max-w-[28ch]">Designed for the moment conditions stop being ideal.</p>
+              <p className="t-body mt-5 max-w-[28ch]">Designed to support you without demanding your attention.</p>
             </div>
             <div
               className="cine-media -mx-[var(--gutter)] md:col-span-7 md:mx-0 md:mr-[calc(var(--gutter)*-1)]"
@@ -862,16 +908,11 @@ export default function CinematicStage() {
           <div className="grid grid-cols-1 gap-y-12 md:grid-cols-12 md:items-center md:gap-x-6">
             <div className="cine-block md:col-span-5">
               <h2 id="complexity" className="t-statement max-w-[15ch]" data-copy="1">
-                Its complexity is not visible.
+                Far more than fabric.
               </h2>
-              <div className="cine-lines mt-6">
-                <p className="t-lead text-ink-2" data-copy="2">
-                  By design.
-                </p>
-                <p className="t-lead text-ink-2" data-copy="3">
-                  Silently present.
-                </p>
-              </div>
+              <p className="t-body mt-5 max-w-[28ch]" data-copy="2">
+                Where advanced technology becomes part of what you wear.
+              </p>
             </div>
             <div
               className="cine-media w-full max-w-[19rem] md:col-span-7 md:max-w-[26rem] md:justify-self-center"
