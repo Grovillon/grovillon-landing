@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { cancelFrame, requestFrame } from './frameClock';
-import { leadPath, leadPose, leadTimeline } from './leadPath';
+import { leadPath, leadPose, leadTimeline, waitX } from './leadPath';
 import { clearLamp, endEntrance, entrance as entranceState, onLamp, setLamp } from './pageLamp';
 import { reliefLayout } from './stageScript';
 
@@ -442,14 +442,17 @@ export default function LightField({ className, variant = 'hero' }) {
         const lines = Array.from(range.getClientRects()).filter((r) => r.width > 1);
         const lastLine = lines[lines.length - 1] || box;
         lineD = lastLine.top + lastLine.height / 2 + y - unpin;
-        stop = lastLine.right - rect.left;
+        // Where the headline's text ends: the end of its longest line, so the
+        // light waits past every line that rises by it, not only past the
+        // full stop (on a phone the first line is the longer one; R6).
+        stop = Math.max(lastLine.right, ...lines.map((line) => line.right)) - rect.left;
       }
       let restD = lineD + 0.6 * view;
       if (rest) {
         const box = rest.getBoundingClientRect();
         restD = box.top + box.height / 2 + y - unpin;
       }
-      const lampX = Math.max(0.78 * width, Math.min(stop + 0.06 * width, 0.9 * width));
+      const lampX = waitX(width, stop);
       geo = {
         vh: view,
         hang: [lamp[0] * unitCss, lamp[1] * unitCss],

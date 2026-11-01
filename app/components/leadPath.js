@@ -61,10 +61,18 @@ const smooth = (u) => u * u * (3 - 2 * u);
 // v0 to v1 (smoothstep in velocity), `u` of the way along it.
 const rampPos = (u, len, v0, v1) => len * (v0 * u + (v1 - v0) * (u * u * u - (u * u * u * u) / 2));
 
+// Where the light waits beside the Scene 04 headline, and rests in Scene 05's
+// grid below it: x in css px from the band's left edge, past the end of the
+// headline's longest line (`textEnd`), at least 0.78 of the width and never
+// past 0.9 of it. On a phone the first line is the longer one (R6).
+export function waitX(width, textEnd) {
+  return Math.max(0.78 * width, Math.min(textEnd + 0.06 * width, 0.9 * width));
+}
+
 // The scroll positions at which the movements change, from the geometry:
 //   vh        viewport height
 //   hang      [x, y] of the stage's lamp on screen at the unpin
-//   lampX     x of the waiting light (past the sentence's full stop)
+//   lampX     x of the waiting light (past the end of the headline's longest line)
 //   enterD    page position of the sentence's top (d)
 //   lineD     page position of the centre of the line the light meets (d)
 //   restD     page position of the grid's rest (d); restX its x

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { cancelFrame, requestFrame } from './frameClock';
+import { waitX } from './leadPath';
 import { lamps, onLamp } from './pageLamp';
 
 // A square grid of hairlines behind the band, with a dot at every crossing: a
@@ -159,6 +160,19 @@ export default function KineticGrid({ className }) {
     // one light, which Scene 04 brings down into the grid's rest beside the
     // heading. Without the relief (no WebGL) the grid rests its own lamp there.
     const restEl = host.querySelector('[data-lead="rest"]');
+    // The rest's x, as LightField places the band's lamp there (waitX): past
+    // the end of Scene 04's headline, measured from the page.
+    const headline = document.querySelector('[data-lead="line"]');
+    const restX = () => {
+      if (!headline) return width * 0.78;
+      const range = document.createRange();
+      range.selectNodeContents(headline);
+      const left = host.getBoundingClientRect().left;
+      const ends = Array.from(range.getClientRects())
+        .filter((line) => line.width > 1)
+        .map((line) => line.right - left);
+      return waitX(width, ends.length ? Math.max(...ends) : 0);
+    };
     const shared = () => {
       const page = lamps.band?.page;
       if (!page) return null;
@@ -170,7 +184,7 @@ export default function KineticGrid({ className }) {
       if (lamp) {
         [aim.x, aim.y] = lamp;
       } else {
-        aim.x = width * 0.78;
+        aim.x = restX();
         if (restEl) {
           const r = restEl.getBoundingClientRect();
           aim.y = r.top + r.height / 2 - host.getBoundingClientRect().top;
@@ -577,7 +591,7 @@ export default function KineticGrid({ className }) {
         // not the lamp, which a jump here may not have brought down yet.
         const r = restEl?.getBoundingClientRect();
         const top = host.getBoundingClientRect().top;
-        const x = width * 0.78;
+        const x = restX();
         const y = r ? r.top + r.height / 2 - top : Math.min(height * 0.3, 320);
         ripple(Math.min(Math.max(x, 0), width), Math.min(Math.max(y, 0), height));
       },
