@@ -250,8 +250,11 @@ export default function LightField({ className, variant = 'hero' }) {
       // The band draws only the strips on screen; the rest keep their picture.
       preserveDrawingBuffer: band,
     });
+    // No relief at all (decided once, as the page opens): the band closes up
+    // Scene 04 around its sentence (globals.css).
     if (!gl || isSoftwareRenderer(gl)) {
       host.dataset.field = 'off';
+      if (band) host.dataset.relief = 'none';
       if (!band) endEntrance();
       return undefined;
     }
@@ -259,11 +262,17 @@ export default function LightField({ className, variant = 'hero' }) {
     let scene = createScene(gl);
     if (!scene) {
       host.dataset.field = 'off';
+      if (band) host.dataset.relief = 'none';
       if (!band) endEntrance();
       return undefined;
     }
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // Reduced motion asked for as the page opened gets Scene 04's still pose,
+    // with the section closed up around it; asked for later, the light stays
+    // where it is (`frozen`, a page position), and the page does not move.
+    const stillAtLoad = reduceMotion.matches;
+    let frozen = null;
 
     let layout = config.layout(1, 1);
     let unitCss = 1;
@@ -334,7 +343,8 @@ export default function LightField({ className, variant = 'hero' }) {
         // never more than the rows on screen (a band frame costs no more than
         // one viewport). A strip only partly on screen stays stale, so the rest
         // of it is drawn when it scrolls in.
-        const strip = STRIP * dpr;
+        // Strip edges are whole device rows, so no row falls between two draws.
+        const strip = Math.max(Math.round(STRIP * dpr), 1);
         const rows = Math.ceil(canvas.height / strip);
         if (strips.length !== rows) strips = new Array(rows).fill('');
         let top = 0;
@@ -384,6 +394,9 @@ export default function LightField({ className, variant = 'hero' }) {
     // eased path's velocity and its stiffness ramps in, so the lamp carries its
     // momentum through the turn instead of reversing in one frame.
     const handOff = () => {
+      // The entrance still ends on time, even if the pointer takes the lamp
+      // before its first frame (the stage waits for it).
+      if (!entranceTimer) entranceTimer = window.setTimeout(endEntrance, ENTRANCE_MS);
       const a = Math.max(entranceT - 0.01, 0);
       const b = Math.min(entranceT + 0.01, 1);
       const rate = (easeInOut(b) - easeInOut(a)) / (b - a) / (ENTRANCE_MS / 1000);
@@ -453,6 +466,9 @@ export default function LightField({ className, variant = 'hero' }) {
       const scrollY = window.scrollY;
       const top = hostTop - scrollY;
       if (reduceMotion.matches) {
+        if (!stillAtLoad && frozen) {
+          return { x: (frozen[0] - hostLeft) / unitCss, y: (frozen[1] - hostTop) / unitCss, z: frozen[2], look: frozen[3], phase: 'rest' };
+        }
         const pose = leadPose(geo);
         return { x: pose.x / unitCss, y: (pose.d - (hostTop - unpin)) / unitCss, z: 1, look: 1, phase: 'rest' };
       }
@@ -599,7 +615,7 @@ export default function LightField({ className, variant = 'hero' }) {
       if (entranceStart !== null) {
         if (entranceStart < 0) {
           entranceStart = now;
-          entranceTimer = window.setTimeout(endEntrance, ENTRANCE_MS);
+          if (!entranceTimer) entranceTimer = window.setTimeout(endEntrance, ENTRANCE_MS);
         }
         entranceT = Math.min((now - entranceStart) / ENTRANCE_MS, 1);
         const e = easeInOut(entranceT);
@@ -674,7 +690,10 @@ export default function LightField({ className, variant = 'hero' }) {
     };
 
     const onPointerMove = (event) => {
-      if (event.pointerType !== 'mouse' || reduceMotion.matches) return;
+      // The band answers to what the grid answers to (a mouse or a pen); the
+      // hero's lamp to a mouse.
+      if (band ? event.pointerType === 'touch' : event.pointerType !== 'mouse') return;
+      if (reduceMotion.matches) return;
       pointer = [event.clientX, event.clientY];
       if (band) {
         if (visible) kick();
@@ -712,6 +731,8 @@ export default function LightField({ className, variant = 'hero' }) {
 
     // A lost context shows the CSS light (hero) or the plain ground (band)
     // until it is restored, rather than a blank canvas.
+    // The page keeps its shape (no closing up), and the lamp is released, so
+    // the stage's joins fade as they do with no lamp beside them.
     const onLost = (event) => {
       event.preventDefault();
       lost = true;
@@ -719,6 +740,7 @@ export default function LightField({ className, variant = 'hero' }) {
       cancelFrame(key);
       host.dataset.field = 'off';
       shown = false;
+      clearLamp(variant);
     };
 
     const onRestored = () => {
@@ -742,10 +764,15 @@ export default function LightField({ className, variant = 'hero' }) {
 
     const onReduce = () => {
       if (band) {
+        frozen = reduceMotion.matches
+          ? [hostLeft + light.x * unitCss, hostTop + light.y * unitCss, z / layout.z, look / layout.look[2]]
+          : null;
         resize(true);
         return;
       }
       if (reduceMotion.matches) {
+        // An entrance that has not started yet is over: the stage must not wait.
+        endEntrance();
         following = false;
         pointer = null;
         entranceStart = null;

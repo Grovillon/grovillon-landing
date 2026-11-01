@@ -390,14 +390,11 @@
   /* Reduced motion: one still pose of the light, between the sentence and the
      grid, so the section closes up around it. Without the relief (no WebGL, no
      script) the sentence stands at full ink on plain ground, closed up the same. */
-  @media (prefers-reduced-motion: reduce) {
-    .scene-ahead {
-      padding-top: clamp(5rem, 11vw, 10rem);
-      padding-bottom: clamp(3rem, 6vw, 5rem);
-    }
-  }
-
-  .band[data-field="off"] > .scene-ahead {
+  /* Decided as the page opens and kept for the visit (a lost context or a later
+     switch to reduced motion leaves the page where it is): data-motion is set
+     by the head script, data-relief by the band when it has no WebGL at all. */
+  [data-motion="reduce"] .scene-ahead,
+  .band[data-relief="none"] > .scene-ahead {
     padding-top: clamp(5rem, 11vw, 10rem);
     padding-bottom: clamp(3rem, 6vw, 5rem);
   }
@@ -673,5 +670,16 @@
   .cine [data-copy] {
     opacity: 1 !important;
     translate: none !important;
+  }
+
+  /* Scene 04 on paper: the sentence alone, closed up, on plain ground. */
+  .scene-ahead {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  .band-field,
+  .grid-field {
+    display: none;
   }
 }
