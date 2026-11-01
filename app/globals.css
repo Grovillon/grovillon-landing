@@ -261,8 +261,10 @@
     min-height: max(36rem, 82svh);
   }
 
-  /* On a phone the hero takes the screen, so the name has open relief around it. */
-  @media (max-width: 47.99rem) {
+  /* On a phone the hero takes the screen, so the name has open relief around it;
+     on a portrait tablet too, so the stage's first statement does not show under
+     the hero's links as the page opens (D30). */
+  @media (max-width: 47.99rem), (orientation: portrait) and (max-width: 64rem) {
     .hero {
       min-height: max(36rem, 96svh);
     }
@@ -378,7 +380,7 @@
     padding-bottom: 40lvh;
   }
 
-  @media (min-width: 720px) and (min-aspect-ratio: 21/20) {
+  @media (min-width: 560px) and (min-aspect-ratio: 21/20) {
     .scene-ahead {
       padding-bottom: 55vh;
       padding-bottom: 55lvh;
@@ -508,6 +510,25 @@
   }
 }
 
+/* A short landscape screen (a phone on its side) gets a hero one screen tall,
+   its spacing closed up so the name, the copy and the links all fit (D24).
+   Unlayered, so it wins over the utilities on those elements. */
+@media (max-height: 34rem) and (min-aspect-ratio: 21/20) {
+  .hero {
+    min-height: max(20rem, 100svh);
+  }
+
+  .hero-inner {
+    padding-top: 5.25rem;
+    padding-bottom: 2.25rem;
+  }
+
+  .hero-name {
+    padding-top: 0;
+    padding-bottom: 1.25rem;
+  }
+}
+
 /* Scenes A and B: one pinned stage. Without WebGL, without script or with
    reduced motion, the markup stays two ordinary sections (the rules above).
    A script in the document head pins it before first paint when it can run
@@ -520,11 +541,14 @@
 
 @media screen {
   /* The pinned run: 2.2 screens of scroll on a phone, 3.2 on a landscape screen
-     (stageScript's beats share it out). */
+     (stageScript's beats share it out), never shorter than on a 740 px tall phone
+     or a 711 px tall landscape screen, so every beat keeps its budget in px on
+     short screens too (CHECKPOINT-2-PLAN §2: 90 / 80 px, 150 / 100 px). */
   :is([data-stage] .cine, .cine[data-cine]) {
-    --cine-screens: 3.2;
-    height: calc(var(--cine-screens) * 100vh);
-    height: calc(var(--cine-screens) * 100lvh);
+    --cine-run: 2.2;
+    --cine-floor: 740px;
+    height: calc(100vh + var(--cine-run) * max(100vh, var(--cine-floor)));
+    height: calc(100lvh + var(--cine-run) * max(100lvh, var(--cine-floor)));
   }
 
   :is([data-stage] .cine, .cine[data-cine]) .cine-stage {
@@ -606,10 +630,12 @@
     margin: 0;
   }
 
-  /* Landscape: the copy sits in the page's left column, the image to its right. */
-  @media (min-width: 720px) and (min-aspect-ratio: 21/20) {
+  /* Landscape: the copy sits in the page's left column, the image to its right,
+     wherever the column fits beside it (D24; CinematicStage uses the same query). */
+  @media (min-width: 560px) and (min-aspect-ratio: 21/20) {
     :is([data-stage] .cine, .cine[data-cine]) {
-      --cine-screens: 4.2;
+      --cine-run: 3.2;
+      --cine-floor: 711px;
     }
 
     :is([data-stage] .cine, .cine[data-cine]) .cine-copy,

@@ -278,19 +278,25 @@ function camera(u, framings) {
 // the page's left column with the image to its right; portrait stages set it
 // above the image. The copy's right edge mirrors globals.css. `entry` is the
 // stage's approach as a share of the pinned run (viewport height / pinned scroll);
-// `statement` is where scene B's copy ends, px from the stage's top.
-export function stageLayout(width, height, entry = 0.25, statement = 0) {
-  const landscape = width >= 720 && width / height >= 1.05;
+// `statement` is where scene B's copy ends, px from the stage's top. `page`
+// passes what the page has already decided, so script and stylesheet agree:
+// `landscape` (the stylesheet's media query) and `copyRight` (the copy column's
+// measured right edge, px from the stage's left).
+export function stageLayout(width, height, entry = 0.25, statement = 0, page = {}) {
+  const landscape = page.landscape ?? (width >= 720 && width / height >= 1.05);
   const gutter = Math.min(Math.max(0.05 * width, 20), 72);
+  // The reveal falls when the stage's top is half a screen from the top of the
+  // screen, whatever the run's length (on a short screen the run has a floor).
+  const timed = (beats) => ({ ...beats, reveal: -0.5 * entry });
   if (landscape) {
-    const copyRight = Math.max(gutter, (width - 1344) / 2 + gutter) + Math.min(480, 0.31 * width);
+    const copyRight = page.copyRight ?? Math.max(gutter, (width - 1344) / 2 + gutter) + Math.min(480, 0.31 * width);
     const fit = Math.min((0.38 * width) / GARMENT.width, (0.52 * height) / GARMENT.height);
     const room = (width - copyRight - 2 * gutter) / 861;
     const closedZoom = Math.min((0.55 * height) / CLOSED_HEIGHT, room);
     return {
       landscape,
       entry,
-      beats: BEATS.landscape,
+      beats: timed(BEATS.landscape),
       garment: {
         fit,
         // Camera distances: the garment on the left, the whole garment, the push-in.
@@ -324,7 +330,7 @@ export function stageLayout(width, height, entry = 0.25, statement = 0) {
   return {
     landscape,
     entry,
-    beats: BEATS.portrait,
+    beats: timed(BEATS.portrait),
     garment: {
       fit: width / GARMENT.width,
       closeD: 0.72,

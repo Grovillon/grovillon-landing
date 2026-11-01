@@ -39,6 +39,9 @@ const MATTE_CELL = 16;
 const PRESS_MS = 400;
 const PRESS_SLOP = 10;
 // Text is lit and dimmed as states, never scrubbed: about 300 ms in, 200 ms out.
+// The stage's landscape composition (globals.css uses the same query): at least
+// 21:20 and wide enough for the copy column beside the image (D24).
+const LANDSCAPE_QUERY = '(min-width: 560px) and (min-aspect-ratio: 21/20)';
 const LIGHT_IN = 0.09;
 const LIGHT_OUT = 0.06;
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
@@ -181,6 +184,7 @@ export default function CinematicStage() {
     }
 
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const landscapeQuery = window.matchMedia(LANDSCAPE_QUERY);
     const copies = Array.from(track.querySelectorAll('[data-copy]')).sort(
       (a, b) => Number(a.dataset.copy) - Number(b.dataset.copy)
     );
@@ -318,7 +322,12 @@ export default function CinematicStage() {
         ? statementBlock.getBoundingClientRect().bottom - stage.getBoundingClientRect().top
         : 0;
       const entry = window.innerHeight / Math.max(track.offsetHeight - height, 1);
-      layout = stageLayout(width, height, entry, statement);
+      // The stylesheet's landscape query decides the composition, and the copy
+      // column's measured edge places the image beside it (F23).
+      const landscape = landscapeQuery.matches;
+      const column = landscape ? track.querySelector('.cine-copy')?.getBoundingClientRect() : null;
+      const copyRight = column?.width ? column.right - stage.getBoundingClientRect().left : undefined;
+      layout = stageLayout(width, height, entry, statement, { landscape, copyRight });
       // The relief's unit is the hero's height, and its pattern starts at the
       // hero's top, so the stage's folds run on from the hero's.
       const heroRect = hero?.getBoundingClientRect();
