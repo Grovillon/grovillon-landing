@@ -94,7 +94,11 @@ export const BEATS = {
     b3: 0.76,
     b4: 0.84,
     b5: 0.92,
-    copy: [0.3, 0.36, 0.43],
+    // The heading at 0.357, not 0.36: on a portrait screen the hero is 96svh,
+    // so a second PageDown from the top stops at t 0.3585-0.3591, a few px
+    // short of 0.36, on every such screen; lit from 0.357 it is on screen
+    // there. Cue spacing stays >= 90 px (92.8 px at the floor, 740 px tall).
+    copy: [0.3, 0.357, 0.43],
   },
 };
 const SEAM = [1110, 300]; // where scene A's push-in ends, on the right shoulder seam
@@ -287,7 +291,15 @@ export function stageLayout(width, height, entry = 0.25, statement = 0, page = {
   const gutter = Math.min(Math.max(0.05 * width, 20), 72);
   // The reveal falls when the stage's top is half a screen from the top of the
   // screen, whatever the run's length (on a short screen the run has a floor).
-  const timed = (beats) => ({ ...beats, reveal: -0.5 * entry });
+  // Where the floor lengthens the run, the pause between scene A's copy going
+  // out and scene B's heading lighting would grow past 0.2 of a screen (the
+  // plan's text gap): it is held there, but never under the cue spacing budget.
+  const timed = (beats, spacing) => {
+    const run = height / Math.max(entry, 1e-6);
+    const [off, heading, line] = beats.copy;
+    const gap = Math.min(heading - off, Math.max(0.2 * height, spacing) / run);
+    return { ...beats, reveal: -0.5 * entry, copy: [off, off + gap, line] };
+  };
   if (landscape) {
     const copyRight = page.copyRight ?? Math.max(gutter, (width - 1344) / 2 + gutter) + Math.min(480, 0.31 * width);
     const fit = Math.min((0.38 * width) / GARMENT.width, (0.52 * height) / GARMENT.height);
@@ -296,7 +308,7 @@ export function stageLayout(width, height, entry = 0.25, statement = 0, page = {
     return {
       landscape,
       entry,
-      beats: timed(BEATS.landscape),
+      beats: timed(BEATS.landscape, 115),
       garment: {
         fit,
         // Camera distances: the garment on the left, the whole garment, the push-in.
@@ -330,7 +342,7 @@ export function stageLayout(width, height, entry = 0.25, statement = 0, page = {
   return {
     landscape,
     entry,
-    beats: timed(BEATS.portrait),
+    beats: timed(BEATS.portrait, 90),
     garment: {
       fit: width / GARMENT.width,
       closeD: 0.72,
