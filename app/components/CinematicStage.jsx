@@ -63,10 +63,20 @@ const mixLamp = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
 // reader's place has been restored.
 let visited = false;
 
-// Text as the browser compares it for a text fragment: case aside, curly and
-// straight apostrophes alike, a non-breaking space as a space (lengths kept,
-// so a place in the folded text is a place in the text).
-const fold = (text) => text.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/\u00a0/g, ' ');
+// Text as the browser compares it for a text fragment, a search at the primary
+// level: case, accents and other marks, compatibility forms (full-width and
+// styled letters, the various spaces) and invisible characters aside; curly
+// quotes and the Hebrew geresh and gershayim as straight quotes. The page, its
+// blocks and the link's words all go through the same fold, so places in them
+// agree.
+const fold = (text) =>
+  text
+    .replace(/[\u2018\u2019\u05f3]/g, "'")
+    .replace(/[\u201c\u201d\u05f4]/g, '"')
+    .normalize('NFKD')
+    .replace(/[\p{Mn}\p{Me}\p{Default_Ignorable_Code_Point}]/gu, '')
+    .toLowerCase()
+    .replace(/\u03c2/g, '\u03c3');
 
 // Each text directive in a URL as [prefix, start, end, suffix], folded, with
 // the URL's own spacing ('' for an absent part), or null when the URL names
@@ -88,7 +98,8 @@ function textDirectives(url) {
       const parts = [prefix, fields[0], fields[1] ?? null, suffix];
       if (parts.some((field) => field === '')) continue;
       const directive = parts.map((field) => (field === null ? '' : fold(decodeURIComponent(field))));
-      if (!directive.some((field) => field.includes('\n'))) said.push(directive);
+      // A part of nothing but invisible characters names nothing.
+      if (!directive.some((field, i) => (parts[i] !== null && !field) || field.includes('\n'))) said.push(directive);
     } catch {
       // a malformed escape: the browser rejects the directive
     }
@@ -115,32 +126,50 @@ const skipSpace = (text, i) => {
 };
 
 // The first place in `text` (the page's rendered text, folded, each block on
-// its own line) where a directive matches, as the browser looks for it: the
-// prefix from a word's start; then the start (from a word's start when there
-// is no prefix), ending on a word's end unless a suffix alone follows it; the
-// end further on, on word boundaries; the suffix right after, ending on a
-// word's end. Returns the index of the start, or -1.
+// its own line) where a directive matches, in the browser's order: the prefix
+// from a word's start, with the start right after it; or else the start from a
+// word's start. The start ends on a word's end unless a suffix alone follows
+// it. With an end, each later end (on word boundaries) in turn until the suffix
+// follows one; the suffix right after, ending on a word's end. A part that
+// occurs nowhere further on ends the search, as it does for the browser.
+// Returns the index of the start, or -1.
 function findDirective(text, [prefix, start, end, suffix]) {
-  const first = prefix || start;
-  for (let p = text.indexOf(first); p >= 0; p = text.indexOf(first, p + 1)) {
-    if (!boundary(text, p)) continue;
-    const s = prefix ? skipSpace(text, p + prefix.length) : p;
-    if (prefix && !text.startsWith(start, s)) continue;
+  const find = (term, from, startBounded, endBounded) => {
+    for (let i = text.indexOf(term, from); i >= 0; i = text.indexOf(term, i + 1)) {
+      if ((!startBounded || boundary(text, i)) && (!endBounded || boundary(text, i + term.length))) return i;
+    }
+    return -1;
+  };
+  const endsOnWord = Boolean(end) || !suffix;
+  let from = 0;
+  for (;;) {
+    let s;
+    if (prefix) {
+      const p = find(prefix, from, true, false);
+      if (p < 0) return -1;
+      from = p + 1;
+      s = skipSpace(text, p + prefix.length);
+      if (!text.startsWith(start, s) || (endsOnWord && !boundary(text, s + start.length))) continue;
+    } else {
+      s = find(start, from, true, endsOnWord);
+      if (s < 0) return -1;
+      from = s + 1;
+    }
     let e = s + start.length;
-    if ((end || !suffix) && !boundary(text, e)) continue;
-    if (end) {
-      let k = text.indexOf(end, e);
-      while (k >= 0 && !(boundary(text, k) && (suffix || boundary(text, k + end.length)))) k = text.indexOf(end, k + 1);
-      if (k < 0) return -1;
-      e = k + end.length;
-    }
-    if (suffix) {
+    for (;;) {
+      if (end) {
+        const k = find(end, e, true, !suffix);
+        if (k < 0) return -1;
+        e = k + end.length;
+      }
+      if (!suffix) return s;
       const j = skipSpace(text, e);
-      if (!text.startsWith(suffix, j) || !boundary(text, j + suffix.length)) continue;
+      const m = find(suffix, j, false, true);
+      if (m < 0) return -1;
+      if (m === j) return s;
+      if (!end) break;
     }
-    return s;
   }
-  return -1;
 }
 
 // The element an address's #id names: as written, then decoded. A malformed
