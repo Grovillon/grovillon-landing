@@ -269,8 +269,9 @@ export default function LightField({ className, variant = 'hero' }) {
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     // Reduced motion asked for as the page opened gets Scene 04's still pose,
-    // with the section closed up around it; asked for later, the light stays
-    // where it is (`frozen`, a page position), and the page does not move.
+    // with the section closed up around it, for the whole visit (the section
+    // stays closed up if the setting is turned off); asked for later, the light
+    // stays where it is (`frozen`, a page position), and the page does not move.
     const stillAtLoad = reduceMotion.matches;
     let frozen = null;
 
@@ -465,7 +466,7 @@ export default function LightField({ className, variant = 'hero' }) {
       if (!geo) return { x: 0, y: 0, z: 1, look: 1, phase: 'rest' };
       const scrollY = window.scrollY;
       const top = hostTop - scrollY;
-      if (reduceMotion.matches) {
+      if (stillAtLoad || reduceMotion.matches) {
         if (!stillAtLoad && frozen) {
           return { x: (frozen[0] - hostLeft) / unitCss, y: (frozen[1] - hostTop) / unitCss, z: frozen[2], look: frozen[3], phase: 'rest' };
         }
