@@ -185,6 +185,26 @@ export default function CinematicStage() {
 
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     const landscapeQuery = window.matchMedia(LANDSCAPE_QUERY);
+    // A link that names words on the page (a text fragment; the browser keeps
+    // it out of the address the page can read) may have centred some of the
+    // stage's words before the script ran: on a fresh visit that opens
+    // scrolled, with no #id and no hand on the page yet, the block whose words
+    // sit in the middle of the screen is the one the reader came for. Read
+    // now, while the stylesheet still holds Scene 03's blocks apart.
+    let fragment = -1;
+    const visit = performance.getEntriesByType?.('navigation')?.[0];
+    if (!window.location.hash && visit?.type === 'navigate' && window.scrollY > 0 && !window.__stageScrolled) {
+      const middle = window.innerHeight / 2;
+      let best = Infinity;
+      Array.from(track.querySelectorAll('[data-copy]')).forEach((el) => {
+        const r = el.getBoundingClientRect();
+        const off = Math.abs(r.top + r.height / 2 - middle);
+        if (off < r.height / 2 + 0.1 * window.innerHeight && off < best) {
+          best = off;
+          fragment = Number(el.dataset.copy);
+        }
+      });
+    }
     const copies = Array.from(track.querySelectorAll('[data-copy]')).sort(
       (a, b) => Number(a.dataset.copy) - Number(b.dataset.copy)
     );
@@ -205,7 +225,13 @@ export default function CinematicStage() {
     // above it for scene A's copy (lit earlier). Lit, a block is in its place.
     // Only the `translate` property moves it: the type itself never moves on
     // screen (DESIGN.md, the Still Type Rule).
-    const anchors = copies.map(() => ({ offset: 0, height: 0, dy: 0 }));
+    const anchors = copies.map(() => ({ offset: 0, height: 0, dy: 0, marginTop: '', marginBottom: '' }));
+    // Headings with an id inside a block (a link can name them: scene A's
+    // heading sits inside its block) get the same scroll margins as the block
+    // they move with.
+    const targets = copies.flatMap((el, i) =>
+      Array.from(el.querySelectorAll('[id]')).map((node) => ({ node, block: i, offset: 0, height: 0, top: '', bottom: '' }))
+    );
     const mounted = performance.now();
 
     let width = 1;
@@ -344,10 +370,24 @@ export default function CinematicStage() {
         anchors[i].offset = rect.top - anchors[i].dy - stageRect.top;
         anchors[i].height = rect.height;
       });
+      targets.forEach((target) => {
+        const rect = target.node.getBoundingClientRect();
+        target.offset = rect.top - anchors[target.block].dy - stageRect.top;
+        target.height = rect.height;
+      });
     };
 
     // Where each unlit block waits (see `anchors`): a whole number of px from
     // its place, recomputed with the scroll so it stays off screen.
+    //
+    // Each block also carries scroll margins that stretch its scroll box to the
+    // screen it sits on in the stage: `offset` above it, the rest of the screen
+    // below. scrollIntoView and fragment links, whatever their alignment, then
+    // scroll to where the block would sit in its place: a lit block in the
+    // pinned stage is already there (no scroll), and a waiting block's landing
+    // is its box minus `offset`. Find in page aligns the matched text itself
+    // (centred, no margins), so a waiting block also sits where centring its
+    // text lands inside the lit window.
     const PARK_GAP = 8;
     const park = () => {
       const pinned = track.dataset.cine === 'on' || track.dataset.cine === 'pending';
@@ -364,20 +404,48 @@ export default function CinematicStage() {
         if (pinned && !light.on && light.value < 0.01) {
           const margin = Math.max(0.06 * runPx, anchor.height / 2 + 40);
           const place = y + stageTop + anchor.offset;
+          // How far centring the block's text lands above (or below) where the
+          // margins land: the block's distance from the screen's middle. A
+          // block found lower down is held deeper in its window by twice that:
+          // once lit and in its place, the browser may centre the found text
+          // again (a text fragment does), and the page then moves up by it.
+          const centring = view / 2 - anchor.offset - anchor.height / 2;
           const box =
             i === 0
-              ? Math.min(start + cues[0] * runPx - margin, y - anchor.height - PARK_GAP)
-              : Math.max(start + cues[i] * runPx + margin + view - anchor.height, y + view + PARK_GAP);
+              ? Math.min(start + cues[0] * runPx - margin + anchor.offset + Math.min(0, centring), y - anchor.height - PARK_GAP)
+              : Math.max(start + cues[i] * runPx + margin + anchor.offset + 2 * Math.max(0, centring), y + view + PARK_GAP);
           dy = Math.round(box - place);
         }
         if (dy !== anchor.dy) {
           anchor.dy = dy;
           el.style.translate = dy ? `0 ${dy}px` : '';
         }
+        const top = pinned ? `${Math.round(anchor.offset)}px` : '';
+        const bottom = pinned ? `${Math.max(Math.round(height - anchor.offset - anchor.height), 0)}px` : '';
+        if (top !== anchor.marginTop) {
+          anchor.marginTop = top;
+          el.style.scrollMarginTop = top;
+        }
+        if (bottom !== anchor.marginBottom) {
+          anchor.marginBottom = bottom;
+          el.style.scrollMarginBottom = bottom;
+        }
+      });
+      targets.forEach((target) => {
+        const top = pinned ? `${Math.round(target.offset)}px` : '';
+        const bottom = pinned ? `${Math.max(Math.round(height - target.offset - target.height), 0)}px` : '';
+        if (top !== target.top) {
+          target.top = top;
+          target.node.style.scrollMarginTop = top;
+        }
+        if (bottom !== target.bottom) {
+          target.bottom = bottom;
+          target.node.style.scrollMarginBottom = bottom;
+        }
       });
     };
 
-    const render = (frame) => {
+    const writeCopy = () => {
       lights.forEach((light, i) => {
         const v = Math.round(light.value * 1000) / 1000;
         if (v !== light.written && copies[i]) {
@@ -392,6 +460,10 @@ export default function CinematicStage() {
           copies[i].style.pointerEvents = events;
         }
       });
+    };
+
+    const render = (frame) => {
+      writeCopy();
       if (lost || !awake || !renderer.live) return;
       const light = reliefLight();
       repeated =
@@ -856,6 +928,34 @@ export default function CinematicStage() {
     setLayoutMode('pending');
     resize();
     measure();
+    // The text is lit as it should be where the page opens (a link may have
+    // brought it there before the script ran), and unlit blocks wait in their
+    // places from the first frame the script runs.
+    const opening = stageFrame(target, layout, width, height);
+    opening.copy.forEach((cue, i) => {
+      const light = lights[i];
+      light.on = cue > 0.5;
+      light.value = light.on ? 1 : 0;
+    });
+    writeCopy();
+    park();
+    // A link to a heading in the stage (#worn, #complexity), or a text fragment
+    // that found an unlit block, reached the stage before the blocks waited in
+    // their places: it is followed again, now that reaching it lands where it
+    // is lit.
+    const named = window.location.hash.length > 1 && document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+    // The fragment's block, if it is unlit where the page opened.
+    const found = fragment >= 0 && !lights[fragment]?.on ? copies[fragment] : null;
+    const linked = named && track.contains(named) ? named : found;
+    if (linked) {
+      later(() => {
+        if (disposed) return;
+        measure();
+        park();
+        jumpOnce();
+        linked.scrollIntoView(linked === found ? { block: 'center' } : undefined);
+      }, 0);
+    }
     // The relief's first frame comes as the hero's entrance ends, even below the
     // fold, so the hero's foot opens onto it (data-relief) then. A page that
     // opens below the hero (a reload, a link to a section) wakes the stage and
@@ -945,7 +1045,15 @@ export default function CinematicStage() {
         copy.style.removeProperty('opacity');
         copy.style.removeProperty('pointer-events');
         copy.style.removeProperty('translate');
+        copy.style.removeProperty('scroll-margin-top');
+        copy.style.removeProperty('scroll-margin-bottom');
         anchors[i].dy = 0;
+        anchors[i].marginTop = '';
+        anchors[i].marginBottom = '';
+      });
+      targets.forEach((target) => {
+        target.node.style.removeProperty('scroll-margin-top');
+        target.node.style.removeProperty('scroll-margin-bottom');
       });
       for (const [, image] of queue.splice(0)) image.close?.();
       offLamp();

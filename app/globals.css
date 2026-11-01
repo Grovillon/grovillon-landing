@@ -630,6 +630,16 @@
     margin: 0;
   }
 
+  /* Before the script runs, Scene 03's blocks (unlit there) sit apart from
+     Scene 02's copy, where the browser can still reach them: in the middle of
+     the screen on portrait, at the top on landscape. A link naming their words
+     then opens on a different place from one naming Scene 02's, so the script
+     can tell which words the reader came for (CinematicStage). */
+  [data-stage] .cine:not([data-cine]) .cine-block {
+    top: calc(50vh - 4rem);
+    top: calc(50lvh - 4rem);
+  }
+
   /* Landscape: the copy sits in the page's left column, the image to its right,
      wherever the column fits beside it (D24; CinematicStage uses the same query). */
   @media (min-width: 560px) and (min-aspect-ratio: 21/20) {
@@ -649,6 +659,11 @@
 
     :is([data-stage] .cine, .cine[data-cine]) .cine-block h2 {
       max-width: 12ch;
+    }
+
+    [data-stage] .cine:not([data-cine]) .cine-block {
+      top: max(7svh, 3rem);
+      transform: none;
     }
   }
 }
