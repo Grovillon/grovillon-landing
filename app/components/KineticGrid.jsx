@@ -573,23 +573,28 @@ export default function KineticGrid({ className }) {
         if (!entry.isIntersecting) return;
         entryObserver.disconnect();
         if (entered || still) return;
-        const band = shared();
-        if (band) [lamp.x, lamp.y] = band;
-        ripple(Math.min(Math.max(lamp.x, 0), width), Math.min(Math.max(lamp.y, 0), height));
+        // From where the light rests beside the heading: read from the page,
+        // not the lamp, which a jump here may not have brought down yet.
+        const r = restEl?.getBoundingClientRect();
+        const top = host.getBoundingClientRect().top;
+        const x = width * 0.78;
+        const y = r ? r.top + r.height / 2 - top : Math.min(height * 0.3, 320);
+        ripple(Math.min(Math.max(x, 0), width), Math.min(Math.max(y, 0), height));
       },
       { rootMargin: '0px 0px -50% 0px' }
     );
 
     const visibilityObserver = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
+      // Drawn on the frame clock, after the band has placed its lamp in the
+      // same frame (a jump here leaves the lamp where it was until then).
       if (visible && (!shown || dirty) && !stopped) {
         rest();
         if (!pointer.inside) {
           lamp.x = aim.x;
           lamp.y = aim.y;
         }
-        draw(performance.now());
-        dirty = false;
+        dirty = true;
       }
       kick();
     });
