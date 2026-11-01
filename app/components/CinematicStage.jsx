@@ -550,6 +550,10 @@ export default function CinematicStage() {
 
       let moving = false;
       const jump = snap || !visible;
+      // A leap of the page (a search, a link, a long keyboard jump), not a
+      // scroll gesture: the text lands on its state at once instead of
+      // fading out over the text that is lighting there.
+      const leap = Math.abs(target - t) > 0.12;
       if (jump) {
         t = target;
         bridging = false;
@@ -653,7 +657,7 @@ export default function CinematicStage() {
         const light = lights[i];
         light.on = light.on ? cue > 0.35 : cue > 0.65;
         const goal = light.on ? 1 : 0;
-        if (!visible) {
+        if (jump || leap) {
           light.value = goal;
         } else {
           light.value += (goal - light.value) * (1 - Math.exp(-dt / (light.on ? LIGHT_IN : LIGHT_OUT)));
@@ -662,6 +666,9 @@ export default function CinematicStage() {
         }
       });
 
+      // The text's state is written every step, on screen or not, so a block
+      // that waits off screen is always unlit (render() draws only on screen).
+      writeCopy();
       park();
 
       // A first frame is drawn as soon as the stage mounts, and again as each
