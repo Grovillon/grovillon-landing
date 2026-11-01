@@ -359,7 +359,9 @@ export default function CinematicStage() {
         const anchor = anchors[i];
         const light = lights[i];
         let dy = 0;
-        if (pinned && !light.on && light.value === 0) {
+        // Parked as soon as it is too faint to see (under 1%: 2 grey levels),
+        // so a search started just after it went out still finds it parked.
+        if (pinned && !light.on && light.value < 0.01) {
           const margin = Math.max(0.06 * runPx, anchor.height / 2 + 40);
           const place = y + stageTop + anchor.offset;
           const box =
@@ -734,15 +736,26 @@ export default function CinematicStage() {
       dispose();
     };
 
+    // A lost context the browser does not give back within a few seconds
+    // would leave the stage pinned over a blank canvas: the stage goes back to
+    // plain sections instead, once the reader is not looking at it (F31, F41).
+    let lostTimer = 0;
     const onLost = (event) => {
       event.preventDefault();
       lost = true;
       if (raf) cancelFrame('stage');
       raf = 0;
+      // The canvas fades out over the page's ground until the stage draws again.
+      if (track.dataset.cine === 'on') track.dataset.cine = 'pending';
+      cancel(lostTimer);
+      lostTimer = later(() => {
+        if (lost) giveUp();
+      }, 3000);
     };
 
     const onRestored = () => {
       lost = false;
+      cancel(lostTimer);
       if (!renderer.restore()) {
         setLayoutMode(null);
         dispose();
