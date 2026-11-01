@@ -63,12 +63,17 @@ const mixLamp = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
 // reader's place has been restored.
 let visited = false;
 
-// Words as the browser matches a text fragment: case and spacing aside.
-const words = (text) => text.replace(/\s+/g, ' ').trim().toLowerCase();
+// Text as the browser compares it for a text fragment: case aside, curly and
+// straight apostrophes alike, a non-breaking space as a space (lengths kept,
+// so a place in the folded text is a place in the text).
+const fold = (text) => text.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/\u00a0/g, ' ');
 
-// Each text directive in a URL (text=[prefix-,]start[,end][,-suffix]) as
-// words, or null when the URL names none. Some engines keep the directives in
-// the visit's own entry; the address the page can read never has them.
+// Each text directive in a URL as [prefix, start, end, suffix], folded, with
+// the URL's own spacing ('' for an absent part), or null when the URL names
+// none. A directive the browser rejects (an empty part, or more than a start
+// and an end between the prefix and the suffix) is left out, as the browser
+// leaves it and goes on to the next. Some engines keep the directives in the
+// visit's own entry; the address the page can read never has them.
 function textDirectives(url) {
   const at = url ? url.indexOf(':~:') : -1;
   if (at < 0) return null;
@@ -77,39 +82,65 @@ function textDirectives(url) {
     if (!part.startsWith('text=')) continue;
     try {
       const fields = part.slice(5).split(',');
-      const prefix = fields.length > 1 && fields[0].endsWith('-') ? fields.shift().slice(0, -1) : '';
-      const suffix = fields.length > 1 && fields[fields.length - 1].startsWith('-') ? fields.pop().slice(1) : '';
-      const [start = '', end = ''] = fields;
-      const directive = [prefix, start, end, suffix].map((field) => words(decodeURIComponent(field)));
-      if (directive[1]) said.push(directive);
+      const prefix = fields.length && fields[0].endsWith('-') ? fields.shift().slice(0, -1) : null;
+      const suffix = fields.length && fields[fields.length - 1].startsWith('-') ? fields.pop().slice(1) : null;
+      if (fields.length < 1 || fields.length > 2) continue;
+      const parts = [prefix, fields[0], fields[1] ?? null, suffix];
+      if (parts.some((field) => field === '')) continue;
+      const directive = parts.map((field) => (field === null ? '' : fold(decodeURIComponent(field))));
+      if (!directive.some((field) => field.includes('\n'))) said.push(directive);
     } catch {
-      // a malformed escape names nothing
+      // a malformed escape: the browser rejects the directive
     }
   }
   return said;
 }
 
-// The first place in `text` that a directive matches, as the browser looks
-// for it: whole words, the prefix just before and the suffix just after.
-// Returns the index of its first words, or -1 (also where an engine cannot
-// read the pattern). No lookbehind and no `d` flag, for older engines.
-const OTHER = '[^\\p{L}\\p{N}]';
-const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Word boundaries as the browser draws them: letters and digits join, and so
+// does an apostrophe between two letters (we're is one word).
+const WORD = /[\p{L}\p{N}]/u;
+const isWord = (c) => Boolean(c) && WORD.test(c);
+function boundary(text, i) {
+  const a = text[i - 1];
+  const b = text[i];
+  if (isWord(a) && isWord(b)) return false;
+  if (a === "'" && isWord(text[i - 2]) && isWord(b)) return false;
+  if (b === "'" && isWord(a) && isWord(text[i + 1])) return false;
+  return true;
+}
+const skipSpace = (text, i) => {
+  let j = i;
+  while (j < text.length && /\s/.test(text[j])) j += 1;
+  return j;
+};
+
+// The first place in `text` (the page's rendered text, folded, each block on
+// its own line) where a directive matches, as the browser looks for it: the
+// prefix from a word's start; then the start (from a word's start when there
+// is no prefix), ending on a word's end unless a suffix alone follows it; the
+// end further on, on word boundaries; the suffix right after, ending on a
+// word's end. Returns the index of the start, or -1.
 function findDirective(text, [prefix, start, end, suffix]) {
-  try {
-    const source =
-      `(?:^|${OTHER})` +
-      `(${prefix ? `${escape(prefix)}\\s*` : ''})` +
-      `(${escape(start)})` +
-      (end ? `[\\s\\S]*?${OTHER}${escape(end)}` : '') +
-      `(?=$|${OTHER})` +
-      (suffix ? `\\s*${escape(suffix)}(?=$|${OTHER})` : '');
-    const match = new RegExp(source, 'u').exec(text);
-    if (!match) return -1;
-    return match.index + match[0].indexOf(match[1] + match[2]) + match[1].length;
-  } catch {
-    return -1;
+  const first = prefix || start;
+  for (let p = text.indexOf(first); p >= 0; p = text.indexOf(first, p + 1)) {
+    if (!boundary(text, p)) continue;
+    const s = prefix ? skipSpace(text, p + prefix.length) : p;
+    if (prefix && !text.startsWith(start, s)) continue;
+    let e = s + start.length;
+    if ((end || !suffix) && !boundary(text, e)) continue;
+    if (end) {
+      let k = text.indexOf(end, e);
+      while (k >= 0 && !(boundary(text, k) && (suffix || boundary(text, k + end.length)))) k = text.indexOf(end, k + 1);
+      if (k < 0) return -1;
+      e = k + end.length;
+    }
+    if (suffix) {
+      const j = skipSpace(text, e);
+      if (!text.startsWith(suffix, j) || !boundary(text, j + suffix.length)) continue;
+    }
+    return s;
   }
+  return -1;
 }
 
 // The element an address's #id names: as written, then decoded. A malformed
@@ -259,6 +290,8 @@ export default function CinematicStage() {
     const visit = performance.getEntriesByType?.('navigation')?.[0];
     const landing = !visited && visit?.type === 'navigate' && !window.__stageScrolled;
     visited = true;
+    // The head script's safety net (a stage that never mounts) stands down.
+    window.__stageMounted = true;
     // The head script may already have pinned the stage; without motion or a
     // hardware-rendered WebGL context, it goes back to plain sections.
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -275,25 +308,25 @@ export default function CinematicStage() {
     const copies = Array.from(track.querySelectorAll('[data-copy]')).sort(
       (a, b) => Number(a.dataset.copy) - Number(b.dataset.copy)
     );
-    // The block the page's first match for a link's words is in (-1 when the
-    // words are found outside the stage, or nowhere): the page's text in
-    // reading order, as the browser searches it, with each block's place in it.
-    const blockFor = (said) => {
-      if (!said?.length) return -1;
-      const page = words(document.body.innerText || '');
-      const stage = page.indexOf(words(track.innerText || ''));
+    // Where the page's first match for a link's words is (null when nothing
+    // matches): in which stage block, or -1 when outside the stage. The page's
+    // rendered text, as the browser searches it, with each block's place in it.
+    const findText = (said) => {
+      if (!said?.length) return null;
+      const page = fold(document.body.innerText || '');
+      const stage = page.indexOf(fold(track.innerText || '').trim());
       let from = Math.max(stage, 0);
       const spans = copies.map((el) => {
-        const own = words(el.innerText || '');
+        const own = fold(el.innerText || '').trim();
         const at = stage < 0 || !own ? -1 : page.indexOf(own, from);
         if (at >= 0) from = at + own.length;
         return [at, at < 0 ? -1 : at + own.length];
       });
       for (const directive of said) {
         const at = findDirective(page, directive);
-        if (at >= 0) return spans.findIndex(([a, b]) => a >= 0 && at >= a && at < b);
+        if (at >= 0) return { block: spans.findIndex(([a, b]) => a >= 0 && at >= a && at < b) };
       }
-      return -1;
+      return null;
     };
     // The words in the middle of the screen, where a text fragment's match was
     // centred: the stage block of the text line nearest the middle anywhere on
@@ -333,15 +366,18 @@ export default function CinematicStage() {
       return best.block > 0 ? copies.length - 1 : best.block;
     };
     // A link that names words on the page (a text fragment) may have centred
-    // some of the stage's words before the script ran. Where the engine keeps
-    // the link's words in the visit's entry, they name the block. Otherwise the
-    // block is the one whose text line is nearest the middle of the screen
-    // (the browser centres the words, not their block), read now, while the
-    // stylesheet still holds Scene 03's blocks apart.
-    let fragment = -1;
-    if (landing && !window.location.hash && window.scrollY > 0) {
-      const said = textDirectives(visit?.name);
-      fragment = said ? blockFor(said) : nearestBlock();
+    // some of the stage's words before the script ran. Chromium keeps the
+    // link's words in the visit's entry, and they name the block (and win over
+    // an #id, as the browser's own scroll does). An engine that does not
+    // (no navigator.userAgentData: not Chromium) gets the block whose text
+    // line is nearest the middle of the screen (the browser centres the words,
+    // not their block), read now, while the stylesheet still holds Scene 03's
+    // blocks apart; in Chromium a visit with no words named is left alone.
+    const said = landing ? textDirectives(visit?.name) : null;
+    const match = said ? findText(said) : null;
+    let fragment = match ? match.block : -1;
+    if (landing && !said && !navigator.userAgentData && !window.location.hash && window.scrollY > 0) {
+      fragment = nearestBlock();
     }
     // Scene A's heading is lit from first paint, as the stylesheet shows it.
     const lights = copies.map((_, i) => ({
@@ -399,6 +435,8 @@ export default function CinematicStage() {
     // after a jump): see LEAP.
     let movedAt = -Infinity;
     let movedSpeed = 0;
+    // When the previous step ran, whether or not the loop kept running.
+    let steppedAt = -Infinity;
     // Whether the timeline is still bridging a wheel notch (see NOTCH_TAU).
     let bridging = false;
     let stageTop = 0;
@@ -694,7 +732,9 @@ export default function CinematicStage() {
       // A leap of the page (see LEAP): the text lands on its state at once
       // instead of fading out over the text that is lighting there.
       const shift = Math.abs(target - t);
-      const speed = gap > 0 ? (shift * runPx) / gap : Infinity;
+      const since = now - steppedAt;
+      steppedAt = now;
+      const speed = since > 0 ? (shift * runPx) / since : Infinity;
       const leap = shift > LEAP && (now - movedAt > SETTLED_MS || speed > JUMP * movedSpeed);
       if (shift > 0) {
         movedAt = now;
@@ -974,9 +1014,9 @@ export default function CinematicStage() {
       if (!event.canIntercept || !event.destination?.sameDocument) return;
       if (event.navigationType !== 'push' && event.navigationType !== 'replace') return;
       if (track.dataset.cine !== 'on' && track.dataset.cine !== 'pending') return;
-      const block = blockFor(textDirectives(event.destination.url));
-      if (block < 0) return;
-      event.intercept({ scroll: 'manual', handler: async () => land(copies[block], { block: 'center' }) });
+      const match = findText(textDirectives(event.destination.url));
+      if (!match || match.block < 0) return;
+      event.intercept({ scroll: 'manual', handler: async () => land(copies[match.block], { block: 'center' }) });
     };
 
     const onReduce = () => {
@@ -995,8 +1035,9 @@ export default function CinematicStage() {
     const onLost = (event) => {
       event.preventDefault();
       lost = true;
-      if (raf) cancelFrame('stage');
-      raf = 0;
+      // The loop goes on (render() draws nothing while the context is lost), so
+      // text fading in or out finishes its fade.
+      kick();
       // The canvas fades out over the page's ground until the stage draws again.
       if (track.dataset.cine === 'on') track.dataset.cine = 'pending';
       cancel(lostTimer);
@@ -1139,7 +1180,7 @@ export default function CinematicStage() {
     // that found an unlit block, reached the stage before the blocks waited in
     // their places: on the visit it brought, it is followed again, now that
     // reaching it lands where it is lit.
-    const named = landing ? hashTarget() : null;
+    const named = landing && !match ? hashTarget() : null;
     // The fragment's block, if it is unlit where the page opened.
     const found = fragment >= 0 && !lights[fragment]?.on ? copies[fragment] : null;
     const linked = named && track.contains(named) ? named : found;
