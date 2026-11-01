@@ -18,6 +18,8 @@
 // Its strength never changes: no pulse, no brightening, no second light.
 
 export const SPEED_CAP = 1.6;
+// The share of the hand-off spent easing in, and again easing out.
+const HAND_RAMP = 0.12;
 
 // Shares of the viewport height (vh) that set the movements' lengths.
 export const LEAD = {
@@ -59,12 +61,18 @@ export function leadTimeline(g) {
   // The line's centre reaches the light's height.
   const s3 = Math.max(g.lineD - waitY, s2 + 2 * LEAD.lockBlend * vh);
   const s4 = s3 + LEAD.hold * vh;
-  const s5 = s4 + LEAD.handOff * vh;
+  // The descent takes at least LEAD.handOff of a screen, longer where the rest
+  // is far enough below the line that its peak would pass the speed cap.
+  const fall = Math.max(g.restD - g.lineD, 0);
+  const s5 = s4 + Math.max(LEAD.handOff * vh, fall / ((1 - HAND_RAMP) * (1 + 0.98 * SPEED_CAP)));
   // The glide: its velocity on screen eases from the page's (−1) to a cruise
   // and back to rest, so it turns without a kink and stops where it waits.
-  // Shorter turns leave a slower cruise; they shorten until it is under the cap.
+  // Shorter turns leave a slower cruise; they shorten until the light's speed
+  // on screen, across as well as down, is under the cap.
   const L = s2 - s1;
   const startY = g.hang[1] - s1;
+  const across = (1.5 * Math.abs(g.lampX - g.hang[0])) / Math.max(L, 1);
+  const limit = Math.sqrt(Math.max((0.98 * SPEED_CAP) ** 2 - across ** 2, 0.25));
   let a = 0;
   let b = 0;
   let cruise = 0;
@@ -72,7 +80,7 @@ export function leadTimeline(g) {
     a = 0.08 * k * L;
     b = 0.1 * k * L;
     cruise = (waitY - startY + a / 2) / Math.max(L - (a + b) / 2, 1);
-    if (cruise <= 0.98 * SPEED_CAP) break;
+    if (cruise <= limit) break;
   }
   return { s1, s2, s3, s4, s5, waitY, startY, L, a, b, cruise };
 }
@@ -130,7 +138,7 @@ export function leadPath(s, g, tl = leadTimeline(g)) {
     const from = g.lineD;
     const to = g.restD;
     const len = s5 - s4;
-    const ramp = 0.12 * len;
+    const ramp = HAND_RAMP * len;
     const peak = (to - from) / (len - ramp);
     const u = s - s4;
     let d;
