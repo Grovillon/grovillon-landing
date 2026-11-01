@@ -190,6 +190,17 @@ export default function CinematicStage() {
       written: i === 0 ? 1 : -1,
       events: i === 0 ? 'auto' : '',
     }));
+    // Landing anchors (R3, D31). A block that has faded out waits, invisibly,
+    // where any way of reaching its text lands the page inside the block's lit
+    // window: find in page, a text fragment, scrollIntoView or a screen reader
+    // all scroll to the text's box, and an unlit box in place would bring the
+    // reader to the pin's start or end, where it is unlit. So the box waits off
+    // screen: below it for scene B's blocks (lit later in the run), placed so
+    // that centring, top- or bottom-aligning it lands past the block's cue;
+    // above it for scene A's copy (lit earlier). Lit, a block is in its place.
+    // Only the `translate` property moves it: the type itself never moves on
+    // screen (DESIGN.md, the Still Type Rule).
+    const anchors = copies.map(() => ({ offset: 0, height: 0, dy: 0 }));
     const mounted = performance.now();
 
     let width = 1;
@@ -316,6 +327,42 @@ export default function CinematicStage() {
       // The relief is supersampled on a low-density screen, decided once: a
       // lower step must cost less than the one it replaces.
       renderer.resize(width, height, DPR_STEPS[dprStep], dprStep === startStep && DPR_STEPS[startStep] < 1.5);
+      // Each block's place in the stage, without the anchor's offset.
+      const stageRect = stage.getBoundingClientRect();
+      copies.forEach((el, i) => {
+        const rect = el.getBoundingClientRect();
+        anchors[i].offset = rect.top - anchors[i].dy - stageRect.top;
+        anchors[i].height = rect.height;
+      });
+    };
+
+    // Where each unlit block waits (see `anchors`): a whole number of px from
+    // its place, recomputed with the scroll so it stays off screen.
+    const PARK_GAP = 8;
+    const park = () => {
+      const pinned = track.dataset.cine === 'on' || track.dataset.cine === 'pending';
+      const y = window.scrollY;
+      const view = window.innerHeight;
+      const start = y + trackTop;
+      const cues = layout.beats.copy;
+      copies.forEach((el, i) => {
+        const anchor = anchors[i];
+        const light = lights[i];
+        let dy = 0;
+        if (pinned && !light.on && light.value === 0) {
+          const margin = Math.max(0.06 * runPx, anchor.height / 2 + 40);
+          const place = y + stageTop + anchor.offset;
+          const box =
+            i === 0
+              ? Math.min(start + cues[0] * runPx - margin, y - anchor.height - PARK_GAP)
+              : Math.max(start + cues[i] * runPx + margin + view - anchor.height, y + view + PARK_GAP);
+          dy = Math.round(box - place);
+        }
+        if (dy !== anchor.dy) {
+          anchor.dy = dy;
+          el.style.translate = dy ? `0 ${dy}px` : '';
+        }
+      });
     };
 
     const render = (frame) => {
@@ -527,6 +574,8 @@ export default function CinematicStage() {
           else moving = true;
         }
       });
+
+      park();
 
       // A first frame is drawn as soon as the stage mounts, and again as each
       // texture arrives, even off screen, so the canvas is already showing
@@ -857,9 +906,11 @@ export default function CinematicStage() {
       reduceMotion.removeEventListener('change', onReduce);
       canvas.removeEventListener('webglcontextlost', onLost);
       canvas.removeEventListener('webglcontextrestored', onRestored);
-      copies.forEach((copy) => {
+      copies.forEach((copy, i) => {
         copy.style.removeProperty('opacity');
         copy.style.removeProperty('pointer-events');
+        copy.style.removeProperty('translate');
+        anchors[i].dy = 0;
       });
       for (const [, image] of queue.splice(0)) image.close?.();
       offLamp();

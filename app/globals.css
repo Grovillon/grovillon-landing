@@ -473,7 +473,11 @@
     top: 0;
     height: 100vh;
     height: 100lvh;
-    overflow: hidden;
+    /* Clipped across only. A hidden overflow is a scroll container, which
+       scrollIntoView and find in page would scroll to reach a waiting block,
+       and a block clipped from view is one find in page will not reveal. */
+    overflow-x: clip;
+    overflow-y: visible;
     isolation: isolate;
   }
 
@@ -568,5 +572,6 @@
 @media print {
   .cine [data-copy] {
     opacity: 1 !important;
+    translate: none !important;
   }
 }
