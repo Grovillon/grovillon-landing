@@ -39,6 +39,22 @@ export const LEAD = {
   rakeLook: 0.62,
 };
 
+// How the glide is lengthened where its turns alone cannot keep the cap (see
+// leadTimeline): [share of LEAD.early, share of LEAD.release].
+const LONGER = [
+  [1, 1],
+  [0.9, 1],
+  [0.8, 1],
+  [0.8, 0.75],
+  [0.8, 0.5],
+  [0.8, 0.25],
+  [0.8, 0],
+  [0.6, 0],
+  [0.4, 0],
+  [0.2, 0],
+  [0, 0],
+];
+
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
 const smooth = (u) => u * u * (3 - 2 * u);
 // The distance covered over a ramp of length `len` whose velocity eases from
@@ -78,14 +94,16 @@ export function leadTimeline(g) {
   // The sentence's top reaches the bottom of the screen at enterD − vh; the
   // light arrives LEAD.early of a screen before it. Where even the shortest
   // turns leave the light too fast (a short or very wide screen), the glide
-  // takes longer: it ends later, up to the moment the sentence's top comes on
-  // screen, and then leaves the hang sooner, up to the unpin itself.
+  // takes longer, in this order (shares of LEAD.early, of LEAD.release): it
+  // ends later, down to the plan's least lead of 0.08 of a screen; then it
+  // leaves the hang sooner; only then does it end later still.
   const enter = g.enterD - vh;
   let tl = null;
-  for (let i = 0; i <= 8 && !tl?.within; i++) {
-    const s1 = LEAD.release * vh * Math.min(Math.max((8 - i) / 4, 0), 1);
-    const s2 = Math.max(enter - LEAD.early * vh * Math.max(1 - i / 4, 0), s1 + 1);
+  for (const [early, release] of LONGER) {
+    const s1 = LEAD.release * vh * release;
+    const s2 = Math.max(enter - LEAD.early * vh * early, s1 + 1);
     tl = glide(s1, s2);
+    if (tl.within) break;
   }
   // The line's centre reaches the light's height.
   const s3 = Math.max(g.lineD - waitY, tl.s2 + 2 * LEAD.lockBlend * vh);
