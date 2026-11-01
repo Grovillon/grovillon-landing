@@ -38,7 +38,10 @@ export default function MissionSection() {
                 <h2 id="conditions" className="t-statement" data-lead="rest">
                   Designed to adapt.
                 </h2>
-                <p className="t-body mt-5 max-w-[32ch]">
+                {/* In ink, as the hero's line is (D4): the lamp rests beside it and a
+                    mouse can bring it over it, and in ink-2 the lit relief behind
+                    it could bring it under 5.9:1. */}
+                <p className="t-body mt-5 max-w-[32ch] text-ink">
                   Exploring how wearable systems can respond to the body’s changing needs and its environment.
                 </p>
               </div>
