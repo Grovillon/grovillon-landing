@@ -63,20 +63,46 @@ const mixLamp = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
 // reader's place has been restored.
 let visited = false;
 
-// Text as the browser compares it for a text fragment, a search at the primary
-// level: case, accents and other marks, compatibility forms (full-width and
-// styled letters, the various spaces) and invisible characters aside; curly
-// quotes and the Hebrew geresh and gershayim as straight quotes. The page, its
-// blocks and the link's words all go through the same fold, so places in them
-// agree.
-const fold = (text) =>
-  text
-    .replace(/[\u2018\u2019\u05f3]/g, "'")
-    .replace(/[\u201c\u201d\u05f4]/g, '"')
-    .normalize('NFKD')
-    .replace(/[\p{Mn}\p{Me}\p{Default_Ignorable_Code_Point}]/gu, '')
-    .toLowerCase()
-    .replace(/\u03c2/g, '\u03c3');
+// Text as the browser compares it for a text fragment. Its search holds two
+// strings equal when a primary-strength collator does: case, accents, widths,
+// styled letters and the various spaces aside, invisible characters ignored.
+// Each character is folded to the plain character that collator holds equal
+// to it (to nothing when the collator ignores it, to the two letters it is
+// spelled with for \u00e6, \u0153 or \u00df), so a plain search over the folded text finds
+// what the browser's search finds. The page, its blocks and the link's words
+// all go through the same fold, so places in them agree.
+const PLAIN = "abcdefghijklmnopqrstuvwxyz0123456789 !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+const LETTERS = 'abcdefghijklmnopqrstuvwxyz';
+const foldedChars = new Map();
+let collator;
+function foldChar(c) {
+  const code = c.codePointAt(0);
+  if ((code >= 0x20 && code < 0x7f) || (code >= 0x09 && code <= 0x0d)) return c.toLowerCase();
+  let f = foldedChars.get(c);
+  if (f !== undefined) return f;
+  collator ??= new Intl.Collator('en', { usage: 'search', sensitivity: 'base' });
+  const same = (s) => collator.compare(c, s) === 0;
+  f = same('') ? '' : Array.from(PLAIN).find(same);
+  if (f === undefined) {
+    const parts = c.normalize('NFKD');
+    const plain = parts === c ? '' : fold(parts);
+    if (plain && same(plain)) f = plain;
+  }
+  if (f === undefined && /\p{Script=Latin}/u.test(c)) {
+    for (const a of LETTERS) {
+      f = Array.from(LETTERS, (b) => a + b).find(same);
+      if (f !== undefined) break;
+    }
+  }
+  if (f === undefined) f = c.toLowerCase();
+  foldedChars.set(c, f);
+  return f;
+}
+function fold(text) {
+  let out = '';
+  for (const c of text) out += foldChar(c);
+  return out;
+}
 
 // Each text directive in a URL as [prefix, start, end, suffix], folded, with
 // the URL's own spacing ('' for an absent part), or null when the URL names
