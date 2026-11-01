@@ -9,6 +9,8 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-const eslintConfig = [...compat.extends("next/core-web-vitals")];
+// The shared config names file patterns only for TypeScript, and by default
+// ESLint 9 lints only .js, .mjs and .cjs files; the components are .jsx.
+const eslintConfig = [{ files: ["**/*.{js,jsx}"] }, ...compat.extends("next/core-web-vitals")];
 
 export default eslintConfig;
