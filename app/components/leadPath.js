@@ -54,35 +54,47 @@ const rampPos = (u, len, v0, v1) => len * (v0 * u + (v1 - v0) * (u * u * u - (u 
 //   restD     page position of the grid's rest (d); restX its x
 export function leadTimeline(g) {
   const { vh } = g;
-  const s1 = LEAD.release * vh;
   const waitY = LEAD.wait * vh;
-  // The sentence's top reaches the bottom of the screen at enterD − vh.
-  const s2 = Math.max(g.enterD - vh - LEAD.early * vh, s1 + 1);
+  // The glide, from s1 to s2: its velocity on screen eases from the page's (−1)
+  // to a cruise and back to rest, so it turns without a kink and stops where it
+  // waits. Shorter turns leave a slower cruise; they shorten until the light's
+  // speed on screen, across as well as down, is under the cap.
+  const glide = (s1, s2) => {
+    const L = s2 - s1;
+    const startY = g.hang[1] - s1;
+    const across = (1.5 * Math.abs(g.lampX - g.hang[0])) / Math.max(L, 1);
+    const limit = Math.sqrt(Math.max((0.98 * SPEED_CAP) ** 2 - across ** 2, 0.25));
+    let a = 0;
+    let b = 0;
+    let cruise = 0;
+    for (let k = 1; k >= 0.25; k -= 0.05) {
+      a = 0.08 * k * L;
+      b = 0.1 * k * L;
+      cruise = (waitY - startY + a / 2) / Math.max(L - (a + b) / 2, 1);
+      if (cruise <= limit) break;
+    }
+    return { s1, s2, waitY, startY, L, a, b, cruise, within: cruise <= limit };
+  };
+  // The sentence's top reaches the bottom of the screen at enterD − vh; the
+  // light arrives LEAD.early of a screen before it. Where even the shortest
+  // turns leave the light too fast (a short or very wide screen), the glide
+  // takes longer: it ends later, up to the moment the sentence's top comes on
+  // screen, and then leaves the hang sooner, up to the unpin itself.
+  const enter = g.enterD - vh;
+  let tl = null;
+  for (let i = 0; i <= 8 && !tl?.within; i++) {
+    const s1 = LEAD.release * vh * Math.min(Math.max((8 - i) / 4, 0), 1);
+    const s2 = Math.max(enter - LEAD.early * vh * Math.max(1 - i / 4, 0), s1 + 1);
+    tl = glide(s1, s2);
+  }
   // The line's centre reaches the light's height.
-  const s3 = Math.max(g.lineD - waitY, s2 + 2 * LEAD.lockBlend * vh);
+  const s3 = Math.max(g.lineD - waitY, tl.s2 + 2 * LEAD.lockBlend * vh);
   const s4 = s3 + LEAD.hold * vh;
   // The descent takes at least LEAD.handOff of a screen, longer where the rest
   // is far enough below the line that its peak would pass the speed cap.
   const fall = Math.max(g.restD - g.lineD, 0);
   const s5 = s4 + Math.max(LEAD.handOff * vh, fall / ((1 - HAND_RAMP) * (1 + 0.98 * SPEED_CAP)));
-  // The glide: its velocity on screen eases from the page's (−1) to a cruise
-  // and back to rest, so it turns without a kink and stops where it waits.
-  // Shorter turns leave a slower cruise; they shorten until the light's speed
-  // on screen, across as well as down, is under the cap.
-  const L = s2 - s1;
-  const startY = g.hang[1] - s1;
-  const across = (1.5 * Math.abs(g.lampX - g.hang[0])) / Math.max(L, 1);
-  const limit = Math.sqrt(Math.max((0.98 * SPEED_CAP) ** 2 - across ** 2, 0.25));
-  let a = 0;
-  let b = 0;
-  let cruise = 0;
-  for (let k = 1; k >= 0.25; k -= 0.05) {
-    a = 0.08 * k * L;
-    b = 0.1 * k * L;
-    cruise = (waitY - startY + a / 2) / Math.max(L - (a + b) / 2, 1);
-    if (cruise <= limit) break;
-  }
-  return { s1, s2, s3, s4, s5, waitY, startY, L, a, b, cruise };
+  return { ...tl, s3, s4, s5 };
 }
 
 // Screen y of the glide, `s` within [s1, s2].
