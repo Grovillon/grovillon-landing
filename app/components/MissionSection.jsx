@@ -14,33 +14,41 @@ const ROLES = [
 export default function MissionSection() {
   return (
     <>
+      {/* Scenes 02 and 03, pinned. */}
       <CinematicStage />
 
-      {/* Scenes 04 and 05 share the band's relief and grid, which run on from the stage. */}
-      <div className="grid-band pb-[clamp(7rem,15vw,13rem)] pt-[clamp(5rem,11vw,10rem)]">
+      {/* Scenes 04 and 05 stand on one relief, which runs on from the stage's under
+          the same lamp. In Scene 04 the lamp goes ahead of the reader, waits for
+          the sentence and meets it (leadPath.js); in Scene 05 it rests in the grid
+          and a mouse takes it. The canvas is decoration: aria-hidden, undescribed. */}
+      <div className="band">
         <LightField variant="band" className="band-field" />
-        <KineticGrid className="grid-field" />
-        {/* Scene 04, temporary: the line alone, still, with no light of its own. */}
-        <section aria-labelledby="ahead" className="wrap pb-[clamp(5rem,11vw,10rem)]">
-          <h2 id="ahead" className="t-signature">
+
+        <section aria-labelledby="ahead" className="scene-ahead wrap">
+          <h2 id="ahead" className="t-signature" data-lead="line">
             One step ahead of the body.
           </h2>
         </section>
-        <section aria-labelledby="conditions" className="wrap">
-          <div className="grid grid-cols-1 gap-y-12 md:grid-cols-12 md:gap-x-6 md:gap-y-20">
-            <div className="md:col-span-5">
-              <h2 id="conditions" className="t-statement">
-                Designed to adapt.
-              </h2>
-              <p className="t-body mt-5 max-w-[32ch]">
-                Exploring how wearable systems can respond to the body’s changing needs and its environment.
-              </p>
+
+        <section aria-labelledby="conditions" className="scene-adapt" data-lead="zone">
+          <KineticGrid className="grid-field" />
+          <div className="wrap">
+            <div className="grid grid-cols-1 md:grid-cols-12 md:gap-x-6">
+              <div className="md:col-span-5">
+                <h2 id="conditions" className="t-statement" data-lead="rest">
+                  Designed to adapt.
+                </h2>
+                <p className="t-body mt-5 max-w-[32ch]">
+                  Exploring how wearable systems can respond to the body’s changing needs and its environment.
+                </p>
+              </div>
             </div>
           </div>
         </section>
       </div>
 
-      <section aria-labelledby="next-layer" className="wrap pb-[clamp(3rem,6vw,5rem)]">
+      {/* Scene 06: plain ground, the page's final statement. */}
+      <section aria-labelledby="next-layer" className="scene-close wrap">
         <div className="max-w-[38rem]">
           <h2 id="next-layer" className="t-statement">
             The next layer of human technology.

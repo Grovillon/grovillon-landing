@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { createStageRenderer } from './stageRenderer';
+import { cancelFrame, requestFrame } from './frameClock';
 import { entrance, lamps, onLamp } from './pageLamp';
 import { reliefLayout, reliefLift, stageEdges, stageFocus, stageFrame, stageLayout } from './stageScript';
 
@@ -419,7 +420,10 @@ export default function CinematicStage() {
       }
       if (stageTop < 0 && band) {
         const k = ease(clamp01(-stageTop / (0.05 * height)));
-        return { lamp: mixLamp(own, [band.x, band.y, band.z], k), gain: 1 + (band.gain - 1) * k, continued: true };
+        // The band's pool too, which Scene 04 tightens while the stage is still
+        // leaving above it, so the two reliefs stay one surface.
+        const look = band.look ? relief.look[2] + (band.look - relief.look[2]) * k : undefined;
+        return { lamp: mixLamp(own, [band.x, band.y, band.z], k), gain: 1 + (band.gain - 1) * k, continued: true, look };
       }
       const lift = stageTop > 0 ? reliefLift(stageTop, unit) : 0;
       return { lamp: [own[0], own[1], own[2] + lift], gain: 1, joined: Boolean(hero), continued: Boolean(band) };
@@ -582,12 +586,21 @@ export default function CinematicStage() {
       // when the reader reaches it.
       if (visible || fresh) render(frame);
       fresh = false;
-      if (moving && visible && !document.hidden) raf = requestAnimationFrame(step);
-      else last = 0;
+      if (moving && visible && !document.hidden) {
+        raf = 1;
+        requestFrame('stage', step);
+      } else {
+        last = 0;
+      }
     };
 
+    // The stage's frames run on the page's frame clock, after the hero's and the
+    // band's: a lamp they move this frame lights the stage's joins this frame.
     const kick = () => {
-      if (!raf && !disposed && !document.hidden) raf = requestAnimationFrame(step);
+      if (!raf && !disposed && !document.hidden) {
+        raf = 1;
+        requestFrame('stage', step);
+      }
     };
 
     // Whether a stage point is on the scene's subject: the garment's matte, or
@@ -715,7 +728,7 @@ export default function CinematicStage() {
     const onLost = (event) => {
       event.preventDefault();
       lost = true;
-      if (raf) cancelAnimationFrame(raf);
+      if (raf) cancelFrame('stage');
       raf = 0;
     };
 
@@ -879,7 +892,7 @@ export default function CinematicStage() {
     function dispose() {
       if (disposed) return;
       disposed = true;
-      if (raf) cancelAnimationFrame(raf);
+      if (raf) cancelFrame('stage');
       raf = 0;
       if (jumping) {
         cancelAnimationFrame(jumping);

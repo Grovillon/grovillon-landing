@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { cancelFrame, requestFrame } from './frameClock';
+import { lamps, onLamp } from './pageLamp';
 
 // A square grid of hairlines behind the band, with a dot at every crossing: a
 // second skin laid over the ground. Near the pointer the skin gathers toward it,
@@ -97,6 +99,8 @@ export default function KineticGrid({ className }) {
     let raf = 0;
     let last = 0;
     let shown = false;
+    // Cleared while off screen (a resize): drawn again as it comes back (F32).
+    let dirty = false;
     let tap = null;
     let press = null;
     let speed = RIPPLE_SPEED[1];
@@ -151,13 +155,28 @@ export default function KineticGrid({ className }) {
     // The lamp rests where the band's relief rests its own (LightField writes it on
     // the band: below a pinned stage, where the stage's lamp hangs, above the band),
     // so the grid and the relief under it share one light; otherwise upper right.
+    // The lamp is the band's (LightField): the relief and the grid on it share
+    // one light, which Scene 04 brings down into the grid's rest beside the
+    // heading. Without the relief (no WebGL) the grid rests its own lamp there.
+    const restEl = host.querySelector('[data-lead="rest"]');
+    const shared = () => {
+      const page = lamps.band?.page;
+      if (!page) return null;
+      const rect = host.getBoundingClientRect();
+      return [page[0] - (rect.left + window.scrollX), page[1] - (rect.top + window.scrollY)];
+    };
     const rest = () => {
-      const shared = host.dataset.lamp?.split(',').map(Number);
-      if (shared?.length === 2 && shared.every(Number.isFinite)) {
-        [aim.x, aim.y] = shared;
+      const lamp = shared();
+      if (lamp) {
+        [aim.x, aim.y] = lamp;
       } else {
         aim.x = width * 0.78;
-        aim.y = Math.min(height * 0.3, 320);
+        if (restEl) {
+          const r = restEl.getBoundingClientRect();
+          aim.y = r.top + r.height / 2 - host.getBoundingClientRect().top;
+        } else {
+          aim.y = Math.min(height * 0.3, 320);
+        }
       }
       aim.load = 0;
     };
@@ -372,11 +391,21 @@ export default function KineticGrid({ className }) {
       const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
       last = now;
       const [k, c] = SPRING;
-      lamp.vx += (-k * (lamp.x - aim.x) - c * lamp.vx) * dt;
-      lamp.vy += (-k * (lamp.y - aim.y) - c * lamp.vy) * dt;
+      // The band's lamp is drawn where the relief's is, this very frame (the
+      // frame clock runs the grid after the band). Without it, the grid's own
+      // lamp follows the pointer on the band's spring.
+      const band = shared();
+      if (band) {
+        [lamp.x, lamp.y] = band;
+        lamp.vx = lamp.vy = 0;
+        if (!pointer.inside) [aim.x, aim.y] = band;
+      } else {
+        lamp.vx += (-k * (lamp.x - aim.x) - c * lamp.vx) * dt;
+        lamp.vy += (-k * (lamp.y - aim.y) - c * lamp.vy) * dt;
+        lamp.x += lamp.vx * dt;
+        lamp.y += lamp.vy * dt;
+      }
       lamp.vl += (-k * (lamp.load - aim.load) - c * lamp.vl) * dt;
-      lamp.x += lamp.vx * dt;
-      lamp.y += lamp.vy * dt;
       lamp.load += lamp.vl * dt;
       gather.vx += (-k * (gather.x - gather.tx) - c * gather.vx) * dt;
       gather.vy += (-k * (gather.y - gather.ty) - c * gather.vy) * dt;
@@ -388,15 +417,17 @@ export default function KineticGrid({ className }) {
         if ((now - r.start) / 1000 > RIPPLE_LIFE || (r.retire > 0 && now - r.retire > RETIRE)) ripples.splice(i, 1);
       }
       const settled =
-        Math.abs(lamp.x - aim.x) + Math.abs(lamp.y - aim.y) < 0.05 &&
+        (band || Math.abs(lamp.x - aim.x) + Math.abs(lamp.y - aim.y) < 0.05) &&
         Math.abs(lamp.vx) + Math.abs(lamp.vy) < 0.05 &&
         Math.abs(lamp.load - aim.load) < 1e-3 &&
         Math.abs(lamp.vl) < 1e-3 &&
         Math.abs(gather.x - gather.tx) + Math.abs(gather.y - gather.ty) < 0.05 &&
         Math.abs(gather.vx) + Math.abs(gather.vy) < 0.05;
       if (settled) {
-        lamp.x = aim.x;
-        lamp.y = aim.y;
+        if (!band) {
+          lamp.x = aim.x;
+          lamp.y = aim.y;
+        }
         lamp.load = aim.load;
         lamp.vx = lamp.vy = lamp.vl = 0;
         gather.x = gather.tx;
@@ -404,12 +435,20 @@ export default function KineticGrid({ className }) {
         gather.vx = gather.vy = 0;
       }
       draw(now);
-      if ((!settled || ripples.length) && visible && !document.hidden) raf = requestAnimationFrame(step);
-      else last = 0;
+      dirty = false;
+      if ((!settled || ripples.length) && visible && !document.hidden) {
+        raf = 1;
+        requestFrame('grid', step);
+      } else {
+        last = 0;
+      }
     };
 
     const kick = () => {
-      if (!raf && !stopped && !still && visible && !document.hidden) raf = requestAnimationFrame(step);
+      if (!raf && !stopped && visible && !document.hidden) {
+        raf = 1;
+        requestFrame('grid', step);
+      }
     };
 
     const local = (event) => {
@@ -470,7 +509,10 @@ export default function KineticGrid({ className }) {
     // and only if it stayed put and the browser never took it for a scroll.
     const onDown = (event) => {
       if (event.button > 0) return;
-      entered = true;
+      // A finger that comes down may be starting a scroll: only a tap counts as
+      // having interacted, so the swipe that brings the grid in keeps its
+      // entry ripple (F33).
+      if (event.pointerType !== 'touch') entered = true;
       if (event.pointerType === 'touch') {
         tap = { id: event.pointerId, x: event.clientX, y: event.clientY };
         return;
@@ -488,6 +530,7 @@ export default function KineticGrid({ className }) {
       if (!start || start.id !== event.pointerId) return;
       if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > TAP_SLOP) return;
       if (event.pointerType !== 'touch' && !(window.getSelection()?.isCollapsed ?? true)) return;
+      entered = true;
       ripple(...local(event));
     };
 
@@ -508,7 +551,7 @@ export default function KineticGrid({ className }) {
     const onReduce = () => {
       still = reduceMotion.matches;
       if (!still) return;
-      if (raf) cancelAnimationFrame(raf);
+      if (raf) cancelFrame('grid');
       raf = 0;
       last = 0;
       ripples.length = 0;
@@ -530,28 +573,33 @@ export default function KineticGrid({ className }) {
         if (!entry.isIntersecting) return;
         entryObserver.disconnect();
         if (entered || still) return;
-        ripple(lamp.x, Math.max(lamp.y, 0));
+        const band = shared();
+        if (band) [lamp.x, lamp.y] = band;
+        ripple(Math.min(Math.max(lamp.x, 0), width), Math.min(Math.max(lamp.y, 0), height));
       },
       { rootMargin: '0px 0px -50% 0px' }
     );
 
     const visibilityObserver = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
-      if (visible && !shown && !stopped) draw(performance.now());
+      if (visible && (!shown || dirty) && !stopped) {
+        rest();
+        if (!pointer.inside) {
+          lamp.x = aim.x;
+          lamp.y = aim.y;
+        }
+        draw(performance.now());
+        dirty = false;
+      }
       kick();
     });
 
-    // The band's relief moves its resting lamp when the stage above it pins or
-    // goes back to plain sections; a lamp at rest goes with it.
-    const lampObserver = new MutationObserver(() => {
-      if (aim.load) return;
-      rest();
-      if (still || !visible) {
-        lamp.x = aim.x;
-        lamp.y = aim.y;
-        if (visible) draw(performance.now());
-      }
-      kick();
+    // The band's lamp moved (Scene 04 bringing it down, a mouse in Scene 05):
+    // the grid draws it in the same frame.
+    const offLamp = onLamp((name) => {
+      if (name !== 'band' || stopped) return;
+      if (visible) kick();
+      else dirty = true;
     });
 
     const onVisibility = () => {
@@ -562,6 +610,7 @@ export default function KineticGrid({ className }) {
       resize();
       measureQuiet();
       if (visible && !stopped) draw(performance.now());
+      else dirty = true;
     });
     // Web fonts can rewrap the words after the first measure.
     document.fonts?.ready.then(() => {
@@ -577,7 +626,6 @@ export default function KineticGrid({ className }) {
     lamp.y = aim.y;
     resizeObserver.observe(host);
     visibilityObserver.observe(host);
-    lampObserver.observe(host, { attributes: true, attributeFilter: ['data-lamp'] });
     if (heading) entryObserver.observe(heading);
     host.addEventListener('pointermove', onMove, { passive: true });
     host.addEventListener('pointerdown', onDown, { passive: true });
@@ -590,10 +638,10 @@ export default function KineticGrid({ className }) {
 
     return () => {
       stopped = true;
-      if (raf) cancelAnimationFrame(raf);
+      cancelFrame('grid');
+      offLamp();
       resizeObserver.disconnect();
       visibilityObserver.disconnect();
-      lampObserver.disconnect();
       entryObserver.disconnect();
       host.removeEventListener('pointermove', onMove);
       host.removeEventListener('pointerdown', onDown);

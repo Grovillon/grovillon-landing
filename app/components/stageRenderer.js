@@ -527,7 +527,9 @@ export function createStageRenderer(canvas) {
   const setShared = (p, frame, edges) => {
     gl.uniform2f(p.uRes, canvas.width, canvas.height);
     gl.uniform1f(p.uScale, size.scale);
-    gl.uniform4f(p.uEdges, edges[0] * size.scale, edges[1], edges[2], edges[3] * size.scale);
+    // All three lengths in device px (the exit fade's too: in css px it ran over
+    // half its height on a dense screen).
+    gl.uniform4f(p.uEdges, edges[0] * size.scale, edges[1], edges[2] * size.scale, edges[3] * size.scale);
     if (!frame) return;
     gl.uniform3f(p.uLight, frame.lamp[0], frame.lamp[1], frame.lamp[2]);
     gl.uniform1f(p.uRadius, frame.radius);
@@ -541,7 +543,7 @@ export function createStageRenderer(canvas) {
     gl.uniform2f(p.uOrigin, 0, origin);
     gl.uniform2f(p.uCell, cell[0], cell[1]);
     gl.uniform2f(p.uDepth, depth[0], depth[1]);
-    gl.uniform3f(p.uLook, look[0], look[1], look[2]);
+    gl.uniform3f(p.uLook, look[0], look[1], light?.look ?? look[2]);
     // The relief's lamp, in the hero's pattern: the stage's own, which rests on
     // the stage where the hero's rests on the hero, unless the stage passes in
     // another (CinematicStage: the hero's or the band's, where the reliefs meet).

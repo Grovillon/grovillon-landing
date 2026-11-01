@@ -332,30 +332,108 @@
     }
   }
 
-  /* Scene C: a square grid of hairlines with a dot at every crossing, a second skin that
-     answers to the pointer and to touch. The still CSS grid is what visitors without script
-     see (with reduced motion the canvas draws it still). Its tile is one cell, crossed at its centre; centred across
-     the band it puts a line through the band's middle and one half a cell below its top,
-     where KineticGrid draws them, reading the cell from --grid-cell, with the same stroke. */
-  .grid-band {
-    --grid-cell: 44px;
+  /* Scenes 04 and 05 stand on one relief (LightField's band variant): the hero's
+     relief run on below the stage, its folds aligned with the stage's and lit by
+     the lamp that leaves it. It sinks into the ground at the band's foot, where
+     Scene 06 stands on plain ground; the grid fades out over the same pixels (F38). */
+  .band {
+    --band-out: clamp(7.5rem, 14vw, 13rem);
     position: relative;
     isolation: isolate;
   }
 
+  .band-field {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 min(24rem, 40lvh), #000 calc(100% - var(--band-out)), transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 min(24rem, 40lvh), #000 calc(100% - var(--band-out)), transparent);
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  [data-field="on"] > .band-field {
+    opacity: 1;
+  }
+
+  /* Below a pinned stage the relief runs on from the stage's (same folds, same
+     lamp), so it does not fade in at its top. */
+  .cine[data-cine="on"] ~ .band > .band-field {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--band-out)), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - var(--band-out)), transparent);
+  }
+
+  [data-field="off"] > .band-field {
+    display: none;
+  }
+
+  /* Scene 04: the page's largest statement, alone on the relief, with room above
+     for the light to go first and room below to hold (CHECKPOINT-2-PLAN, Scene 04). */
+  .scene-ahead {
+    padding-top: 55vh;
+    padding-top: 55lvh;
+    padding-bottom: 40vh;
+    padding-bottom: 40lvh;
+  }
+
+  @media (min-width: 720px) and (min-aspect-ratio: 21/20) {
+    .scene-ahead {
+      padding-bottom: 55vh;
+      padding-bottom: 55lvh;
+    }
+  }
+
+  /* Reduced motion: one still pose of the light, between the sentence and the
+     grid, so the section closes up around it. Without the relief (no WebGL, no
+     script) the sentence stands at full ink on plain ground, closed up the same. */
+  @media (prefers-reduced-motion: reduce) {
+    .scene-ahead {
+      padding-top: clamp(5rem, 11vw, 10rem);
+      padding-bottom: clamp(3rem, 6vw, 5rem);
+    }
+  }
+
+  .band[data-field="off"] > .scene-ahead {
+    padding-top: clamp(5rem, 11vw, 10rem);
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+  }
+
+  @media (scripting: none) {
+    .scene-ahead {
+      padding-top: clamp(5rem, 11vw, 10rem);
+      padding-bottom: clamp(3rem, 6vw, 5rem);
+    }
+  }
+
+  /* Scene 05: a square grid of hairlines with a dot at every crossing, a second
+     skin that answers to the pointer and to touch. The still CSS grid is what
+     visitors without script see (with reduced motion the canvas draws it still).
+     Its tile is one cell, crossed at its centre; centred across the scene it puts
+     a line through the middle and one half a cell below the top, where
+     KineticGrid draws them, reading the cell from --grid-cell, with the same stroke. */
+  .scene-adapt {
+    --grid-cell: 44px;
+    position: relative;
+    isolation: isolate;
+    padding-top: clamp(5rem, 11vw, 10rem);
+    padding-bottom: clamp(7rem, 15vw, 13rem);
+  }
+
   .grid-field,
-  .grid-band::before {
+  .scene-adapt::before {
     position: absolute;
     inset: 0;
     z-index: -1;
     width: 100%;
     height: 100%;
-    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 clamp(3rem, 7vw, 6rem), #000 calc(100% - var(--band-out)), transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 clamp(3rem, 7vw, 6rem), #000 calc(100% - var(--band-out)), transparent);
     transition: opacity 300ms var(--ease-out);
   }
 
-  .grid-band::before {
+  .scene-adapt::before {
     content: "";
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M0 22.5H44M22.5 0V44' fill='none' stroke='%23ecebe7' stroke-opacity='.05'/%3E%3Ccircle cx='22.5' cy='22.5' r='1.1' fill='%23ecebe7' fill-opacity='.09'/%3E%3C/svg%3E");
     background-size: var(--grid-cell) var(--grid-cell);
@@ -364,37 +442,6 @@
 
   .grid-field {
     opacity: 0;
-  }
-
-  /* Under the grid, the hero's relief runs on (LightField's band variant), its folds
-     aligned with the hero's and lit by the same lamp as the grid: the skin lies on
-     the same material as the rest of the page. It rises out of the ground below the
-     stage and sinks back into it above Scene 06; shown only once it has drawn. */
-  .band-field {
-    position: absolute;
-    inset: 0;
-    z-index: -2;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 24%, #000 66%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, #000 24%, #000 66%, transparent);
-    transition: opacity 300ms var(--ease-out);
-  }
-
-  [data-field="on"] > .band-field {
-    opacity: 1;
-  }
-
-  /* Below a pinned stage the band's relief runs on from the stage's (same folds,
-     same lamp), so it does not fade in at its top. */
-  .cine[data-cine="on"] ~ .grid-band > .band-field {
-    -webkit-mask-image: linear-gradient(to bottom, #000 66%, transparent);
-    mask-image: linear-gradient(to bottom, #000 66%, transparent);
-  }
-
-  [data-field="off"] > .band-field {
-    display: none;
   }
 
   [data-grid="on"] > .grid-field {
@@ -406,26 +453,31 @@
   }
 
   @media (min-width: 48rem) {
-    .grid-band {
+    .scene-adapt {
       --grid-cell: 54px;
     }
 
-    .grid-band::before {
+    .scene-adapt::before {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='54'%3E%3Cpath d='M0 27.5H54M27.5 0V54' fill='none' stroke='%23ecebe7' stroke-opacity='.05'/%3E%3Ccircle cx='27.5' cy='27.5' r='1.1' fill='%23ecebe7' fill-opacity='.09'/%3E%3C/svg%3E");
     }
   }
 
   /* Dense screens: the canvas's finer stroke. */
   @media (min-resolution: 1.5dppx) {
-    .grid-band::before {
+    .scene-adapt::before {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M0 22.5H44M22.5 0V44' fill='none' stroke='%23ecebe7' stroke-opacity='.05' stroke-width='.75'/%3E%3Ccircle cx='22.5' cy='22.5' r='1.1' fill='%23ecebe7' fill-opacity='.09'/%3E%3C/svg%3E");
     }
   }
 
   @media (min-width: 48rem) and (min-resolution: 1.5dppx) {
-    .grid-band::before {
+    .scene-adapt::before {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='54'%3E%3Cpath d='M0 27.5H54M27.5 0V54' fill='none' stroke='%23ecebe7' stroke-opacity='.05' stroke-width='.75'/%3E%3Ccircle cx='27.5' cy='27.5' r='1.1' fill='%23ecebe7' fill-opacity='.09'/%3E%3C/svg%3E");
     }
+  }
+
+  /* Scene 06 stands on plain ground right below the band's fade. */
+  .scene-close {
+    padding-bottom: clamp(3rem, 6vw, 5rem);
   }
 
   /* Media lit from the same lamp: the garment falls off into the ground. */
