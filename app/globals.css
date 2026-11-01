@@ -524,10 +524,17 @@
   }
 
   /* Scene 06 stands on plain ground, well below the closing's fade, so the
-     two never share the screen at rest. */
+     two never share the screen at rest; its statement, words and links sit at
+     the centre of the screen. */
   .scene-close {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 80vh;
+    min-height: 80lvh;
     padding-top: clamp(4rem, 9vw, 8rem);
     padding-bottom: clamp(3rem, 6vw, 5rem);
+    text-align: center;
   }
 
   /* Media lit from the same lamp: the garment falls off into the ground. */

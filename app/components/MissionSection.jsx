@@ -60,18 +60,19 @@ export default function MissionSection() {
         </section>
       </div>
 
-      {/* Scene 06: plain ground, well clear of the closing above it. */}
+      {/* Scene 06: the page's last statement, at the centre of the screen on
+          plain ground, well clear of the closing above it. */}
       <section aria-labelledby="next-layer" className="scene-close wrap">
-        <div className="max-w-[38rem]">
+        <div className="mx-auto max-w-[38rem]">
           <h2 id="next-layer" className="t-statement">
             The next layer of human technology.
           </h2>
-          <p className="t-body mt-5 max-w-[42ch]">
+          <p className="t-body mx-auto mt-5 max-w-[42ch]">
             Grovillon is developing a new approach to wearable systems, designed around the human body and the
             conditions it faces.
           </p>
         </div>
-        <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-2">
+        <div className="mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
           <a href={`mailto:${CONTACT_EMAIL}`} className="lo-btn">
             Get in touch
             <Arrow direction="out" className="lo-arrow" />
