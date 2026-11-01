@@ -68,6 +68,13 @@
     outline-offset: 4px;
   }
 
+  /* The policy pages keep the smooth in-page scrolling they were published
+     with. The home page jumps (its pinned stage would flash past). */
+  @media (prefers-reduced-motion: no-preference) {
+    html:has(.legal-page) {
+      scroll-behavior: smooth;
+    }
+  }
 }
 
 @layer components {
