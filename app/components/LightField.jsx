@@ -341,9 +341,12 @@ export default function LightField({ className, variant = 'hero' }) {
       const lampKey = lightKey(x, y);
       if (band) {
         // Strips on screen that still show another light are drawn again, and
-        // never more than the rows on screen (a band frame costs no more than
-        // one viewport). A strip only partly on screen stays stale, so the rest
-        // of it is drawn when it scrolls in.
+        // never more than the rows on screen and one row past each edge of it
+        // (a band frame costs one viewport and two rows): the browser scales
+        // the canvas to the screen, and the screen's edge rows blend in the
+        // rows just beyond, which must show the same light. A strip drawn only
+        // in part shows two lights, so it stays stale for any light, and the
+        // rest of it is drawn when it scrolls in.
         // Strip edges are whole device rows, so no row falls between two draws.
         const strip = Math.max(Math.round(STRIP * dpr), 1);
         const rows = Math.ceil(canvas.height / strip);
@@ -352,8 +355,8 @@ export default function LightField({ className, variant = 'hero' }) {
         let bottom = canvas.height;
         if (!force) {
           const rect = canvas.getBoundingClientRect();
-          const viewTop = Math.max(Math.floor(-rect.top * dpr), 0);
-          const viewBottom = Math.min(Math.ceil((window.innerHeight - rect.top) * dpr), canvas.height);
+          const viewTop = Math.max(Math.floor(-rect.top * dpr) - 1, 0);
+          const viewBottom = Math.min(Math.ceil((window.innerHeight - rect.top) * dpr) + 1, canvas.height);
           if (viewBottom <= viewTop) return publish(x, y, at);
           let from = Math.floor(viewTop / strip);
           let to = Math.min(Math.floor((viewBottom - 1) / strip), rows - 1);
@@ -366,7 +369,7 @@ export default function LightField({ className, variant = 'hero' }) {
         gl.enable(gl.SCISSOR_TEST);
         gl.scissor(0, canvas.height - bottom, canvas.width, bottom - top);
         for (let i = Math.floor(top / strip); i * strip < bottom; i++) {
-          if (i * strip >= top && Math.min((i + 1) * strip, canvas.height) <= bottom) strips[i] = lampKey;
+          strips[i] = i * strip >= top && Math.min((i + 1) * strip, canvas.height) <= bottom ? lampKey : '';
         }
       } else if (!force && drawnKey === lampKey) {
         return undefined;
