@@ -45,10 +45,15 @@ const LANDSCAPE_QUERY = '(min-width: 560px) and (min-aspect-ratio: 21/20)';
 const LIGHT_IN = 0.09;
 const LIGHT_OUT = 0.06;
 // A leap of the page (a search, a link, a key that jumps), not a scroll: more
-// than LEAP of the run in one step, after the page had stood still for
-// SETTLED_MS. Mid-scroll, a long frame or a fling is never a leap.
+// than LEAP of the run in one step, either after the page had stood still for
+// SETTLED_MS or at more than JUMP times the speed it was moving at. Mid-scroll,
+// a long frame or a fling keeps its speed, so it is never a leap.
 const LEAP = 0.12;
 const SETTLED_MS = 250;
+const JUMP = 4;
+// A text line must be this much nearer the middle than any other scene's to
+// name a text fragment's block (see nearestBlock).
+const NEAR_GAP = 24;
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
 const ease = (x) => x * x * (3 - 2 * x);
 const mixLamp = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
@@ -61,26 +66,50 @@ let visited = false;
 // Words as the browser matches a text fragment: case and spacing aside.
 const words = (text) => text.replace(/\s+/g, ' ').trim().toLowerCase();
 
-// The first words each text directive in a URL names (text=[prefix-,]start
-// [,end][,-suffix]), or null when the URL names none. Some engines keep the
-// directive in the visit's own entry; the address the page can read never has it.
+// Each text directive in a URL (text=[prefix-,]start[,end][,-suffix]) as
+// words, or null when the URL names none. Some engines keep the directives in
+// the visit's own entry; the address the page can read never has them.
 function textDirectives(url) {
   const at = url ? url.indexOf(':~:') : -1;
   if (at < 0) return null;
   const said = [];
   for (const part of url.slice(at + 3).split('&')) {
     if (!part.startsWith('text=')) continue;
-    const start = part
-      .slice(5)
-      .split(',')
-      .find((field) => field && !field.endsWith('-') && !field.startsWith('-'));
     try {
-      if (start) said.push(words(decodeURIComponent(start)));
+      const fields = part.slice(5).split(',');
+      const prefix = fields.length > 1 && fields[0].endsWith('-') ? fields.shift().slice(0, -1) : '';
+      const suffix = fields.length > 1 && fields[fields.length - 1].startsWith('-') ? fields.pop().slice(1) : '';
+      const [start = '', end = ''] = fields;
+      const directive = [prefix, start, end, suffix].map((field) => words(decodeURIComponent(field)));
+      if (directive[1]) said.push(directive);
     } catch {
       // a malformed escape names nothing
     }
   }
   return said;
+}
+
+// The first place in `text` that a directive matches, as the browser looks
+// for it: whole words, the prefix just before and the suffix just after.
+// Returns the index of its first words, or -1 (also where an engine cannot
+// read the pattern). No lookbehind and no `d` flag, for older engines.
+const OTHER = '[^\\p{L}\\p{N}]';
+const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function findDirective(text, [prefix, start, end, suffix]) {
+  try {
+    const source =
+      `(?:^|${OTHER})` +
+      `(${prefix ? `${escape(prefix)}\\s*` : ''})` +
+      `(${escape(start)})` +
+      (end ? `[\\s\\S]*?${OTHER}${escape(end)}` : '') +
+      `(?=$|${OTHER})` +
+      (suffix ? `\\s*${escape(suffix)}(?=$|${OTHER})` : '');
+    const match = new RegExp(source, 'u').exec(text);
+    if (!match) return -1;
+    return match.index + match[0].indexOf(match[1] + match[2]) + match[1].length;
+  } catch {
+    return -1;
+  }
 }
 
 // The element an address's #id names: as written, then decoded. A malformed
@@ -187,10 +216,11 @@ export default function CinematicStage() {
       window.scrollTo(0, top);
       root.style.scrollBehavior = behavior;
     };
-    // `keep` leaves the scroll position alone: where a link brought the page,
-    // the position is not a place in the pinned stage, so it is not mapped; the
-    // link's target is simply found again.
-    const setLayoutMode = (mode, keep = false) => {
+    // `keep` leaves the scroll position alone: a position the browser set on
+    // its own (a link's target, or a place restored on a reload or Back, saved
+    // in this layout) is not a place in the pinned stage, so it is not mapped.
+    // `refind` follows the link's target again, on the visit the link brought.
+    const setLayoutMode = (mode, keep = false, refind = keep) => {
       // The reader's position is read before the page changes height: once it
       // has, the browser may already have clamped the scroll to the new page.
       const before = track.getBoundingClientRect();
@@ -204,7 +234,7 @@ export default function CinematicStage() {
       }
       const after = track.getBoundingClientRect();
       if (keep) {
-        const target = hashTarget();
+        const target = refind ? hashTarget() : null;
         if (target) {
           const behavior = document.documentElement.style.scrollBehavior;
           document.documentElement.style.scrollBehavior = 'auto';
@@ -234,7 +264,9 @@ export default function CinematicStage() {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const renderer = reduceMotion.matches ? null : createStageRenderer(canvas);
     if (!renderer) {
-      if (track.dataset.cine || document.documentElement.dataset.stage) setLayoutMode(null, landing);
+      if (track.dataset.cine || document.documentElement.dataset.stage) {
+        setLayoutMode(null, !window.__stageScrolled, landing);
+      }
       return undefined;
     }
 
@@ -243,51 +275,73 @@ export default function CinematicStage() {
     const copies = Array.from(track.querySelectorAll('[data-copy]')).sort(
       (a, b) => Number(a.dataset.copy) - Number(b.dataset.copy)
     );
-    // The block a text directive's words are in, if the page's first match
-    // for them is in the stage: the earliest block that has them, with
-    // nothing before the stage that has them.
+    // The block the page's first match for a link's words is in (-1 when the
+    // words are found outside the stage, or nowhere): the page's text in
+    // reading order, as the browser searches it, with each block's place in it.
     const blockFor = (said) => {
       if (!said?.length) return -1;
-      const range = document.createRange();
-      range.setStart(document.body, 0);
-      range.setEndBefore(track);
-      const before = range.cloneContents();
-      before.querySelectorAll('script, style, noscript, template').forEach((node) => node.remove());
-      const earlier = words(before.textContent || '');
-      return copies.findIndex((el) => {
-        const own = words(el.textContent || '');
-        return said.some((start) => start && own.includes(start) && !earlier.includes(start));
+      const page = words(document.body.innerText || '');
+      const stage = page.indexOf(words(track.innerText || ''));
+      let from = Math.max(stage, 0);
+      const spans = copies.map((el) => {
+        const own = words(el.innerText || '');
+        const at = stage < 0 || !own ? -1 : page.indexOf(own, from);
+        if (at >= 0) from = at + own.length;
+        return [at, at < 0 ? -1 : at + own.length];
       });
+      for (const directive of said) {
+        const at = findDirective(page, directive);
+        if (at >= 0) return spans.findIndex(([a, b]) => a >= 0 && at >= a && at < b);
+      }
+      return -1;
+    };
+    // The words in the middle of the screen, where a text fragment's match was
+    // centred: the stage block of the text line nearest the middle anywhere on
+    // the page, or -1 when that line is not in the stage, is too far from the
+    // middle, or has another scene's (or other text's) line within NEAR_GAP of
+    // it (on a short landscape screen Scene 02's and 03's copy overlap before
+    // the script runs): then the reader stays where they landed.
+    const nearestBlock = () => {
+      const middle = window.innerHeight / 2;
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode: (node) =>
+          node.parentElement?.closest('script, style, noscript, template')
+            ? NodeFilter.FILTER_REJECT
+            : NodeFilter.FILTER_ACCEPT,
+      });
+      const range = document.createRange();
+      const found = [];
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        if (!node.data.trim()) continue;
+        const block = copies.findIndex((el) => el.contains(node));
+        range.selectNodeContents(node);
+        for (const line of range.getClientRects()) {
+          if (line.width <= 1 || line.height <= 1 || line.bottom <= 0 || line.top >= window.innerHeight) continue;
+          found.push({ off: Math.abs(line.top + line.height / 2 - middle), height: line.height, block, node });
+        }
+      }
+      found.sort((a, b) => a.off - b.off);
+      const [best] = found;
+      if (!best || best.off > Math.max(best.height, 0.06 * window.innerHeight)) return -1;
+      // Scene 03's heading and line are lit together from the line's cue, so
+      // they do not compete: either one lands the line's lit window.
+      const scene = (block) => Math.min(block, 1);
+      const other = found.find(
+        (line) => scene(line.block) !== scene(best.block) || (best.block < 0 && line.node !== best.node)
+      );
+      if (other && other.off - best.off < NEAR_GAP) return -1;
+      return best.block > 0 ? copies.length - 1 : best.block;
     };
     // A link that names words on the page (a text fragment) may have centred
     // some of the stage's words before the script ran. Where the engine keeps
     // the link's words in the visit's entry, they name the block. Otherwise the
-    // block is the one with a line of text in the middle of the screen, if no
-    // other block has one there: read now, while the stylesheet still holds
-    // Scene 03's blocks apart, and only by text lines (the browser centres the
-    // words, not their block). Ambiguous, the reader stays where they landed.
+    // block is the one whose text line is nearest the middle of the screen
+    // (the browser centres the words, not their block), read now, while the
+    // stylesheet still holds Scene 03's blocks apart.
     let fragment = -1;
     if (landing && !window.location.hash && window.scrollY > 0) {
       const said = textDirectives(visit?.name);
-      if (said) {
-        fragment = blockFor(said);
-      } else {
-        const middle = window.innerHeight / 2;
-        const close = copies.filter((el) => {
-          const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-          const range = document.createRange();
-          for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-            range.selectNodeContents(node);
-            for (const line of range.getClientRects()) {
-              if (line.width <= 1 || line.height <= 1) continue;
-              const off = Math.abs(line.top + line.height / 2 - middle);
-              if (off <= Math.max(line.height, 0.06 * window.innerHeight)) return true;
-            }
-          }
-          return false;
-        });
-        if (close.length === 1) fragment = Number(close[0].dataset.copy);
-      }
+      fragment = said ? blockFor(said) : nearestBlock();
     }
     // Scene A's heading is lit from first paint, as the stylesheet shows it.
     const lights = copies.map((_, i) => ({
@@ -341,8 +395,10 @@ export default function CinematicStage() {
     let runPx = 1;
     let lastWheel = -Infinity;
     let lastNotch = -Infinity;
-    // When the page last moved under the stage (see LEAP).
+    // When the page last moved under the stage, and how fast (px per ms; 0
+    // after a jump): see LEAP.
     let movedAt = -Infinity;
+    let movedSpeed = 0;
     // Whether the timeline is still bridging a wheel notch (see NOTCH_TAU).
     let bridging = false;
     let stageTop = 0;
@@ -638,8 +694,12 @@ export default function CinematicStage() {
       // A leap of the page (see LEAP): the text lands on its state at once
       // instead of fading out over the text that is lighting there.
       const shift = Math.abs(target - t);
-      const leap = shift > LEAP && now - movedAt > SETTLED_MS;
-      if (shift > 0) movedAt = now;
+      const speed = gap > 0 ? (shift * runPx) / gap : Infinity;
+      const leap = shift > LEAP && (now - movedAt > SETTLED_MS || speed > JUMP * movedSpeed);
+      if (shift > 0) {
+        movedAt = now;
+        movedSpeed = Number.isFinite(speed) ? speed : 0;
+      }
       if (jump) {
         t = target;
         bridging = false;
@@ -738,13 +798,21 @@ export default function CinematicStage() {
       stageFocus(frame);
 
       // Each text block switches on past 0.65 and off below 0.35 of its cue,
-      // then eases there; off screen it lands on the state directly.
+      // then eases there; off screen it lands on the state directly. Scene 02's
+      // copy and Scene 03's share one place on screen, so a block that is
+      // lighting waits while the other scene's copy is still going out: a fast
+      // scroll never shows text over text, it only lights the new text later.
       frame.copy.forEach((cue, i) => {
-        const light = lights[i];
-        light.on = light.on ? cue > 0.35 : cue > 0.65;
+        lights[i].on = lights[i].on ? cue > 0.35 : cue > 0.65;
+      });
+      lights.forEach((light, i) => {
         const goal = light.on ? 1 : 0;
+        const waiting =
+          light.on && lights.some((other, j) => (j === 0) !== (i === 0) && !other.on && other.value > 0.01);
         if (jump || leap) {
           light.value = goal;
+        } else if (waiting && light.value < 0.01) {
+          moving = true;
         } else {
           light.value += (goal - light.value) * (1 - Math.exp(-dt / (light.on ? LIGHT_IN : LIGHT_OUT)));
           if (Math.abs(goal - light.value) < 0.002) light.value = goal;
