@@ -64,9 +64,10 @@ const rampPos = (u, len, v0, v1) => len * (v0 * u + (v1 - v0) * (u * u * u - (u 
 // Where the light waits beside the Scene 04 headline, and rests in Scene 05's
 // grid below it: x in css px from the band's left edge, past the end of the
 // headline's longest line (`textEnd`), at least 0.78 of the width and never
-// past 0.9 of it. On a phone the first line is the longer one (R6).
+// nearer the edge than 0.06 of it. On a phone the first line is the longer one
+// (R6); at 320 px it nearly fills the line, and the light still clears it.
 export function waitX(width, textEnd) {
-  return Math.max(0.78 * width, Math.min(textEnd + 0.06 * width, 0.9 * width));
+  return Math.max(0.78 * width, Math.min(textEnd + 0.06 * width, 0.94 * width));
 }
 
 // The scroll positions at which the movements change, from the geometry:
