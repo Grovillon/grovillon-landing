@@ -284,8 +284,9 @@ function camera(u, framings) {
 // stage's approach as a share of the pinned run (viewport height / pinned scroll);
 // `statement` is where scene B's copy ends, px from the stage's top. `page`
 // passes what the page has already decided, so script and stylesheet agree:
-// `landscape` (the stylesheet's media query) and `copyRight` (the copy column's
-// measured right edge, px from the stage's left).
+// `landscape` (the stylesheet's media query), `copyRight` (the copy column's
+// measured right edge, px from the stage's left) and `run` (the pinned scroll,
+// px: with a browser's toolbar showing, the viewport is shorter than the stage).
 export function stageLayout(width, height, entry = 0.25, statement = 0, page = {}) {
   const landscape = page.landscape ?? (width >= 720 && width / height >= 1.05);
   const gutter = Math.min(Math.max(0.05 * width, 20), 72);
@@ -295,7 +296,7 @@ export function stageLayout(width, height, entry = 0.25, statement = 0, page = {
   // out and scene B's heading lighting would grow past 0.2 of a screen (the
   // plan's text gap): it is held there, but never under the cue spacing budget.
   const timed = (beats, spacing) => {
-    const run = height / Math.max(entry, 1e-6);
+    const run = page.run ?? height / Math.max(entry, 1e-6);
     const [off, heading, line] = beats.copy;
     const gap = Math.min(heading - off, Math.max(0.2 * height, spacing) / run);
     return { ...beats, reveal: -0.5 * entry, copy: [off, off + gap, line] };

@@ -44,9 +44,58 @@ const PRESS_SLOP = 10;
 const LANDSCAPE_QUERY = '(min-width: 560px) and (min-aspect-ratio: 21/20)';
 const LIGHT_IN = 0.09;
 const LIGHT_OUT = 0.06;
+// A leap of the page (a search, a link, a key that jumps), not a scroll: more
+// than LEAP of the run in one step, after the page had stood still for
+// SETTLED_MS. Mid-scroll, a long frame or a fling is never a leap.
+const LEAP = 0.12;
+const SETTLED_MS = 250;
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
 const ease = (x) => x * x * (3 - 2 * x);
 const mixLamp = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k);
+
+// Only the first stage this document mounts follows the address's link: a later
+// one is a return through the site's router (Back from a policy page), and the
+// reader's place has been restored.
+let visited = false;
+
+// Words as the browser matches a text fragment: case and spacing aside.
+const words = (text) => text.replace(/\s+/g, ' ').trim().toLowerCase();
+
+// The first words each text directive in a URL names (text=[prefix-,]start
+// [,end][,-suffix]), or null when the URL names none. Some engines keep the
+// directive in the visit's own entry; the address the page can read never has it.
+function textDirectives(url) {
+  const at = url ? url.indexOf(':~:') : -1;
+  if (at < 0) return null;
+  const said = [];
+  for (const part of url.slice(at + 3).split('&')) {
+    if (!part.startsWith('text=')) continue;
+    const start = part
+      .slice(5)
+      .split(',')
+      .find((field) => field && !field.endsWith('-') && !field.startsWith('-'));
+    try {
+      if (start) said.push(words(decodeURIComponent(start)));
+    } catch {
+      // a malformed escape names nothing
+    }
+  }
+  return said;
+}
+
+// The element an address's #id names: as written, then decoded. A malformed
+// escape names nothing.
+function hashTarget() {
+  const raw = window.location.hash.slice(1);
+  if (!raw) return null;
+  const element = document.getElementById(raw);
+  if (element) return element;
+  try {
+    return document.getElementById(decodeURIComponent(raw));
+  } catch {
+    return null;
+  }
+}
 
 // A coarse matte of the garment from its texture's alpha, grown by two cells so
 // the pointer counts as on the garment just past its edge.
@@ -138,9 +187,9 @@ export default function CinematicStage() {
       window.scrollTo(0, top);
       root.style.scrollBehavior = behavior;
     };
-    // `keep` leaves the scroll position alone: a position the browser set on
-    // its own (a restored one, or a link's target) is not a place in the pinned
-    // stage, so it is not mapped; a link's target is simply found again.
+    // `keep` leaves the scroll position alone: where a link brought the page,
+    // the position is not a place in the pinned stage, so it is not mapped; the
+    // link's target is simply found again.
     const setLayoutMode = (mode, keep = false) => {
       // The reader's position is read before the page changes height: once it
       // has, the browser may already have clamped the scroll to the new page.
@@ -155,7 +204,7 @@ export default function CinematicStage() {
       }
       const after = track.getBoundingClientRect();
       if (keep) {
-        const target = window.location.hash && document.getElementById(window.location.hash.slice(1));
+        const target = hashTarget();
         if (target) {
           const behavior = document.documentElement.style.scrollBehavior;
           document.documentElement.style.scrollBehavior = 'auto';
@@ -172,42 +221,74 @@ export default function CinematicStage() {
       }
     };
 
+    // Whether the page opened where a link brought it: the document's first
+    // stage, on a fresh visit (not a reload or Back), with no hand on the page
+    // yet (the head script notes a hand). Only then is a link's target found
+    // again once the stage is set; any other opening position is the reader's
+    // own, and is kept.
+    const visit = performance.getEntriesByType?.('navigation')?.[0];
+    const landing = !visited && visit?.type === 'navigate' && !window.__stageScrolled;
+    visited = true;
     // The head script may already have pinned the stage; without motion or a
-    // hardware-rendered WebGL context, it goes back to plain sections. Unless
-    // the reader has scrolled by hand since (the head script notes it), the
-    // scroll position is the browser's own and is left where it is.
+    // hardware-rendered WebGL context, it goes back to plain sections.
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const renderer = reduceMotion.matches ? null : createStageRenderer(canvas);
     if (!renderer) {
-      if (track.dataset.cine || document.documentElement.dataset.stage) setLayoutMode(null, !window.__stageScrolled);
+      if (track.dataset.cine || document.documentElement.dataset.stage) setLayoutMode(null, landing);
       return undefined;
     }
 
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     const landscapeQuery = window.matchMedia(LANDSCAPE_QUERY);
-    // A link that names words on the page (a text fragment; the browser keeps
-    // it out of the address the page can read) may have centred some of the
-    // stage's words before the script ran: on a fresh visit that opens
-    // scrolled, with no #id and no hand on the page yet, the block whose words
-    // sit in the middle of the screen is the one the reader came for. Read
-    // now, while the stylesheet still holds Scene 03's blocks apart.
-    let fragment = -1;
-    const visit = performance.getEntriesByType?.('navigation')?.[0];
-    if (!window.location.hash && visit?.type === 'navigate' && window.scrollY > 0 && !window.__stageScrolled) {
-      const middle = window.innerHeight / 2;
-      let best = Infinity;
-      Array.from(track.querySelectorAll('[data-copy]')).forEach((el) => {
-        const r = el.getBoundingClientRect();
-        const off = Math.abs(r.top + r.height / 2 - middle);
-        if (off < r.height / 2 + 0.1 * window.innerHeight && off < best) {
-          best = off;
-          fragment = Number(el.dataset.copy);
-        }
-      });
-    }
     const copies = Array.from(track.querySelectorAll('[data-copy]')).sort(
       (a, b) => Number(a.dataset.copy) - Number(b.dataset.copy)
     );
+    // The block a text directive's words are in, if the page's first match
+    // for them is in the stage: the earliest block that has them, with
+    // nothing before the stage that has them.
+    const blockFor = (said) => {
+      if (!said?.length) return -1;
+      const range = document.createRange();
+      range.setStart(document.body, 0);
+      range.setEndBefore(track);
+      const before = range.cloneContents();
+      before.querySelectorAll('script, style, noscript, template').forEach((node) => node.remove());
+      const earlier = words(before.textContent || '');
+      return copies.findIndex((el) => {
+        const own = words(el.textContent || '');
+        return said.some((start) => start && own.includes(start) && !earlier.includes(start));
+      });
+    };
+    // A link that names words on the page (a text fragment) may have centred
+    // some of the stage's words before the script ran. Where the engine keeps
+    // the link's words in the visit's entry, they name the block. Otherwise the
+    // block is the one with a line of text in the middle of the screen, if no
+    // other block has one there: read now, while the stylesheet still holds
+    // Scene 03's blocks apart, and only by text lines (the browser centres the
+    // words, not their block). Ambiguous, the reader stays where they landed.
+    let fragment = -1;
+    if (landing && !window.location.hash && window.scrollY > 0) {
+      const said = textDirectives(visit?.name);
+      if (said) {
+        fragment = blockFor(said);
+      } else {
+        const middle = window.innerHeight / 2;
+        const close = copies.filter((el) => {
+          const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          const range = document.createRange();
+          for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            range.selectNodeContents(node);
+            for (const line of range.getClientRects()) {
+              if (line.width <= 1 || line.height <= 1) continue;
+              const off = Math.abs(line.top + line.height / 2 - middle);
+              if (off <= Math.max(line.height, 0.06 * window.innerHeight)) return true;
+            }
+          }
+          return false;
+        });
+        if (close.length === 1) fragment = Number(close[0].dataset.copy);
+      }
+    }
     // Scene A's heading is lit from first paint, as the stylesheet shows it.
     const lights = copies.map((_, i) => ({
       on: i === 0,
@@ -260,6 +341,8 @@ export default function CinematicStage() {
     let runPx = 1;
     let lastWheel = -Infinity;
     let lastNotch = -Infinity;
+    // When the page last moved under the stage (see LEAP).
+    let movedAt = -Infinity;
     // Whether the timeline is still bridging a wheel notch (see NOTCH_TAU).
     let bridging = false;
     let stageTop = 0;
@@ -347,13 +430,14 @@ export default function CinematicStage() {
       const statement = statementBlock
         ? statementBlock.getBoundingClientRect().bottom - stage.getBoundingClientRect().top
         : 0;
-      const entry = window.innerHeight / Math.max(track.offsetHeight - height, 1);
+      const run = Math.max(track.offsetHeight - height, 1);
+      const entry = window.innerHeight / run;
       // The stylesheet's landscape query decides the composition, and the copy
       // column's measured edge places the image beside it (F23).
       const landscape = landscapeQuery.matches;
       const column = landscape ? track.querySelector('.cine-copy')?.getBoundingClientRect() : null;
       const copyRight = column?.width ? column.right - stage.getBoundingClientRect().left : undefined;
-      layout = stageLayout(width, height, entry, statement, { landscape, copyRight });
+      layout = stageLayout(width, height, entry, statement, { landscape, copyRight, run });
       // The relief's unit is the hero's height, and its pattern starts at the
       // hero's top, so the stage's folds run on from the hero's.
       const heroRect = hero?.getBoundingClientRect();
@@ -541,19 +625,21 @@ export default function CinematicStage() {
       repeated = false;
       last = now;
       measure();
-      // Textures that never came: the stage stands down once the reader is
-      // not looking at it, so the page does not change under them.
-      if (tired && !visible) {
+      // Textures that never came, or a context lost for good: the stage stands
+      // down once the reader is not looking at it, so the page does not change
+      // under them.
+      if ((tired || stale) && !visible) {
         standDown();
         return;
       }
 
       let moving = false;
       const jump = snap || !visible;
-      // A leap of the page (a search, a link, a long keyboard jump), not a
-      // scroll gesture: the text lands on its state at once instead of
-      // fading out over the text that is lighting there.
-      const leap = Math.abs(target - t) > 0.12;
+      // A leap of the page (see LEAP): the text lands on its state at once
+      // instead of fading out over the text that is lighting there.
+      const shift = Math.abs(target - t);
+      const leap = shift > LEAP && now - movedAt > SETTLED_MS;
+      if (shift > 0) movedAt = now;
       if (jump) {
         t = target;
         bridging = false;
@@ -809,6 +895,22 @@ export default function CinematicStage() {
       if (!document.hidden) kick();
     };
 
+    // A text fragment followed within the page (a link, or words added to the
+    // address) is landed by the stage, where the engine reports it (the
+    // Navigation API): the browser's own search centres the words again and
+    // again while the stage is pinned, and that carries the page past the
+    // stage. Only new navigations to words in the stage's blocks are taken;
+    // Back and Forward keep the browser's restored place. On such a
+    // navigation the browser does not mark the words it found.
+    const onNavigate = (event) => {
+      if (!event.canIntercept || !event.destination?.sameDocument) return;
+      if (event.navigationType !== 'push' && event.navigationType !== 'replace') return;
+      if (track.dataset.cine !== 'on' && track.dataset.cine !== 'pending') return;
+      const block = blockFor(textDirectives(event.destination.url));
+      if (block < 0) return;
+      event.intercept({ scroll: 'manual', handler: async () => land(copies[block], { block: 'center' }) });
+    };
+
     const onReduce = () => {
       if (!reduceMotion.matches) return;
       setLayoutMode(null);
@@ -818,7 +920,10 @@ export default function CinematicStage() {
     // A lost context the browser does not give back within a few seconds
     // would leave the stage pinned over a blank canvas: the stage goes back to
     // plain sections instead, once the reader is not looking at it (F31, F41).
+    // `stale`: the context has stayed lost past that patience. A context that
+    // comes back later still keeps the stage (it is drawing again).
     let lostTimer = 0;
+    let stale = false;
     const onLost = (event) => {
       event.preventDefault();
       lost = true;
@@ -828,12 +933,15 @@ export default function CinematicStage() {
       if (track.dataset.cine === 'on') track.dataset.cine = 'pending';
       cancel(lostTimer);
       lostTimer = later(() => {
-        if (lost) giveUp();
+        if (!lost) return;
+        stale = true;
+        kick();
       }, 3000);
     };
 
     const onRestored = () => {
       lost = false;
+      stale = false;
       cancel(lostTimer);
       if (!renderer.restore()) {
         setLayoutMode(null);
@@ -946,23 +1054,25 @@ export default function CinematicStage() {
     });
     writeCopy();
     park();
+    // Lands the page where a link to a block (or a heading in it) is meant to
+    // land: inside the block's lit window, as scrollIntoView does once the
+    // blocks wait in their places.
+    const land = (element, options) => {
+      if (disposed) return;
+      measure();
+      park();
+      jumpOnce();
+      element.scrollIntoView(options);
+    };
     // A link to a heading in the stage (#worn, #complexity), or a text fragment
     // that found an unlit block, reached the stage before the blocks waited in
-    // their places: it is followed again, now that reaching it lands where it
-    // is lit.
-    const named = window.location.hash.length > 1 && document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+    // their places: on the visit it brought, it is followed again, now that
+    // reaching it lands where it is lit.
+    const named = landing ? hashTarget() : null;
     // The fragment's block, if it is unlit where the page opened.
     const found = fragment >= 0 && !lights[fragment]?.on ? copies[fragment] : null;
     const linked = named && track.contains(named) ? named : found;
-    if (linked) {
-      later(() => {
-        if (disposed) return;
-        measure();
-        park();
-        jumpOnce();
-        linked.scrollIntoView(linked === found ? { block: 'center' } : undefined);
-      }, 0);
-    }
+    if (linked) later(() => land(linked, linked === found ? { block: 'center' } : undefined), 0);
     // The relief's first frame comes as the hero's entrance ends, even below the
     // fold, so the hero's foot opens onto it (data-relief) then. A page that
     // opens below the hero (a reload, a link to a section) wakes the stage and
@@ -1017,6 +1127,7 @@ export default function CinematicStage() {
     reduceMotion.addEventListener('change', onReduce);
     canvas.addEventListener('webglcontextlost', onLost);
     canvas.addEventListener('webglcontextrestored', onRestored);
+    window.navigation?.addEventListener?.('navigate', onNavigate);
 
     function dispose() {
       if (disposed) return;
@@ -1048,6 +1159,7 @@ export default function CinematicStage() {
       reduceMotion.removeEventListener('change', onReduce);
       canvas.removeEventListener('webglcontextlost', onLost);
       canvas.removeEventListener('webglcontextrestored', onRestored);
+      window.navigation?.removeEventListener?.('navigate', onNavigate);
       copies.forEach((copy, i) => {
         copy.style.removeProperty('opacity');
         copy.style.removeProperty('pointer-events');
