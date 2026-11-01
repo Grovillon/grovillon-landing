@@ -1,6 +1,6 @@
-// Scene 04, "The Light Goes First": where the one lamp is at each scroll
-// position after the stage unpins. Pure functions of scroll, so the light
-// replays exactly in reverse and can be tested in Node.
+// "The Light Goes First": where the one lamp is at each scroll position after
+// the stage unpins, on its way into the page's closing scene. Pure functions of
+// scroll, so the light replays exactly in reverse and can be tested in Node.
 //
 // All lengths are css px. `s` is the scroll since the stage unpinned. A point
 // fixed on the page at `d` (px below the top of the screen at the unpin) shows
@@ -11,10 +11,13 @@
 //   3. it waits, still on screen, where the sentence will arrive; the relief
 //      slides under it, and the sentence enters below and rises into it;
 //   4. meet, hold, rake: as the sentence's line reaches it, it locks to the
-//      page just past the full stop and lowers to a raking angle, its pool
-//      narrowing, so the folds beyond the sentence read as steps;
-//   5. hand-off: it descends straight down into the grid's rest, where it
-//      stays (Scene 05) unless a fine pointer takes it.
+//      page and lowers to a raking angle, its pool narrowing. With a sweep
+//      (`g.sweep`, the closing's first line: it waits at the line's start)
+//      it then crosses the line word by word, reaching its end as the closing
+//      stands at the centre of the screen; without one it holds just past the
+//      full stop;
+//   5. hand-off: it settles into the grid's rest, where it stays (Scene 05)
+//      unless a fine pointer takes it.
 // Its strength never changes: no pulse, no brightening, no second light.
 
 export const SPEED_CAP = 1.6;
@@ -26,7 +29,9 @@ export const LEAD = {
   release: 0.05, // the stage's first 5% leaving: the band lamp takes over at the hang
   early: 0.1, // the light arrives this far ahead of the sentence's first line
   wait: 0.62, // where the light waits, as a share of vh from the top
+  sweepWait: 0.84, // where it waits for a line it sweeps: low, so the line meets it as it enters
   hold: 0.3, // meet, hold and rake
+  sweepMin: 0.3, // the shortest sweep
   handOff: 0.35, // the descent into the grid's rest
   lockBlend: 0.02, // half-width of the smooth lock at the meet
   // The lamp's height and pool, as shares of their values elsewhere on the page:
@@ -60,6 +65,24 @@ const smooth = (u) => u * u * (3 - 2 * u);
 // The distance covered over a ramp of length `len` whose velocity eases from
 // v0 to v1 (smoothstep in velocity), `u` of the way along it.
 const rampPos = (u, len, v0, v1) => len * (v0 * u + (v1 - v0) * (u * u * u - (u * u * u * u) / 2));
+// 0..1 at an even pace with eased ends (a fifth of the way each): a sweep that
+// reads the line at a steady rhythm instead of rushing its middle.
+const RAMP = 0.2;
+const PEAK = 1 / (1 - RAMP);
+function evenly(u) {
+  const x = clamp01(u);
+  if (x <= RAMP) return rampPos(x / RAMP, RAMP, 0, PEAK);
+  if (x <= 1 - RAMP) return rampPos(1, RAMP, 0, PEAK) + PEAK * (x - RAMP);
+  return rampPos(1, RAMP, 0, PEAK) + PEAK * (1 - 2 * RAMP) + rampPos((x - (1 - RAMP)) / RAMP, RAMP, PEAK, 0);
+}
+
+// How lit each word of a swept line is when the lamp is at `x` (css px): 0
+// before the light reaches it, 1 once it has passed, over `soft` px; and how
+// near the light is to it (1 on it), for a glint as the light crosses.
+export function wordLight(x, wordX, soft) {
+  const d = (x - wordX) / Math.max(soft, 1);
+  return { lit: smooth(clamp01(0.5 + d / 2)), near: Math.exp(-d * d) };
+}
 
 // Where the light waits beside the Scene 04 headline, and rests in Scene 05's
 // grid below it: x in css px from the band's left edge, past the end of the
@@ -77,9 +100,13 @@ export function waitX(width, textEnd) {
 //   enterD    page position of the sentence's top (d)
 //   lineD     page position of the centre of the line the light meets (d)
 //   restD     page position of the grid's rest (d); restX its x
+//   sweep     optional [x0, x1]: the line's start and end, which the light
+//             sweeps; centerD then is the closing's centre (d)
 export function leadTimeline(g) {
   const { vh } = g;
-  const waitY = LEAD.wait * vh;
+  const sweeping = Boolean(g.sweep);
+  const waitY = (sweeping ? LEAD.sweepWait : LEAD.wait) * vh;
+  const toX = sweeping ? g.sweep[0] : g.lampX;
   // The glide, from s1 to s2: its velocity on screen eases from the page's (−1)
   // to a cruise and back to rest, so it turns without a kink and stops where it
   // waits. Shorter turns leave a slower cruise; they shorten until the light's
@@ -87,7 +114,7 @@ export function leadTimeline(g) {
   const glide = (s1, s2) => {
     const L = s2 - s1;
     const startY = g.hang[1] - s1;
-    const across = (1.5 * Math.abs(g.lampX - g.hang[0])) / Math.max(L, 1);
+    const across = (1.5 * Math.abs(toX - g.hang[0])) / Math.max(L, 1);
     const limit = Math.sqrt(Math.max((0.98 * SPEED_CAP) ** 2 - across ** 2, 0.25));
     let a = 0;
     let b = 0;
@@ -114,14 +141,16 @@ export function leadTimeline(g) {
     tl = glide(s1, s2);
     if (tl.within) break;
   }
-  // The line's centre reaches the light's height.
+  // The line's centre reaches the light's height. A sweep ends as the closing
+  // stands at the centre of the screen.
   const s3 = Math.max(g.lineD - waitY, tl.s2 + 2 * LEAD.lockBlend * vh);
-  const s4 = s3 + LEAD.hold * vh;
+  const s4 = sweeping ? Math.max(g.centerD - vh / 2, s3 + LEAD.sweepMin * vh) : s3 + LEAD.hold * vh;
   // The descent takes at least LEAD.handOff of a screen, longer where the rest
-  // is far enough below the line that its peak would pass the speed cap.
-  const fall = Math.max(g.restD - g.lineD, 0);
+  // is far enough from the line that its peak would pass the speed cap.
+  const from = sweeping ? g.sweep[1] : g.lampX;
+  const fall = Math.max(g.restD - g.lineD, Math.abs((g.restX ?? from) - from), 0);
   const s5 = s4 + Math.max(LEAD.handOff * vh, fall / ((1 - HAND_RAMP) * (1 + 0.98 * SPEED_CAP)));
-  return { ...tl, s3, s4, s5 };
+  return { ...tl, s3, s4, s5, sweeping };
 }
 
 // Screen y of the glide, `s` within [s1, s2].
@@ -138,9 +167,10 @@ function glideY(s, tl) {
 // The lamp at scroll `s`: screen position, and its height and pool radius as
 // shares of their values elsewhere (1 outside the rake).
 export function leadPath(s, g, tl = leadTimeline(g)) {
-  const { s1, s2, s3, s4, s5, waitY } = tl;
+  const { s1, s2, s3, s4, s5, waitY, sweeping } = tl;
   const [hangX, hangY] = g.hang;
-  const lampX = g.lampX;
+  const lampX = sweeping ? g.sweep[0] : g.lampX;
+  const endX = sweeping ? g.sweep[1] : lampX;
   const restX = g.restX ?? lampX;
   const w = LEAD.lockBlend * g.vh;
   let x = lampX;
@@ -166,9 +196,10 @@ export function leadPath(s, g, tl = leadTimeline(g)) {
   } else if (s <= s4) {
     // The lock: on screen the light eases from still to the page's pace over
     // ±w around the meet, so it ends exactly on the line's centre.
-    phase = s < s3 ? 'waits' : 'hold';
+    phase = s < s3 ? 'waits' : sweeping ? 'sweep' : 'hold';
     if (s < s3 + w) y = waitY + rampPos((s - (s3 - w)) / (2 * w), 2 * w, 0, -1);
     else y = waitY - (s - s3);
+    if (sweeping) x = lampX + (endX - lampX) * evenly((s - s3) / (s4 - s3));
     lower = 1 + smooth(clamp01((s - s3) / (s4 - s3)));
   } else if (s <= s5) {
     phase = 'hand-off';
@@ -184,7 +215,7 @@ export function leadPath(s, g, tl = leadTimeline(g)) {
     if (u <= ramp) d = from + rampPos(u / ramp, ramp, 0, peak);
     else if (u <= len - ramp) d = from + rampPos(1, ramp, 0, peak) + peak * (u - ramp);
     else d = from + rampPos(1, ramp, 0, peak) + peak * (len - 2 * ramp) + rampPos((u - (len - ramp)) / ramp, ramp, peak, 0);
-    x = lampX + (restX - lampX) * smooth(clamp01(u / len));
+    x = endX + (restX - endX) * smooth(clamp01(u / len));
     y = d - s;
     lower = 2 * (1 - smooth(clamp01(u / len)));
   } else {
@@ -205,5 +236,6 @@ export function leadPath(s, g, tl = leadTimeline(g)) {
 // The still pose for reduced motion: one light just past the full stop, low
 // enough to reach the grid's first rows, fixed on the page (d).
 export function leadPose(g) {
+  if (g.sweep) return { x: g.restX ?? g.lampX, d: g.restD, z: 1, look: 1 };
   return { x: g.lampX, d: g.lineD + 0.5 * Math.max(g.restD - g.lineD, 0), z: 1, look: 1 };
 }

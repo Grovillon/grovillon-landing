@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import { cancelFrame, requestFrame } from './frameClock';
-import { waitX } from './leadPath';
 import { lamps, onLamp } from './pageLamp';
 
 // A square grid of hairlines behind the band, with a dot at every crossing: a
@@ -157,22 +156,10 @@ export default function KineticGrid({ className }) {
     // the band: below a pinned stage, where the stage's lamp hangs, above the band),
     // so the grid and the relief under it share one light; otherwise upper right.
     // The lamp is the band's (LightField): the relief and the grid on it share
-    // one light, which Scene 04 brings down into the grid's rest beside the
-    // heading. Without the relief (no WebGL) the grid rests its own lamp there.
+    // one light, which comes to rest at the centre of the closing, behind its
+    // statement. Without the relief (no WebGL) the grid rests its own lamp there.
     const restEl = host.querySelector('[data-lead="rest"]');
-    // The rest's x, as LightField places the band's lamp there (waitX): past
-    // the end of Scene 04's headline, measured from the page.
-    const headline = document.querySelector('[data-lead="line"]');
-    const restX = () => {
-      if (!headline) return width * 0.78;
-      const range = document.createRange();
-      range.selectNodeContents(headline);
-      const left = host.getBoundingClientRect().left;
-      const ends = Array.from(range.getClientRects())
-        .filter((line) => line.width > 1)
-        .map((line) => line.right - left);
-      return waitX(width, ends.length ? Math.max(...ends) : 0);
-    };
+    const restX = () => width / 2;
     const shared = () => {
       const page = lamps.band?.page;
       if (!page) return null;
@@ -579,16 +566,16 @@ export default function KineticGrid({ className }) {
       draw(performance.now());
     };
 
-    // The first time the heading is well into view, the resting lamp sends one
-    // ripple out through the skin, from where its light meets the band.
-    const heading = host.querySelector('h2');
+    // The first time the closing's statement is well into view, the resting
+    // lamp sends one ripple out through the skin, from where its light rests.
+    const heading = restEl || host.querySelector('h2');
     const entryObserver = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
         entryObserver.disconnect();
         if (entered || still) return;
-        // From where the light rests beside the heading: read from the page,
-        // not the lamp, which a jump here may not have brought down yet.
+        // From where the light rests: read from the page, not the lamp, which a
+        // jump here may not have brought down yet.
         const r = restEl?.getBoundingClientRect();
         const top = host.getBoundingClientRect().top;
         const x = restX();

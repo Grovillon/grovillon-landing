@@ -107,7 +107,7 @@
     letter-spacing: -0.006em;
   }
 
-  /* Scene 04's line, the page's largest statement: one line from about 524 px
+  /* The closing's statement, the page's largest: one line from about 524 px
      wide, two balanced lines below. */
   .t-signature {
     font-stretch: 112%;
@@ -115,6 +115,18 @@
     font-size: clamp(2.25rem, 4.6vw, 4.5rem);
     line-height: 1.06;
     letter-spacing: -0.006em;
+  }
+
+  /* The closing's first line, in the name's voice: wide, spaced capitals, on
+     one line down to a 320 px screen. */
+  .t-kicker {
+    font-stretch: 125%;
+    font-weight: 400;
+    font-size: clamp(0.66rem, 3.2vw, 1.75rem);
+    line-height: 1.3;
+    letter-spacing: 0.24em;
+    margin-right: -0.24em;
+    text-transform: uppercase;
   }
 
   .t-lead {
@@ -371,41 +383,6 @@
     display: none;
   }
 
-  /* Scene 04: the page's largest statement, alone on the relief, with room above
-     for the light to go first and room below to hold (CHECKPOINT-2-PLAN, Scene 04). */
-  .scene-ahead {
-    padding-top: 55vh;
-    padding-top: 55lvh;
-    padding-bottom: 40vh;
-    padding-bottom: 40lvh;
-  }
-
-  @media (min-width: 560px) and (min-aspect-ratio: 21/20) {
-    .scene-ahead {
-      padding-bottom: 55vh;
-      padding-bottom: 55lvh;
-    }
-  }
-
-  /* Reduced motion: one still pose of the light, between the sentence and the
-     grid, so the section closes up around it. Without the relief (no WebGL, no
-     script) the sentence stands at full ink on plain ground, closed up the same. */
-  /* Decided as the page opens and kept for the visit (a lost context or a later
-     switch to reduced motion leaves the page where it is): data-motion is set
-     by the head script, data-relief by the band when it has no WebGL at all. */
-  [data-motion="reduce"] .scene-ahead,
-  .band[data-relief="none"] > .scene-ahead {
-    padding-top: clamp(5rem, 11vw, 10rem);
-    padding-bottom: clamp(3rem, 6vw, 5rem);
-  }
-
-  @media (scripting: none) {
-    .scene-ahead {
-      padding-top: clamp(5rem, 11vw, 10rem);
-      padding-bottom: clamp(3rem, 6vw, 5rem);
-    }
-  }
-
   /* Scene 05: a square grid of hairlines with a dot at every crossing, a second
      skin that answers to the pointer and to touch. The still CSS grid is what
      visitors without script see (with reduced motion the canvas draws it still).
@@ -416,8 +393,44 @@
     --grid-cell: 44px;
     position: relative;
     isolation: isolate;
-    padding-top: clamp(5rem, 11vw, 10rem);
-    padding-bottom: clamp(7rem, 15vw, 13rem);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* The closing: one screen, its words at its centre, the grid all around. A
+     sixth of a screen of relief above it is where the light goes ahead of
+     the reader; with no light to travel (reduced motion, no relief, no script)
+     the closing keeps only a margin. Below it the grid and the relief fade
+     out, and Scene 06 starts below the screen. */
+  .finale {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100lvh;
+    margin-top: 15vh;
+    margin-top: 15lvh;
+    text-align: center;
+  }
+
+  [data-motion="reduce"] .finale,
+  .band[data-relief="none"] .finale {
+    margin-top: clamp(3rem, 8vw, 6rem);
+  }
+
+  @media (scripting: none) {
+    .finale {
+      margin-top: clamp(3rem, 8vw, 6rem);
+    }
+  }
+
+  /* The first line waits dim while the light goes ahead, and each word lights
+     as the light reads it (LightField sets --lit and --near per word); without
+     the light every word is lit. */
+  .finale [data-word] {
+    opacity: calc(0.16 + 0.84 * var(--lit, 1));
+    text-shadow: 0 0 calc(0.9em * var(--near, 0)) rgb(255 244 228 / calc(0.55 * var(--near, 0)));
+    transition: opacity 160ms ease-out;
   }
 
   .grid-field,
@@ -474,8 +487,10 @@
     }
   }
 
-  /* Scene 06 stands on plain ground right below the band's fade. */
+  /* Scene 06 stands on plain ground, well below the closing's fade, so the
+     two never share the screen at rest. */
   .scene-close {
+    padding-top: clamp(4rem, 9vw, 8rem);
     padding-bottom: clamp(3rem, 6vw, 5rem);
   }
 
@@ -627,6 +642,13 @@
     margin: 0;
   }
 
+  /* Scene 02's copy stands below the garment, clear of it, where scene 03's
+     stack will be drawn: the two scenes trade places. */
+  :is([data-stage] .cine, .cine[data-cine]) .cine-copy {
+    top: auto;
+    bottom: max(8svh, 3.5rem);
+  }
+
   /* Before the script runs, Scene 03's blocks (unlit there) sit apart from
      Scene 02's copy, where the browser can still reach them: in the middle of
      the screen on portrait, at the top on landscape. A link naming their words
@@ -637,8 +659,8 @@
     top: calc(50lvh - 4rem);
   }
 
-  /* Landscape: the copy sits in the page's left column, the image to its right,
-     wherever the column fits beside it (D24; CinematicStage uses the same query). */
+  /* Landscape: each scene's copy and image share the screen side by side,
+     wherever a column fits beside an image (D24; CinematicStage uses the same query). */
   @media (min-width: 560px) and (min-aspect-ratio: 21/20) {
     :is([data-stage] .cine, .cine[data-cine]) {
       --cine-run: 3.2;
@@ -648,10 +670,18 @@
     :is([data-stage] .cine, .cine[data-cine]) .cine-copy,
     :is([data-stage] .cine, .cine[data-cine]) .cine-block {
       top: 50%;
+      bottom: auto;
       left: max(var(--gutter), calc((100% - 84rem) / 2 + var(--gutter)));
       right: auto;
       width: min(30rem, 31vw);
       transform: translateY(-50%);
+    }
+
+    /* Scene 02's copy in the right column, the garment on the left; scene 03's
+       statement then lights where the garment stood, the stack where this was. */
+    :is([data-stage] .cine, .cine[data-cine]) .cine-copy {
+      left: auto;
+      right: max(var(--gutter), calc((100% - 84rem) / 2 + var(--gutter)));
     }
 
     :is([data-stage] .cine, .cine[data-cine]) .cine-block h2 {
@@ -672,10 +702,15 @@
     translate: none !important;
   }
 
-  /* Scene 04 on paper: the sentence alone, closed up, on plain ground. */
-  .scene-ahead {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+  /* The closing on paper: its words, closed up, on plain ground. */
+  .finale {
+    min-height: 0;
+    margin-top: 2rem;
+  }
+
+  .finale [data-word] {
+    opacity: 1;
+    text-shadow: none;
   }
 
   .band-field,

@@ -39,15 +39,14 @@ const SPAN = STACK_BOTTOM - SHEETS[0].box[1];
 const CLOSED_HEIGHT = SPAN - (1 - CLOSEST) * SLACK_SUM;
 const OPEN_HEIGHT = SPAN - (1 - WIDEST) * SLACK_SUM;
 
-// The relief behind both scenes is the hero's, lit by its own steady lamp, and
-// it stays as it is from the moment the stage arrives until it leaves: only
-// the subjects come and go in front of it. The garment is there from the
-// start, unlit, hidden in its own shade on the relief; light falls on it,
-// slowly, and at the end of scene A the light goes out and it is dark again.
-// Only then, unseen, do it and its shade go; after a pause on the relief
-// alone, scene B's statement is lit first and the stack is drawn out of the
-// dark where it stands. It closes, rests closed in its light, and that light
-// goes out too, so the stage ends on the relief and the statement alone.
+// The stage arrives in the dark, the garment unseen in it. Light falls: one
+// pool that opens over the garment and spreads until the whole relief is lit,
+// so the garment and the relief around it come out of the dark together. The
+// garment stands still in the light; at the end of scene A it dissolves into
+// the lit relief, and scene B's statement lights in its place while the stack
+// is drawn out of the dark beside it. The stack closes, rests closed in its
+// light, and that light goes out, so the stage ends on the relief and the
+// statement alone.
 //
 // The beats, as the shares of the pinned run at which each one ends (the
 // reveal starts mid-approach, while the stage is still scrolling in). Every
@@ -57,6 +56,8 @@ const OPEN_HEIGHT = SPAN - (1 - WIDEST) * SLACK_SUM;
 // garment, a2 the camera has drawn back while the lamp crosses, a3 the key
 // light rests, a4 the camera has pushed onto the seam, a5 the seam rests lit,
 // a6 the light is out and the garment gone. Then the relief alone to `cut`.
+// (Scene A's beats now mark its light: a1 the light has found the garment, a2 it
+// lights the whole garment, a3 the whole relief, a5..a6 the garment dissolves.)
 // Scene B: b1 the plane of light has passed, b2 the lamp has crossed the open
 // stack and rests, b3 it has closed, b4 it rests closed, b5 its light is out
 // and it is gone; the stage rests on the statement until it unpins. `copy`:
@@ -101,24 +102,17 @@ export const BEATS = {
     copy: [0.3, 0.357, 0.43],
   },
 };
-const SEAM = [1110, 300]; // where scene A's push-in ends, on the right shoulder seam
-const PUSH = 0.6; // the push-in's end, as a share of the hold distance
-const LAMP_HEIGHT = 1700; // scene A's lamp above the image, image px
-// The garment comes into the light from above its right shoulder, below where
-// the relief's lamp hangs: its front spreads from this image point, starting
-// at the garment's nearest edge (image px), over the garment's bounds.
-const LIGHT_FROM = [1160, -120];
-const NEAREST = 345;
+const LAMP_HEIGHT = 1700; // scene A's key light above the image, image px
+// The garment in the photograph (image px): its bounds, and the point the
+// camera keeps at the screen anchor (the middle of the garment as it shows,
+// its lower edge fading out).
 const BOUNDS = [220, 66, 1350, 1024];
-// While the camera holds the push-in's framing, the light stays gathered this
-// far onto the seam (the rest of the way as it goes out).
-const GATHERED = 0.6;
-// How gradually the light comes: over this much of the front's travel a point
-// goes from unlit to fully lit; and as the light gathers onto the seam at the
-// end, over this much of the frame's half-diagonal. The garment itself is
-// solid throughout: only its light changes.
-const FRONT_SOFT = 1.3;
-const GONE_SOFT = 0.6;
+const GARMENT_W = BOUNDS[2] - BOUNDS[0];
+const GARMENT_H = BOUNDS[3] - BOUNDS[1];
+const GARMENT_AT = [785, 470];
+// The camera eases this much closer over the whole of scene A, at an even
+// pace, so the still garment is never quite static.
+const DRIFT = 0.04;
 // The stage's relief fades up from the ground below the join with the hero,
 // whose own relief fades out above it, over this much of the hero's height; it
 // fades out again over this much at the stage's bottom edge as it leaves.
@@ -181,13 +175,6 @@ const glide = cubicBezier(0.45, 0, 0.55, 1);
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
 const ramp = (t, a, b) => clamp01((t - a) / (b - a));
 const mix = (a, b, t) => a + (b - a) * t;
-// A camera move between two rests, 0..1: it sets off at the scroll's own pace
-// (slope 1), so a move starts as soon as the reader scrolls into it, and
-// arrives at rest (slope 0).
-const setOff = (t, a, b) => {
-  const u = ramp(t, a, b);
-  return u + u * u - u * u * u;
-};
 const mixPoint = (a, b, t) => [mix(a[0], b[0], t), mix(a[1], b[1], t)];
 const same = (a, b) => a[0] === b[0] && a[1] === b[1];
 
@@ -253,29 +240,20 @@ function path(t, keys) {
   });
 }
 
-// The camera between framings. A framing puts the image point `cam` at the
-// screen point `anchor` at scale `zoom`; `u` runs from one framing (its index)
-// to the next. Between two framings the camera zooms about the one screen
-// point they share, so the scale changes at an even rate (in log space) and
-// every point of the image travels in a straight line; with no change of scale
-// it is a plain pan.
-function camera(u, framings) {
-  const i = Math.min(Math.max(Math.floor(u), 0), framings.length - 2);
-  const p = clamp01(u - i);
-  const a = framings[i];
-  const b = framings[i + 1];
-  const r = b.zoom / a.zoom;
-  const s = r ** p;
-  const zoom = a.zoom * s;
-  const anchor = mixPoint(a.anchor, b.anchor, p);
-  const offset = [0, 1].map((k) => {
-    const from = a.anchor[k] - a.zoom * a.cam[k];
-    const to = b.anchor[k] - b.zoom * b.cam[k];
-    if (Math.abs(r - 1) < 1e-4) return mix(from, to, p);
-    const fixed = (to - r * from) / (1 - r);
-    return fixed + s * (from - fixed);
-  });
-  return { zoom, anchor, cam: [(anchor[0] - offset[0]) / zoom, (anchor[1] - offset[1]) / zoom] };
+// Scene A's framing: the garment's middle at `anchor` (px) at scale `zoom`, and
+// where its light falls from: above the screen, over the garment, down onto its
+// shoulders. `revealFill` is how much of the garment the key light shows as
+// the light arrives (the rest shows as it settles).
+function garmentPlace(anchor, zoom, width, height, revealFill) {
+  const shoulders = [anchor[0] + 0.06 * GARMENT_W * zoom, anchor[1] - 0.26 * GARMENT_H * zoom];
+  return {
+    zoom,
+    anchor,
+    cam: GARMENT_AT,
+    dawnFrom: [shoulders[0] + 0.04 * width, -0.3 * height],
+    dawnAt: shoulders,
+    revealFill,
+  };
 }
 
 // Where the image sits for a given stage size. Landscape stages set the copy in
@@ -302,32 +280,22 @@ export function stageLayout(width, height, entry = 0.25, statement = 0, page = {
     return { ...beats, reveal: -0.5 * entry, copy: [off, off + gap, line] };
   };
   if (landscape) {
-    const copyRight = page.copyRight ?? Math.max(gutter, (width - 1344) / 2 + gutter) + Math.min(480, 0.31 * width);
-    const fit = Math.min((0.38 * width) / GARMENT.width, (0.52 * height) / GARMENT.height);
+    const edge = Math.max(gutter, (width - 1344) / 2 + gutter);
+    // Scene B's statement column (left) and scene A's copy column (right), as
+    // the stylesheet sets them; the page passes their measured edges.
+    const copyRight = page.copyRight ?? edge + Math.min(480, 0.31 * width);
+    const copyLeft = page.copyLeft ?? width - edge - Math.min(480, 0.31 * width);
     const room = (width - copyRight - 2 * gutter) / 861;
     const closedZoom = Math.min((0.55 * height) / CLOSED_HEIGHT, room);
+    // The garment stands on the left, where scene B's statement will light,
+    // clear of scene A's copy on the right.
+    const right = copyLeft - Math.max(24, 0.035 * width);
+    const zoom = Math.min((right - edge) / GARMENT_W, (0.8 * height) / GARMENT_H);
     return {
       landscape,
       entry,
       beats: timed(BEATS.landscape, 115),
-      garment: {
-        fit,
-        // Camera distances: the garment on the left, the whole garment, the push-in.
-        closeD: 0.75,
-        holdD: 1,
-        pushD: PUSH,
-        anchor: [Math.max(0.645 * width, copyRight + 24 + 0.45 * GARMENT.width * fit), 0.5 * height],
-        // The opening framing puts the chest (image px) a third of the way
-        // across, inside the dark of the veil, which darkens the relief from the
-        // left edge to `veil[0]` and is gone by `veil[1]` (px); the pull-back
-        // carries the garment out of it, to the right.
-        close: [745, 420],
-        closeAnchor: [0.33 * width, 0.5 * height],
-        veil: [0.55 * width, 0.85 * width],
-        // The fill the front brings: low, so the light falls from the right
-        // and the garment's left, under the copy, stays in shadow.
-        revealFill: 0.35,
-      },
+      garment: garmentPlace([(edge + right) / 2, 0.5 * height], zoom, width, height, 0.35),
       stack: {
         // The camera keeps the stack framed: closer while it is closed, further back as it opens.
         openZoom: Math.min((0.78 * height) / OPEN_HEIGHT, room),
@@ -340,21 +308,14 @@ export function stageLayout(width, height, entry = 0.25, statement = 0, page = {
   // anchor, keeps 16px clear of the statement above it; never below half the
   // width's own limit.
   const below = (tall) => Math.max((2 * (0.64 * height - statement - 16)) / tall, (0.42 * width) / 861);
+  // On a portrait screen the garment stands in the upper part of the stage and
+  // scene A's copy below it.
+  const zoom = Math.min((0.98 * width) / GARMENT_W, (0.5 * height) / GARMENT_H);
   return {
     landscape,
     entry,
     beats: timed(BEATS.portrait, 90),
-    garment: {
-      fit: width / GARMENT.width,
-      closeD: 0.72,
-      holdD: 0.95,
-      pushD: 0.62,
-      anchor: [0.5 * width, 0.6 * height],
-      close: [770, 430],
-      closeAnchor: [0.5 * width, 0.58 * height],
-      veil: null,
-      revealFill: 0.5,
-    },
+    garment: garmentPlace([0.5 * width, 0.37 * height], zoom, width, height, 0.5),
     stack: {
       // Scene B's statement is lit before the stack is drawn below it, so on a
       // short screen the stack is drawn smaller rather than into the words.
@@ -384,130 +345,63 @@ export function reliefLayout(width, unit, offset) {
   };
 }
 
-// Larger than any distance on the image: a front that has passed everything.
-const FAR = 1e6;
-
-// Scene A: the stage arrives with the relief lit and the garment unlit in its
-// shade, unseen; on a landscape screen it stands on the left, where a veil
-// darkens the relief. Light starts to fall on the garment while the stage is
-// still scrolling in, from above its right shoulder, and spreads down and
-// across it with the camera still. Once it is lit the camera moves: it pulls
-// back to the whole garment while the lamp crosses it and the veil lifts, the
-// lamp rests as a key light, and the camera pushes onto the right shoulder
-// seam while the light gathers there. The seam rests lit; then the light goes
-// out, and the garment, dark again in its shade, leaves unseen.
-function garmentScene(t, layout, center) {
-  const { fit, closeD, holdD, pushD, anchor, close, closeAnchor, veil, revealFill } = layout.garment;
-  const { reveal, a1, a2, a3, a4, a5, a6 } = layout.beats;
-  const pull = a2 - a1;
-  const push = a4 - a3;
+// Scene A: the stage arrives in the dark, the garment unseen. As the stage
+// settles, light falls from above the garment: a pool that comes down onto its
+// shoulders and opens until it has lit the garment and then the whole relief,
+// so the dark recedes because it is lit, not because a layer of shade is
+// taken away. The garment stands still in the light while the camera eases a
+// few percent closer; its own key light, over its right shoulder, drifts a
+// little across it. At the end the garment dissolves into the lit relief,
+// where scene B's statement lights.
+function garmentScene(t, layout, width, height) {
+  const { zoom, anchor, cam, dawnFrom, dawnAt, revealFill } = layout.garment;
+  const { reveal, a1, a2, a3, a5, a6 } = layout.beats;
   const out = a6 - a5;
-  const framings = [
-    { cam: close, anchor: closeAnchor, zoom: fit / closeD },
-    { cam: [768, 470], anchor, zoom: fit / holdD },
-    { cam: SEAM, anchor: center, zoom: fit / pushD },
-  ];
-  // The camera holds the opening framing while the light spreads, then draws
-  // back, rests on the whole garment, and pushes in onto the seam.
-  const view = camera(setOff(t, a1, a2) + setOff(t, a3, a4), framings);
-  // The light's front spreads down and across the garment from above its
-  // right shoulder until it has passed the farthest point the opening frame
-  // shows. After that the whole garment stays in the light: the rest of it is
-  // only seen once the camera has moved.
-  const first = framings[0];
-  const seen = [0, 1].map((k) => [
-    Math.max(first.cam[k] - first.anchor[k] / first.zoom, BOUNDS[k]),
-    Math.min(first.cam[k] + (2 * center[k] - first.anchor[k]) / first.zoom, BOUNDS[k + 2]),
-  ]);
-  const farthest = Math.hypot(
-    Math.max(LIGHT_FROM[0] - seen[0][0], seen[0][1] - LIGHT_FROM[0]),
-    Math.max(LIGHT_FROM[1] - seen[1][0], seen[1][1] - LIGHT_FROM[1])
-  );
-  const frontSoft = FRONT_SOFT * (farthest - NEAREST);
-  const front = t < a1 ? mix(NEAREST, farthest + frontSoft, ramp(t, reveal, a1)) : FAR;
-  // As the camera pushes in, the light gathers onto the seam: the garment goes
-  // dark from the edges of the frame inwards, through a gradient wider than
-  // half the frame, and holds there while the seam rests lit. Then the light
-  // left around the seam goes out. Once it is dark in its shade the garment
-  // and its shade go, unseen, and the relief is left alone.
-  const seam = [0, 1].map((k) => view.anchor[k] + (SEAM[k] - view.cam[k]) * view.zoom);
-  const reach = Math.hypot(Math.max(seam[0], 2 * center[0] - seam[0]), Math.max(seam[1], 2 * center[1] - seam[1]));
-  const goneSoft = (GONE_SOFT * Math.hypot(center[0], center[1])) / view.zoom;
-  const gathered = GATHERED * ramp(t, a3, a4) + (1 - GATHERED) * ramp(t, a5, a6 - out / 14);
-  const gone = t < a3 ? FAR : mix(reach / view.zoom + goneSoft, 0.5 * goneSoft, gathered);
-  const light = 1 - glide(ramp(t, a5, a6));
-  // The garment and its shade dissolve together while the light goes out, so
-  // neither is ever left on the relief as a dark shape: gone as it goes dark.
-  const leave = 1 - glide(ramp(t, a5 + out / 7, a6 - out / 14));
-  // Light falls on the garment from above the frame, over the right shoulder,
-  // straight down. As the camera moves it carries on across the garment on
-  // the page's 30-degree angle and curves up to a key light over the left
-  // shoulder, where it rests; then it crosses back to the right shoulder seam,
-  // where its beam narrows as the camera arrives, and stays there until it
-  // goes out.
+  const diagonal = Math.hypot(width, height);
+  // The light starts to fall as the stage settles, so the reader sees the
+  // dark first and the garment come out of it on the still stage.
+  const fall = mix(reveal, 0, 0.75);
+  // The pool comes down onto the shoulders as it opens, and keeps opening
+  // until it reaches past every corner; the relief takes the full light on
+  // from when the garment is lit.
+  const centre = mixPoint(dawnFrom, dawnAt, glide(ramp(t, fall, a1)));
+  const reach = diagonal * mix(0.05, 1.4, glide(ramp(t, fall, a2)));
+  const spread = glide(ramp(t, a1, a3));
+  // The key light: over the right shoulder, drifting slowly towards the chest.
   const lamp = path(t, [
-    [reveal, [1110, -160]],
-    [a1, [1110, 200]],
-    [a1 + 1e-4, [1110, 200]],
-    [a1 + 0.83 * pull, [420, 440]],
-    [a2, [620, 250]],
-    [a3, [620, 250]],
-    [a4, SEAM],
-    [a6, SEAM],
+    [fall, [1150, -60]],
+    [a1, [1080, 150]],
+    [a5, [930, 230]],
   ]);
-  // The pool widens as the light comes down, narrows for the push-in, and a
-  // little more as it goes out.
   const radius = track(t, [
-    [a1, 360],
-    [a1 + 0.83 * pull, 560],
-    [a2, 680],
-    [a3, 680],
-    [a4, 260],
-    [a5, 260],
-    [a6, 200],
+    [fall, 520],
+    [a1, 640],
+    [a2, 700],
   ]);
-  // The lamp is on from the start: the front alone decides what it reaches.
-  // Some fill comes with the front, so the whole garment reads once it is lit;
-  // the fill rises as the lamp crosses and falls away for the push-in, so the
-  // seam rests in the lamp's own pool.
-  const intensity = 1;
-  const fill =
-    mix(revealFill * glide(ramp(t, reveal, a1)), 0.82, glide(ramp(t, a1 + 0.13 * pull, a1 + 0.91 * pull))) *
-    (1 - glide(ramp(t, a3, a3 + 0.62 * push)));
+  const fill = mix(revealFill * glide(ramp(t, fall, a1)), 0.78, glide(ramp(t, a1, a2)));
+  // The garment dissolves into the lit relief as scene A's copy goes out.
+  const leave = 1 - glide(ramp(t, a5 - 0.25 * out, a6 - 0.1 * out));
   return {
     scene: 'garment',
-    cam: view.cam,
-    anchor: view.anchor,
-    zoomGarment: view.zoom,
+    cam,
+    anchor,
+    zoomGarment: zoom * (1 + DRIFT * ramp(t, fall, a6)),
     lamp: [lamp[0], lamp[1], LAMP_HEIGHT],
     radius,
-    intensity,
+    intensity: 1,
     fill,
-    // Where light reaches the garment, in image px: within the light's front
-    // (its radius about LIGHT_FROM, and how much of it is soft) and within its
-    // reach of the seam as it gathers there (likewise). `light` puts out what
-    // is left; `present` is the garment and its shade as they arrive (with a
-    // late texture), `leave` the two of them going together at the end.
-    show: [front, frontSoft, gone, goneSoft],
-    showAt: [LIGHT_FROM[0], LIGHT_FROM[1], SEAM[0], SEAM[1]],
-    light,
+    // The light that falls on the stage: its centre and reach (px), and how
+    // much of the relief it lights everywhere.
+    dawn: [centre[0], centre[1], reach, spread],
+    light: 1,
     present: 1,
     leave,
     shown: leave > 0,
-    // The veil over the left of the relief, px: dark to its first edge, gone
-    // by its second, at full strength until the garment is lit, lifting as
-    // the camera draws back. It is the relief's, there before the garment.
-    veil: veil ? [veil[0], veil[1], 1 - glide(ramp(t, a1, a1 + 0.83 * pull))] : [0, 1, 0],
-    // The shade round the garment eases once it is lit and the camera moves it,
-    // where it only has to ground it in the key light, and deepens again as the
-    // light gathers onto the seam, so that the garment leaves unseen.
-    pool: 1 - 0.6 * glide(ramp(t, a1, a1 + 0.83 * pull)) * (1 - glide(ramp(t, a3, a3 + 0.75 * push))),
-    // A moving pointer leans the lamp a little once most of the garment is
-    // lit, never while it is still dark; while the key light rests a pointer
-    // on the garment takes it, and the held lamp narrows to model it. Both
-    // let go before the camera pushes in, so the two never coincide.
-    lean: 0.3 * ramp(t, mix(reveal, a1, 0.67), mix(reveal, a1, 0.86)) * (1 - ramp(t, a3 - 0.02, a3)),
-    hold: ramp(t, a2 - 0.02, a2) * (1 - ramp(t, a3 - 0.02, a3)),
+    // A moving pointer leans the key light a little once the garment is lit;
+    // while it rests lit, a pointer on the garment takes it, and the held
+    // light narrows to model it. Both let go before the garment dissolves.
+    lean: 0.3 * ramp(t, a1, a2) * (1 - ramp(t, a5 - 0.03, a5)),
+    hold: ramp(t, a2, a2 + 0.02) * (1 - ramp(t, a5 - 0.03, a5)),
     heldRadius: 440,
     floor: 0,
   };
@@ -529,7 +423,7 @@ function stackScene(t, layout) {
   // How far each pair is open: 1 = the render's spacing, 0 = closed up. Once
   // the lamp has crossed them the pairs close from the top, one after another,
   // the last as the closing beat ends.
-  const closing = SLACK.map((_, j) => 1 - glide(ramp(t, b2 + 0.136 * j * shut, b2 + (0.455 + 0.136 * j) * shut)));
+  const closing = SLACK.map((_, j) => 1 - glide(ramp(t, b2 + 0.09 * j * shut, b2 + (0.62 + 0.09 * j) * shut)));
   // Each sheet's downward shift from its place in the render: the base stays
   // put and each sheet sits at least as low as the sheet below it moved, so no
   // uncovered surface ever shows.
@@ -595,10 +489,10 @@ function stackScene(t, layout) {
     [b2 + 0.625 * shut, 640],
   ]);
   // The camera holds the open stack's framing while the plane passes and the
-  // lamp crosses; as the layers come together it draws back with them, 20%
+  // lamp crosses; as the layers come together it eases back with them, 14%
   // over the closing, holds while the material rests, and recedes a little
   // further as it leaves.
-  const zoom = openZoom * (1 - 0.2 * setOff(t, b2, b3) - 0.03 * glide(ramp(t, b4, b5)));
+  const zoom = openZoom * (1 - 0.14 * glide(ramp(t, b2, b3)) - 0.03 * glide(ramp(t, b4, b5)));
   return {
     scene: 'stack',
     sheets,
@@ -642,8 +536,7 @@ function copyCues(t, beats) {
 
 // Scene A plays until its light is out and the garment gone; scene B from there.
 export function stageFrame(t, layout, width, height) {
-  const center = [width / 2, height / 2];
-  const frame = t < layout.beats.a6 ? garmentScene(t, layout, center) : stackScene(Math.min(t, 1), layout);
+  const frame = t < layout.beats.a6 ? garmentScene(t, layout, width, height) : stackScene(Math.min(t, 1), layout);
   frame.copy = copyCues(t, layout.beats);
   return frame;
 }

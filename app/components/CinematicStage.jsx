@@ -582,11 +582,15 @@ export default function CinematicStage() {
       const run = Math.max(track.offsetHeight - height, 1);
       const entry = window.innerHeight / run;
       // The stylesheet's landscape query decides the composition, and the copy
-      // column's measured edge places the image beside it (F23).
+      // columns' measured edges place the images beside them (F23): the stack
+      // right of scene B's statement, the garment left of scene A's copy.
       const landscape = landscapeQuery.matches;
-      const column = landscape ? track.querySelector('.cine-copy')?.getBoundingClientRect() : null;
-      const copyRight = column?.width ? column.right - stage.getBoundingClientRect().left : undefined;
-      layout = stageLayout(width, height, entry, statement, { landscape, copyRight, run });
+      const stageLeft = stage.getBoundingClientRect().left;
+      const column = landscape ? statementBlock?.getBoundingClientRect() : null;
+      const copyRight = column?.width ? column.right - stageLeft : undefined;
+      const side = landscape ? track.querySelector('.cine-copy')?.getBoundingClientRect() : null;
+      const copyLeft = side?.width ? side.left - stageLeft : undefined;
+      layout = stageLayout(width, height, entry, statement, { landscape, copyRight, copyLeft, run });
       // The relief's unit is the hero's height, and its pattern starts at the
       // hero's top, so the stage's folds run on from the hero's.
       const heroRect = hero?.getBoundingClientRect();
