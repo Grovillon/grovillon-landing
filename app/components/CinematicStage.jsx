@@ -719,9 +719,9 @@ export default function CinematicStage() {
     // Just below the join the hero's own lamp, wherever the pointer has taken
     // it, lights the relief (`near`: the renderer hands over from it within as
     // many px of the join as the hero still shows above it), so the two read as
-    // one surface with no seam; the veil comes in below the join over at most a
-    // quarter of the hero's height, so the garment waiting in its shade stays
-    // hidden. Leaving over the grid band, whose relief runs
+    // one surface with no seam; the hero's light lifts the stage's dark only
+    // within an eighth of the hero's height below the join, so the garment
+    // waiting unlit in that dark is never seen against lit relief. Leaving over the grid band, whose relief runs
     // on from the stage's and rests its lamp where the stage's hangs, it is lit
     // by the band's lamp, which the pointer moves there. With no hero lamp to
     // share, the stage's own lamp hangs higher while the stage approaches.
@@ -735,7 +735,7 @@ export default function CinematicStage() {
           lamp: mixLamp(own, [hero.x, hero.y, hero.z], k),
           gain: 1 + (hero.gain - 1) * k,
           joined: true,
-          near: [hero.x, hero.y, hero.z, hero.gain, stageTop, Math.min(stageTop, 0.25 * unit)],
+          near: [hero.x, hero.y, hero.z, hero.gain, stageTop, Math.min(stageTop, 0.12 * unit)],
         };
       }
       if (stageTop < 0 && band) {

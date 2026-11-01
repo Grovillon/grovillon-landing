@@ -159,7 +159,9 @@ float shadeLight(vec2 frag) {
 // The light that falls into the dark in scene A (uDawn): a soft pool centred
 // at uDawn.xy (css px) reaching about uDawn.z, filling uDawn.w of the dark
 // everywhere. Both scale the relief's light, never the ground. Just below the
-// join with the hero the hero's own light runs on, unchanged.
+// join with the hero the hero's own light runs on, unchanged, over a short
+// band (uNearBand.y) that never reaches the garment, so the unlit garment is
+// never seen against relief the hero's light has lifted out of the dark.
 uniform vec4 uDawn;
 float dawnLight(vec2 frag) {
   vec2 d = (frag / uScale - uDawn.xy) / max(uDawn.z, 1.0);
@@ -167,7 +169,7 @@ float dawnLight(vec2 frag) {
 }
 float dawn(vec2 frag) {
   float dark = shadeLight(frag);
-  return mix(1.0, dark + (1.0 - dark) * dawnLight(frag), handed(frag, uNearBand.x));
+  return mix(1.0, dark + (1.0 - dark) * dawnLight(frag), handed(frag, uNearBand.y));
 }
 vec3 dawned(vec3 col, vec2 frag) {
   return uGround + (col - uGround) * dawn(frag);

@@ -307,8 +307,12 @@ export default function LightField({ className, variant = 'hero' }) {
     let following = false;
 
     // ---- the band: Scene 04's script, Scene 05's rest and pointer ----
-    // Scene 04's sentence, word by word (measureBand).
+    // Scene 04's sentence, word by word (measureBand). A page that jumps to it
+    // (find in page, a link, a restored place) finds it already read: every
+    // word lit until the reader scrolls back above it.
     let words = [];
+    let lastScroll = window.scrollY;
+    let jumped = window.scrollY > 0;
     // Geometry for leadPath (css px, page positions relative to the unpin).
     let geo = null;
     let timeline = null;
@@ -632,6 +636,9 @@ export default function LightField({ className, variant = 'hero' }) {
     // no light to read it (reduced motion, no relief) every word is lit.
     function lightWords(p) {
       if (!words.length || !timeline?.path) return;
+      if (jumped && (p.phase === 'release' || p.phase === 'goes-first')) jumped = false;
+      // With no light to read it (a lost context) or after a jump, all lit.
+      const read = !lost && !jumped;
       const marks = timeline.path.marks.slice(1, -1);
       const gaps = marks.slice(1).map((m, i) => m - marks[i]);
       const soft = Math.min(Math.max(0.55 * (gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : 60), 24), 140);
@@ -639,8 +646,8 @@ export default function LightField({ className, variant = 'hero' }) {
       words.forEach((word, i) => {
         let lit = 1;
         let near = 0;
-        if (before) lit = 0;
-        else if (p.phase === 'sweep' && Number.isFinite(p.progress)) ({ lit, near } = wordLight(p.progress, marks[i], soft));
+        if (read && before) lit = 0;
+        else if (read && p.phase === 'sweep' && Number.isFinite(p.progress)) ({ lit, near } = wordLight(p.progress, marks[i], soft));
         lit = Math.round(lit * 100) / 100;
         near = Math.round(near * 100) / 100;
         if (lit === word.lit && near === word.near) return;
@@ -782,6 +789,9 @@ export default function LightField({ className, variant = 'hero' }) {
 
     const onScroll = () => {
       if (band) {
+        const y = window.scrollY;
+        if (Math.abs(y - lastScroll) > 1.2 * window.innerHeight) jumped = true;
+        lastScroll = y;
         if (!ready && past()) {
           ready = true;
           resize(true);

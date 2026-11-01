@@ -442,19 +442,17 @@
     }
   }
 
-  /* Each word waits dim and out of focus, a little low, and comes into place
-     as the light reaches it, glinting while the light is on it (LightField
-     sets --lit and --near per word). */
+  /* Each word waits dim and out of focus, and comes into focus as the light
+     reaches it, glinting while the light is on it (LightField sets --lit and
+     --near per word). The words stay inline, so find in page and links that
+     name the sentence still match it across them. */
   .moment [data-word] {
-    display: inline-block;
     opacity: calc(0.22 + 0.78 * var(--lit, 1));
     filter: blur(calc((1 - var(--lit, 1)) * 0.05em));
-    transform: translateY(calc((1 - var(--lit, 1)) * 0.08em));
     text-shadow: 0 0 calc(0.4em * var(--near, 0)) rgb(255 244 228 / calc(0.7 * var(--near, 0)));
     transition:
       opacity 160ms ease-out,
-      filter 160ms ease-out,
-      transform 160ms ease-out;
+      filter 160ms ease-out;
   }
 
   /* Scene 05, the closing: one screen, its statement at the centre, the grid
@@ -762,7 +760,6 @@
   .moment [data-word] {
     opacity: 1;
     filter: none;
-    transform: none;
     text-shadow: none;
   }
 
