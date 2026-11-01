@@ -132,8 +132,8 @@ const SETTLED = 0.3;
 // the rows it has passed are there, the rows it has not yet reached are not,
 // over SCAN_SOFT render px, and where it crosses a layer the surface catches
 // its light (SCAN_GLINT).
-const SCAN_SOFT = 56;
-const SCAN_GLINT = 0.9;
+const SCAN_SOFT = 200;
+const SCAN_GLINT = 0.45;
 const FLOOR = 0.3; // the least fill a held lamp leaves on scene B's sheets
 // Depth of field in scene B: blur in mip levels per sheet away from the lamp,
 // when the stack is fully open; nothing is out of focus while it is closed.
@@ -172,6 +172,9 @@ function cubicBezier(p1x, p1y, p2x, p2y) {
 // scrub, that strong curve compresses each change into a few frames and stalls
 // at either end, and an ease-out switches light on with a jolt.
 const glide = cubicBezier(0.45, 0, 0.55, 1);
+// Light that comes and goes on its own, over a long stretch of scroll: an even
+// sine in-out, gentler still in its middle, so it never seems to switch.
+const sine = (x) => 0.5 - 0.5 * Math.cos(Math.PI * x);
 
 const clamp01 = (x) => Math.min(Math.max(x, 0), 1);
 const ramp = (t, a, b) => clamp01((t - a) / (b - a));
@@ -365,33 +368,37 @@ export function reliefLayout(width, unit, offset) {
 // never fades: it is only ever seen where light falls on it.
 function garmentScene(t, layout, width, height) {
   const { zoom, anchor, cam, shade, dawnFrom, dawnAt, dawnGone, revealFill } = layout.garment;
-  const { reveal, a1, a2, a3, a5, a6 } = layout.beats;
+  const { reveal, a1, a2, a3, a4, a5, a6 } = layout.beats;
   const out = a6 - a5;
   const diagonal = Math.hypot(width, height);
   // The light starts to fall as the stage settles, so the reader sees the
-  // dark first and the garment come out of it on the still stage.
-  const fall = mix(reveal, 0, 0.75);
-  // The light leaves over a longer stretch than the copy's fade, so the reader
-  // sees it go: the dark closes in round the garment, then the pool slides away
+  // dark first; it comes down and opens over a long stretch of scroll, on
+  // gentle curves, so the garment emerges as light gathers, never at once.
+  const fall = mix(reveal, 0, 0.5);
+  // It leaves over as long a stretch, from when the garment has rested lit:
+  // the dark closes in round the garment first, then the pool slides away
   // down it.
-  const leaveFrom = a5 - 0.75 * out;
+  const leaveFrom = Math.max(a4, a5 - 1.4 * out);
   const leaveTo = a6 - 0.02 * out;
-  const away = glide(ramp(t, mix(leaveFrom, leaveTo, 0.45), leaveTo));
-  const centre = mixPoint(mixPoint(dawnFrom, dawnAt, glide(ramp(t, fall, a1))), dawnGone, away);
-  const reach = diagonal * mix(0.05, 0.9, glide(ramp(t, fall, a2))) * (1 - 0.97 * away);
-  const lift = glide(ramp(t, a1, a3)) * (1 - glide(ramp(t, leaveFrom, mix(leaveFrom, leaveTo, 0.45))));
+  const away = sine(ramp(t, mix(leaveFrom, leaveTo, 0.15), leaveTo));
+  const centre = mixPoint(mixPoint(dawnFrom, dawnAt, sine(ramp(t, fall, a2))), dawnGone, away);
+  const reach = diagonal * mix(0.05, 0.9, sine(ramp(t, fall, a3))) * (1 - 0.5 * away);
+  const lift = sine(ramp(t, a1, a3)) * (1 - sine(ramp(t, leaveFrom, mix(leaveFrom, leaveTo, 0.5))));
+  // The light's strength: it brightens as it falls and dims evenly over the
+  // whole of its leaving, to nothing as scene B takes over.
+  const gain = sine(ramp(t, fall, a2)) * (1 - sine(ramp(t, leaveFrom, leaveTo)));
   // The key light: over the right shoulder, drifting slowly towards the chest.
   const lamp = path(t, [
     [fall, [1150, -60]],
-    [a1, [1080, 150]],
+    [a2, [1080, 150]],
     [a5, [930, 230]],
   ]);
   const radius = track(t, [
     [fall, 520],
-    [a1, 640],
-    [a2, 700],
+    [a2, 640],
+    [a3, 700],
   ]);
-  const fill = mix(revealFill * glide(ramp(t, fall, a1)), 0.78, glide(ramp(t, a1, a2)));
+  const fill = mix(revealFill * sine(ramp(t, fall, a2)), 0.78, sine(ramp(t, a1, a3)));
   return {
     scene: 'garment',
     cam,
@@ -405,6 +412,7 @@ function garmentScene(t, layout, width, height) {
     // its centre and reach (px), and how much of the dark it fills.
     shade: [...shade, 1],
     dawn: [centre[0], centre[1], reach, lift],
+    dawnGain: gain,
     light: 1,
     present: 1,
     shown: true,
@@ -434,7 +442,7 @@ function stackScene(t, layout) {
   // How far each pair is open: 1 = the render's spacing, 0 = closed up. Once
   // the lamp has crossed them the pairs close from the top, one after another,
   // the last as the closing beat ends.
-  const closing = SLACK.map((_, j) => 1 - glide(ramp(t, b2 + 0.09 * j * shut, b2 + (0.62 + 0.09 * j) * shut)));
+  const closing = SLACK.map((_, j) => 1 - sine(ramp(t, b2 + 0.09 * j * shut, b2 + (0.62 + 0.09 * j) * shut)));
   // Each sheet's downward shift from its place in the render: the base stays
   // put and each sheet sits at least as low as the sheet below it moved, so no
   // uncovered surface ever shows.
@@ -464,7 +472,7 @@ function stackScene(t, layout) {
   // The plane of light, in render rows: from above the stack's top edge to
   // below its base, gathering speed and slowing to rest. One plane for every
   // sheet, so a sheet is never drawn where the one above it is not.
-  const scan = glide(ramp(t, cut, b1));
+  const scan = sine(ramp(t, cut, b1));
   const front = mix(SHEETS[0].box[1] - 2 * SCAN_SOFT, STACK_BOTTOM + 2 * SCAN_SOFT, scan);
   // The lamp rides the plane down, close over the layers it is reaching, then
   // rises over the open stack and crosses it from left to right, so the light
@@ -484,8 +492,14 @@ function stackScene(t, layout) {
   // the light: the sheets cannot fall below the ground colour, so a stack
   // darker than the lit relief behind it would show as a dark shape. It is
   // gone before that, and the statement ends the film on the relief alone.
-  const intensity = (1 - 0.25 * glide(ramp(t, b2 + 0.5 * shut, b3))) * (1 - glide(ramp(t, b4, b5)));
-  const show = 1 - glide(ramp(t, b4 + 0.05 * out, b4 + 0.75 * out));
+  // The stack comes up out of the dark as the plane passes (a soft plane and
+  // a fade, never a hard line), and at the end its light goes out slowly while
+  // it dissolves a little ahead of the light.
+  const rest = b4 - b3;
+  const intensity =
+    (1 - 0.25 * sine(ramp(t, b2 + 0.5 * shut, b3))) * (1 - sine(ramp(t, b4 - 0.35 * rest, b5)));
+  const arrive = sine(ramp(t, cut, mix(cut, b1, 0.7)));
+  const show = arrive * (1 - sine(ramp(t, b4 - 0.2 * rest, b5 - 0.15 * out)));
   const fill = track(t, [
     [cut, 0.22],
     [b1, 0.3],
@@ -503,12 +517,12 @@ function stackScene(t, layout) {
   // lamp crosses; as the layers come together it eases back with them, 14%
   // over the closing, holds while the material rests, and recedes a little
   // further as it leaves.
-  const zoom = openZoom * (1 - 0.14 * glide(ramp(t, b2, b3)) - 0.03 * glide(ramp(t, b4, b5)));
+  const zoom = openZoom * (1 - 0.14 * sine(ramp(t, b2, b3)) - 0.03 * sine(ramp(t, b4, b5)));
   return {
     scene: 'stack',
     // The dark where the garment stood holds scene B's statement, and lifts
     // as the stack's light goes out, so the stage ends on the relief alone.
-    shade: [...layout.garment.shade, 1 - glide(ramp(t, b4, b5))],
+    shade: [...layout.garment.shade, 1 - sine(ramp(t, b4 - 0.35 * (b4 - b3), b5))],
     dawn: [0, 0, 1, 0],
     sheets,
     spread,

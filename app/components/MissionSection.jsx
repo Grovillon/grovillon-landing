@@ -3,17 +3,14 @@ import Arrow from './Arrow';
 import CinematicStage from './CinematicStage';
 import KineticGrid from './KineticGrid';
 import LightField from './LightField';
+import RolesDisclosure from './RolesDisclosure';
 
 export const CONTACT_EMAIL = 'd@grovillon.com';
 
 // Scene 04's sentence, a word at a time, so the light can read it.
 const AHEAD = 'One step ahead of the body.'.split(' ');
 
-const ROLES = [
-  'Senior Embedded Systems & Firmware Engineer',
-  'Control Systems & Algorithms Lead',
-  'Freelance / B2B Contractor for Mobile App Development',
-];
+const ROLES = ['Embedded systems & firmware', 'Software & algorithms', 'Wearable electronics'];
 
 export default function MissionSection() {
   return (
@@ -84,29 +81,37 @@ export default function MissionSection() {
         </div>
       </section>
 
-      {/* The roles: a quiet, compact section, a label over a short list. */}
-      <section id="roles" aria-labelledby="roles-title" className="wrap scroll-mt-6 pt-[clamp(2.5rem,5vw,4rem)]">
-        <div className="grid grid-cols-1 gap-y-4 md:grid-cols-12 md:gap-x-6">
-          <h2 id="roles-title" className="t-label text-ink-2 md:col-span-4 md:pt-[1.05rem]">
-            We’re looking to connect with:
-          </h2>
-          <div className="md:col-span-7 lg:col-span-6">
-            <ul className="border-b border-line">
-              {ROLES.map((role) => (
-                <li key={role} className="role-row">
-                  <span className="t-role">{role}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="t-body mt-6 text-ink-2">
-              We’d love to hear from you. Write to us at{' '}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="lo-inline">
-                {CONTACT_EMAIL}
-              </a>
-              .
-            </p>
-          </div>
-        </div>
+      {/* The roles: a quiet, centred section under Scene 06. The label opens a
+          short list of the open roles; the way to write stays in view. */}
+      <section id="roles" aria-labelledby="roles-title" className="wrap scroll-mt-6 pt-[clamp(2.5rem,5vw,4rem)] text-center">
+        <RolesDisclosure
+          className="roles mx-auto max-w-[36rem]"
+          summary={
+            <summary className="roles-summary">
+              <h2 id="roles-title" className="t-label">
+                We’re looking to connect with:
+              </h2>
+              <svg className="roles-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.25" />
+              </svg>
+            </summary>
+          }
+        >
+          <ul className="mt-3 border-b border-line">
+            {ROLES.map((role) => (
+              <li key={role} className="role-row">
+                <span className="t-role">{role}</span>
+              </li>
+            ))}
+          </ul>
+        </RolesDisclosure>
+        <p className="t-body mt-6 text-ink-2">
+          We’d love to hear from you. Write to us at{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="lo-inline">
+            {CONTACT_EMAIL}
+          </a>
+          .
+        </p>
       </section>
     </>
   );

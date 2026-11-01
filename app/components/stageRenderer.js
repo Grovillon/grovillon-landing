@@ -163,9 +163,12 @@ float shadeLight(vec2 frag) {
 // band (uNearBand.y) that never reaches the garment, so the unlit garment is
 // never seen against relief the hero's light has lifted out of the dark.
 uniform vec4 uDawn;
+// How strong that light is (0..1): it brightens as it falls and dims evenly
+// as it leaves, so the garment comes and goes as light gathers and fades.
+uniform float uDawnGain;
 float dawnLight(vec2 frag) {
   vec2 d = (frag / uScale - uDawn.xy) / max(uDawn.z, 1.0);
-  return mix(exp(-dot(d, d)), 1.0, uDawn.w);
+  return uDawnGain * mix(exp(-dot(d, d)), 1.0, uDawn.w);
 }
 float dawn(vec2 frag) {
   float dark = shadeLight(frag);
@@ -398,6 +401,7 @@ const RELIEF_UNIFORMS = [
   'uReliefGain',
   'uSupersample',
   'uDawn',
+  'uDawnGain',
   'uShade',
   'uShadeSoft',
   'uNearLamp',
@@ -518,7 +522,7 @@ export function createStageRenderer(canvas) {
     gl.uniform1f(p.uFill, frame.fill);
   };
 
-  const setRelief = (p, light, dawn, shade) => {
+  const setRelief = (p, light, dawn, shade, gain = 1) => {
     const { unit, origin, cell, depth, lamp, look } = surface;
     gl.uniform1f(p.uUnit, unit);
     gl.uniform2f(p.uOrigin, 0, origin);
@@ -539,6 +543,7 @@ export function createStageRenderer(canvas) {
     // Facets have hard edges: supersampled on a low-density screen.
     gl.uniform1f(p.uSupersample, size.supersample ? 1 : 0);
     gl.uniform4f(p.uDawn, dawn[0], dawn[1], dawn[2], dawn[3]);
+    gl.uniform1f(p.uDawnGain, gain);
     gl.uniform4f(p.uShade, shade[0], shade[1], shade[2], shade[3]);
     gl.uniform2f(p.uShadeSoft, shade[4], shade[5]);
   };
@@ -562,7 +567,7 @@ export function createStageRenderer(canvas) {
     const p = programs.garment;
     fullscreen(p);
     setShared(p, frame, edges);
-    setRelief(p, light, frame.dawn, frame.shade || NO_SHADE);
+    setRelief(p, light, frame.dawn, frame.shade || NO_SHADE, frame.dawnGain ?? 1);
     gl.uniform2f(p.uAnchor, frame.anchor[0], frame.anchor[1]);
     gl.uniform2f(p.uCam, frame.cam[0], frame.cam[1]);
     gl.uniform1f(p.uZoom, frame.zoomGarment);

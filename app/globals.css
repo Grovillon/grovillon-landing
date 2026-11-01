@@ -91,7 +91,7 @@
   .t-display {
     font-stretch: 125%;
     font-weight: 300;
-    font-size: clamp(0.9375rem, 2.6vw, 2.25rem);
+    font-size: clamp(1rem, 3.1vw, 2.75rem);
     line-height: 1;
     letter-spacing: 0.28em;
     margin-right: -0.28em;
@@ -552,15 +552,100 @@
     mask-image: linear-gradient(to bottom, #000 48%, rgb(0 0 0 / 0.62) 74%, rgb(0 0 0 / 0.2) 92%, transparent 100%);
   }
 
+  /* The open roles, folded under their label: the label is the control, with a
+     chevron that turns as the list opens; the list opens smoothly where the
+     browser can animate a disclosure, at once elsewhere and with reduced motion. */
+  .roles-summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 2.75rem;
+    color: var(--ink-2);
+    cursor: pointer;
+    list-style: none;
+    transition: color 200ms ease;
+  }
+
+  .roles-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .roles-summary:focus-visible {
+    outline: 1px solid var(--line-strong);
+    outline-offset: 4px;
+  }
+
+  .roles-chevron {
+    flex: none;
+    transition: transform 220ms var(--ease-out);
+  }
+
+  .roles[open] .roles-chevron {
+    transform: rotate(180deg);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .roles-summary:hover {
+      color: var(--ink);
+    }
+  }
+
+  @supports (interpolate-size: allow-keywords) {
+    .roles {
+      interpolate-size: allow-keywords;
+    }
+
+    .roles::details-content {
+      height: 0;
+      overflow: clip;
+      transition:
+        height 320ms var(--ease-out),
+        content-visibility 320ms allow-discrete;
+    }
+
+    .roles[open]::details-content {
+      height: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .roles::details-content,
+    .roles-chevron {
+      transition: none;
+    }
+  }
+
   /* The open roles: a plain, compact list between hairlines; the line below it
      is the way to write. */
   .role-row {
     display: flex;
     align-items: center;
+    justify-content: center;
     min-height: 2.875rem;
     padding: 0.7rem 0.125rem;
     border-top: 1px solid var(--line);
     color: var(--ink);
+  }
+}
+
+/* From a tablet's width up (but not on a phone on its side), the name stands at
+   the very centre of the hero, alone, and the copy keeps to the lower left
+   corner below it. Unlayered, so it wins over the utilities on those elements. */
+@media (min-width: 48rem) and (min-height: 34.01rem) {
+  .hero-inner {
+    justify-content: flex-end;
+  }
+
+  .hero-name {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .hero-name > * {
+    pointer-events: auto;
   }
 }
 
@@ -580,6 +665,37 @@
   .hero-name {
     padding-top: 0;
     padding-bottom: 1.25rem;
+  }
+
+  /* The copy and its links at a size for a screen this short: a compact
+     block that leaves the name and the relief room. */
+  .hero-copy {
+    max-width: 24rem;
+  }
+
+  .hero-copy .t-lead {
+    font-size: 0.9375rem;
+  }
+
+  .hero-copy .t-body {
+    margin-top: 0.375rem;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+  }
+
+  .hero-actions {
+    margin-top: 0.875rem;
+    column-gap: 1.5rem;
+  }
+
+  .hero-actions .lo-btn,
+  .hero-actions .lo-link {
+    min-height: 2.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .hero-actions .lo-btn {
+    padding: 0 0.875rem 0 1rem;
   }
 }
 
