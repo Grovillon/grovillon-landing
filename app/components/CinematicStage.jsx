@@ -950,6 +950,9 @@ export default function CinematicStage() {
       }
       resize();
       snap = true;
+      // Drawn at once, on screen or not, so the stage is not blank when the
+      // reader comes back to it.
+      fresh = true;
       kick();
       // A texture that arrived while the context was lost is uploaded now.
       if (queue.length && !uploading) {
