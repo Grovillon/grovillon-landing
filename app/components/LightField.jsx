@@ -307,8 +307,11 @@ export default function LightField({ className, variant = 'hero' }) {
     // The pointer's share of the band's lamp (Scene 05, fine pointer only).
     const share = { value: 0, velocity: 0 };
     const held = { x: 0, y: 0, vx: 0, vy: 0, placed: false };
-    // The band waits for the hero's entrance before its first full draw.
-    let ready = !band || pageEntranceDone();
+    // The band waits for the hero's entrance before its first full draw, so
+    // the entrance has the GPU to itself, unless the reader is already past
+    // the hero (a page opened lower down, or scrolled away), as the stage does.
+    const past = () => window.scrollY > 0.25 * window.innerHeight;
+    let ready = !band || pageEntranceDone() || past();
     let strips = [];
 
     function pageEntranceDone() {
@@ -683,6 +686,10 @@ export default function LightField({ className, variant = 'hero' }) {
 
     const onScroll = () => {
       if (band) {
+        if (!ready && past()) {
+          ready = true;
+          resize(true);
+        }
         kick();
         return;
       }
