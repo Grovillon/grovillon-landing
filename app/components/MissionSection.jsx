@@ -83,13 +83,13 @@ export default function MissionSection() {
         </div>
       </section>
 
-      <section id="roles" aria-labelledby="roles-title" className="wrap scroll-mt-6 pt-[clamp(3rem,6vw,5rem)]">
-        <div className="grid grid-cols-1 gap-y-6 md:grid-cols-12 md:gap-x-6">
-          {/* A label, not a statement: the roles themselves lead. */}
-          <h2 id="roles-title" className="t-label text-ink-2 md:col-span-4 md:pt-[1.85rem]">
+      {/* The roles: a quiet, compact section, a label over a short list. */}
+      <section id="roles" aria-labelledby="roles-title" className="wrap scroll-mt-6 pt-[clamp(2.5rem,5vw,4rem)]">
+        <div className="grid grid-cols-1 gap-y-4 md:grid-cols-12 md:gap-x-6">
+          <h2 id="roles-title" className="t-label text-ink-2 md:col-span-4 md:pt-[1.05rem]">
             We’re looking to connect with:
           </h2>
-          <div className="md:col-span-8">
+          <div className="md:col-span-7 lg:col-span-6">
             <ul className="border-b border-line">
               {ROLES.map((role) => (
                 <li key={role} className="role-row">
@@ -97,7 +97,7 @@ export default function MissionSection() {
                 </li>
               ))}
             </ul>
-            <p className="t-lead mt-12 text-ink-2">
+            <p className="t-body mt-6 text-ink-2">
               We’d love to hear from you. Write to us at{' '}
               <a href={`mailto:${CONTACT_EMAIL}`} className="lo-inline">
                 {CONTACT_EMAIL}

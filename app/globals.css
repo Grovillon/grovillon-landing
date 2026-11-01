@@ -151,11 +151,12 @@
     text-transform: uppercase;
   }
 
+  /* The open roles: quiet, at reading size, below the page's statements. */
   .t-role {
     font-stretch: 106%;
     font-weight: 400;
-    font-size: clamp(1.125rem, 1.85vw, 1.5rem);
-    line-height: 1.3;
+    font-size: clamp(0.9375rem, 1.05vw, 1.0625rem);
+    line-height: 1.45;
   }
 
   /* Controls */
@@ -546,12 +547,13 @@
     mask-image: linear-gradient(to bottom, #000 48%, rgb(0 0 0 / 0.62) 74%, rgb(0 0 0 / 0.2) 92%, transparent 100%);
   }
 
-  /* The open roles: a plain list between hairlines; the line below it is the way to write. */
+  /* The open roles: a plain, compact list between hairlines; the line below it
+     is the way to write. */
   .role-row {
     display: flex;
     align-items: center;
-    min-height: 4.5rem;
-    padding: 1.25rem 0.25rem;
+    min-height: 2.875rem;
+    padding: 0.7rem 0.125rem;
     border-top: 1px solid var(--line);
     color: var(--ink);
   }
